@@ -40,7 +40,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **84 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **85 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -88,6 +88,18 @@ import zlib from "node:zlib"; // Node 22.15+; in browsers pass e.g. fzstd's deco
 const acc = describeAccessory(parseRbxm(bytes, { zstd: (b) => zlib.zstdDecompressSync(b) }));
 // { name, meshId, textureId, attachment: { name: "HairAttachment", cframe }, layered: { order, cageMeshId, ... } | null }
 rig.addAccessory(parseMesh(hairBytes), { attachment: acc.attachment, map: loadRobloxTexture("hair.png") });
+```
+
+### Roblox head shapes
+
+Head catalog items are a `SpecialMesh` plus the head's own attachment points. `describeHead` reads both, and `setHead` puts the mesh on the neck by its `NeckRigAttachment`. Hair and hats added afterwards weld to that head's own `HairAttachment` / `HatAttachment`.
+
+```js
+import { parseRbxm, describeHead, parseMesh } from "blockrig";
+
+const head = describeHead(parseRbxm(headModelBytes));        // { meshId, scale, offset, attachments }
+rig.setHead(parseMesh(await fetchMesh(head.meshId)), head);  // fetchMesh: however you obtain the mesh file
+rig.addAccessory(hairMesh, { attachment: hair.attachment }); // lands on the new head's HairAttachment
 ```
 
 ### `<script>` tag
@@ -231,6 +243,7 @@ anim.play(salute, { fade: 0.15 });
 | `createRig({ rigType?, shape?, scale?, skeleton?, body?, face?, outline? })` | Builds the rig. `body: false` skips the blocky body; `face` is an image or canvas decal. |
 | `buildBody({ rigType, shape, scale })` · `R15_SHAPES` | The bind skeleton and part layout a rig is built from. |
 | `rig.setBodyPart(name, mesh, { map?, color?, scale? })` | Swap a blocky part (or `"Head"`) for a mesh. |
+| `describeHead(roots)` · `rig.setHead(mesh, { scale, offset, attachments })` · `rig.headAttachments` · `rig.headBounds()` | Roblox head assets: placed by `NeckRigAttachment`, with their own accessory attachments. |
 | `keyframeSequenceToClip(roots, { name, rigType, cubicLegacy })` | Roblox `KeyframeSequence` → clip (Pose CFrame → Transform, Weight, easing, markers). |
 | `rig.setJointOffset(name, x, y, z)` | Translation part of a joint's Transform. |
 | `toR6(clip)` · `toR15(clip)` · `retargetAll(clips, fn)` | Retarget clips between rig types. |
@@ -271,7 +284,7 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 84 unit + regression tests (node:test, no browser needed)
+npm test             # 85 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
 npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html and faces.html)

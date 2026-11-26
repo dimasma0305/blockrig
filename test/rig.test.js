@@ -101,3 +101,30 @@ test("accessory: attachment matching welds the handle to the head", () => {
   close([m.getWorldPosition(new THREE.Vector3()).y], [neckY + 1.2 + 0.4]);
   assert.throws(() => rig.addAccessory(tri, { attachment: { name: "TailAttachment", cframe: { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, 0, 0] } } }), /unsupported/);
 });
+
+test("setHead: a Roblox head asset sits on the neck by its NeckRigAttachment and brings its own attachments", async () => {
+  const { describeHead, parseRbxm } = await import("../src/rbxm.js");
+  const { writeRbxm } = await import("./helpers/rbxm-writer.js");
+  const S = 0x01, V3 = 0x0e;
+  const v3 = (name, v) => ({ className: "Vector3Value", props: { Name: [S, name], Value: [V3, v] } });
+  const model = writeRbxm([{ className: "SpecialMesh", props: { Name: [S, "Mesh"], MeshId: [S, "https://www.roblox.com/asset/?id=555"], Scale: [V3, [1.2, 1.2, 1.2]], Offset: [V3, [0, 0, 0]] },
+    children: [v3("NeckRigAttachment", [0, -0.5, 0]), v3("HairAttachment", [0, 0.7, 0]), v3("FaceFrontAttachment", [0, 0, -0.6])] }]);
+  const d = describeHead(parseRbxm(model));
+  assert.equal(d.meshId, 555); assert.deepEqual(d.scale.map((x) => +x.toFixed(3)), [1.2, 1.2, 1.2]);
+  assert.deepEqual(Object.keys(d.attachments).sort(), ["FaceFrontAttachment", "HairAttachment", "NeckRigAttachment"]);
+
+  const rig = createRig();
+  const cube = new THREE.BoxGeometry(1, 1, 1);
+  const mesh = { positions: cube.attributes.position.array, normals: cube.attributes.normal.array, uvs: cube.attributes.uv.array, indices: Uint32Array.from(cube.index.array), lods: [0, 12], faceCount: 12 };
+  const old = rig.parts.Head;
+  const h = rig.setHead(mesh, d);
+  assert.equal(old.visible, false); assert.equal(rig.parts.Head, h);
+  // centre = neck - NeckRigAttachment = 0.5 above the neck; Scale makes the 1-stud cube 1.2 studs
+  const b = rig.headBounds();
+  close([b.min.y, b.max.y], [0.5 - 0.6, 0.5 + 0.6], 1e-4);
+  close(rig.headAttachments.HairAttachment, [0, 0.5 + 0.7, 0]);
+  // a hair added now welds to the new head's HairAttachment
+  const tri = { vertexCount: 3, faceCount: 1, positions: new Float32Array(9), normals: new Float32Array(9), uvs: new Float32Array(6), indices: new Uint32Array([0, 1, 2]), lods: [0, 1] };
+  const hair = rig.addAccessory(tri, { attachment: { name: "HairAttachment", cframe: { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, 0, 0] } } });
+  close(hair.position.toArray(), [0, 1.2, 0]);
+});

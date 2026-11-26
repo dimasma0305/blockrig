@@ -134,6 +134,28 @@ export function assetId(content) {
 }
 
 /**
+ * Describe a Roblox head asset (the model a "Head" catalog item downloads as): its SpecialMesh (MeshId,
+ * TextureId, Scale, Offset, MeshType) and the attachment positions it carries as Vector3Values, relative
+ * to the Head part's centre (HairAttachment, HatAttachment, FaceFrontAttachment, FaceCenterAttachment,
+ * NeckRigAttachment). Classic heads without the values return an empty attachments object.
+ */
+export function describeHead(roots) {
+  const mesh = findInstance(roots, (x) => x.className === "SpecialMesh" || x.className === "MeshPart");
+  if (!mesh) throw new Error("blockrig: no SpecialMesh or MeshPart in this head model");
+  const attachments = {};
+  const scan = (list) => { for (const x of list) { if (x.className === "Vector3Value" && /Attachment$/.test(x.props.Name) && x.props.Value) attachments[x.props.Name] = x.props.Value.slice(); if (x.className === "Attachment" && x.props.CFrame) attachments[x.props.Name] = x.props.CFrame.pos.slice(); scan(x.children); } };
+  scan(roots);
+  return {
+    meshId: assetId(mesh.props.MeshId),
+    textureId: assetId(mesh.props.TextureId ?? mesh.props.TextureID),
+    meshType: mesh.props.MeshType ?? null,
+    scale: mesh.props.Scale ? mesh.props.Scale.slice() : [1, 1, 1],
+    offset: mesh.props.Offset ? mesh.props.Offset.slice() : [0, 0, 0],
+    attachments,
+  };
+}
+
+/**
  * Pull the parts of an Accessory that a renderer needs: mesh/texture ids, the handle attachment
  * and, for layered clothing, the WrapLayer settings.
  */

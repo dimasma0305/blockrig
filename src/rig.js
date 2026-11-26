@@ -190,6 +190,9 @@ export function createRig(o = {}) {
   bones[spec.neck.parent].add(neck);
   const neckBindQ = neck.quaternion.clone(), neckBindP = neck.position.clone();
   const head = new THREE.Group(); head.name = "Head"; neck.add(head);
+  // the head's attachment points in head space (origin at the neck joint); setHead() replaces them with the
+  // head asset's own, the way Roblox heads carry their HairAttachment / HatAttachment / FaceFrontAttachment
+  const headAtt = Object.fromEntries(Object.entries(HEAD_ATTACHMENTS).map(([k, v]) => [k, v.slice()]));
   head.scale.setScalar(spec.headScale);
 
   // ---- blocky body ----
@@ -293,7 +296,7 @@ export function createRig(o = {}) {
      */
     addAccessory(mesh, { attachment, map = null, color = 0xffffff } = {}) {
       if (!attachment) throw new Error("blockrig: addAccessory needs the handle attachment");
-      const body = HEAD_ATTACHMENTS[attachment.name];
+      const body = headAtt[attachment.name];
       if (!body) throw new Error(`blockrig: unsupported attachment ${attachment.name}`);
       const m = new THREE.Mesh(geometryFromMesh(mesh), material({ map, color, side: THREE.DoubleSide, roughness: 1 }));
       m.name = attachment.name;
@@ -340,6 +343,36 @@ export function createRig(o = {}) {
       head.add(d); faceState.face = face; faceState.rewrap = null;
       return d;
     },
+
+    /** The head's attachment points (head space: origin at the neck joint, Y up, face towards -Z). */
+    get headAttachments() { return headAtt; },
+    /**
+     * Swap the head for a Roblox head asset: a SpecialMesh (FileMesh) with Scale/Offset, plus the head's own
+     * attachments (Vector3Values relative to the Head part's centre), as returned by describeHead().
+     * The mesh is placed so its NeckRigAttachment sits on the neck joint (classic heads without one are
+     * centred 0.6 studs above it), and accessories added afterwards weld to the head's own attachments.
+     * @param {object} mesh parsed mesh
+     * @param {{ scale?: number[], offset?: number[], attachments?: Record<string, number[]>, map?: THREE.Texture, color?: THREE.ColorRepresentation }} [o]
+     */
+    setHead(mesh, { scale = [1, 1, 1], offset = [0, 0, 0], attachments = {}, map = null, color } = {}) {
+      const neckAtt = attachments.NeckRigAttachment;
+      const centre = neckAtt ? [-neckAtt[0], -neckAtt[1], -neckAtt[2]] : [0, HEAD_H / 2, 0];
+      const g = geometryFromMesh(mesh);
+      g.scale(scale[0], scale[1], scale[2]);
+      g.translate(centre[0] + offset[0], centre[1] + offset[1], centre[2] + offset[2]);
+      const old = parts.Head;
+      const mat = material({ map, color: color ?? (map ? 0xffffff : (colors ? colors.skin : 0xf6dcc0)) });
+      if (!map && old && old.material && old.material.map && faceState.tex === old.material.map) mat.map = old.material.map; // keep a wrapped live face
+      const m = new THREE.Mesh(g, mat); m.name = "Head";
+      head.add(m);
+      if (outline) { const ol = new THREE.Mesh(g, olBox); m.userData.outline = ol; head.add(ol); }
+      if (old) { old.visible = false; if (old.userData.outline) old.userData.outline.visible = false; }
+      parts.Head = m;
+      for (const [k, v] of Object.entries(attachments)) if (k !== "NeckRigAttachment") headAtt[k] = [centre[0] + v[0], centre[1] + v[1], centre[2] + v[2]];
+      return m;
+    },
+    /** Bounding box of the current head mesh in head space (useful to size a face decal). */
+    headBounds() { const b = new THREE.Box3(); if (parts.Head) { parts.Head.geometry.computeBoundingBox(); b.copy(parts.Head.geometry.boundingBox).applyMatrix4(parts.Head.matrix); } return b; },
 
     /** Replace the face decal. */
     setFace(image) { if (!headMaterial) return; const t = faceTexture(image, headMaterial.color.getStyle()); if (t) { headMaterial.map = t; headMaterial.color.set(0xffffff); headMaterial.needsUpdate = true; } },

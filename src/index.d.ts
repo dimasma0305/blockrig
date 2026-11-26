@@ -20,6 +20,7 @@ export function parseRbxm(input: ArrayBuffer | ArrayBufferView | string, options
 export function parseRbxmx(text: string): RbxInstance[];
 export function findInstance(roots: RbxInstance[], pred: (x: RbxInstance) => boolean): RbxInstance | null;
 export function assetId(content: unknown): number | null;
+export function describeHead(roots: RbxInstance[]): { meshId: number | null; textureId: number | null; meshType: number | null; scale: number[]; offset: number[]; attachments: Record<string, number[]> };
 export function describeAccessory(roots: RbxInstance[]): {
   name: string; meshId: number | null; textureId: number | null;
   attachment: { name: string; cframe: CFrame } | null;
@@ -59,6 +60,9 @@ export interface Rig {
   addLayeredClothing(mesh: ParsedMesh, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; lod?: number; side?: THREE.Side }): THREE.SkinnedMesh;
   addAccessory(mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o: { attachment: { name: string; cframe: CFrame }; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
   setFace(image: CanvasImageSource): void;
+  readonly headAttachments: Record<string, number[]>;
+  setHead(mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o?: { scale?: number[]; offset?: number[]; attachments?: Record<string, number[]>; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
+  headBounds(): THREE.Box3;
   readonly face: Face | null;
   setExpression(nameOrParams: ExpressionName | string | Partial<FaceParams>, o?: { fade?: number }): Rig;
   updateFace(dt: number): void;

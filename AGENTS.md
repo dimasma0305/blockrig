@@ -25,6 +25,7 @@ Keep this table current. **Parity** means it behaves like Roblox. **Approximatio
 | `Motor6D`: `Part1 = Part0 · C0 · Transform · C1⁻¹`; animation writes `Transform` | `motor6D()`; joints pose by a `Transform` delta on top of the bind pose | Parity (see note 1) |
 | `Humanoid:BuildRigFromAttachments()`: joints from `*RigAttachment` pairs | bind skeleton from joint positions (`R15_BIND`, `buildBody`) | Approximation (note 2) |
 | `Humanoid:AddAccessory()`: weld so `Handle = Part · BodyAtt · HandleAtt⁻¹` | `rig.addAccessory()` / `accessoryWeld()` | Parity (head attachments only) |
+| Head assets: `SpecialMesh` (FileMesh, `MeshId`, `Scale`, `Offset`) plus the head's own attachment Vector3Values; the head is placed by its `NeckRigAttachment` | `describeHead()` + `rig.setHead()`; later accessories weld to the new head's attachments | Parity (classic heads without the values fall back to a 0.6-stud centre) |
 | Layered clothing: `WrapLayer` / `WrapTarget` cages, then skinning | `rig.addLayeredClothing()`: skinning with the garment's own bone weights | Approximation (note 3) |
 | `.mesh` v1–v7 (v1 text with v1.00 half scale; LODs, bones, subsets, skinning, FACS) | `parseMesh()` / `writeMesh()` | Parity (v7 Draco via hook) |
 | Binary `.rbxm` (chunks, LZ4/ZSTD, interleaved encodings) and XML `.rbxmx` | `parseRbxm()` (auto-detects XML), `parseRbxmx()`, `describeAccessory()` | Parity for the supported property types |

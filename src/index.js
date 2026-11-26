@@ -1,6 +1,6 @@
 export { parseMesh, lodIndices } from "./mesh.js";
 export { writeMesh } from "./writer.js";
-export { parseRbxm, findInstance, describeAccessory, assetId } from "./rbxm.js";
+export { parseRbxm, findInstance, describeAccessory, describeHead, assetId } from "./rbxm.js";
 export { parseRbxmx } from "./rbxmx.js";
 export { cframeToMatrix, matrixToCFrame, motor6D, accessoryWeld } from "./cframe.js";
 export { R15_BIND, R15_JOINTS, R15_FLOOR, R15_NECK_Y, HEAD_ATTACHMENTS } from "./skeleton.js";
