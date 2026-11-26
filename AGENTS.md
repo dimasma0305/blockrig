@@ -6,6 +6,24 @@ BlockRig reproduces how **Roblox** builds, dresses and animates characters, in t
 
 A change that "looks right" but works differently from Roblox is a bug, even if it renders fine.
 
+## Scope: characters only
+
+BlockRig is a **character** library. Everything in it serves building, dressing, posing, animating and expressing a Roblox-style character. The world around the character is the app's job, built with plain three.js.
+
+**In scope**
+- Rigs and bodies: R15 and R6, body shapes and scaling, body-part meshes, Roblox head shapes.
+- Clothing and accessories: layered clothing, hair, hats and face accessories, attachment welds.
+- Animation: KeyframeSequence import, the Animator (easing, priorities, weights, fades, markers), retargeting.
+- Faces: face Decals, Dynamic Heads (FACS) when added, and the procedural expressions extra.
+- The file formats those need: `.mesh`, `.rbxm` / `.rbxmx`, reading only the instances that belong to a character or an accessory.
+
+**Out of scope (don't add these to the library)**
+- Environments: Parts and maps, Terrain, materials, `Lighting`, `Sky`, `Atmosphere`, water, place (`.rbxl`) loading.
+- Physics, collisions, Humanoid movement and controllers, cameras, networking, game logic, UI.
+- Props that aren't worn or held by a character. A held tool or weapon attached to a hand is in scope; a tree is not.
+
+Examples, demos and tests may build a simple scene around a character, but those helpers stay in `examples/`. If a request is about the world rather than the character, say that it's out of scope for BlockRig and suggest doing it in the app or a separate package.
+
 ## Before you change anything
 
 1. **Name the Roblox mechanism** the change relates to, for example `Motor6D.Transform`, `Humanoid:AddAccessory`, `Decal` on `Head`, `AnimationTrack:Play(fadeTime, weight, speed)`.

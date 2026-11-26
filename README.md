@@ -25,6 +25,10 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 | <img src="docs/wave.png" width="200" alt="wave clip"> | <img src="docs/run.png" width="200" alt="run clip"> | <img src="docs/card.png" width="200" alt="card throw clip"> | <img src="docs/victory.png" width="200" alt="victory jump clip"> |
 | `wave` | `run` | `card` | `victory` |
 
+## Scope
+
+BlockRig is a **character** library: rigs, bodies, heads, clothing, accessories, faces and animation for Roblox-style characters. It doesn't build worlds (Parts, Terrain, materials, Lighting, Sky) or handle physics, controllers or cameras. Put your character in any three.js scene you like. See [AGENTS.md](AGENTS.md#scope-characters-only).
+
 ## Why
 
 The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, no weights. Layered clothing like jackets and coats *does* ship with skin weights for all 15 R15 bones, but only inside the binary `.mesh` file, which no JavaScript library could read. BlockRig reads those weights and binds the garment to a three.js `SkinnedMesh`, so sleeves bend at the elbow and coat tails follow the legs, the way they do in-game.
