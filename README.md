@@ -48,6 +48,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 
 ## Features
 
+- 👕 **Roblox avatars**: `BodyColors`, classic **Shirt / Pants / T-shirt** templates composited the Roblox way, and **body packages** whose joints are built from their rig attachments (`BuildRigFromAttachments`), with accessories on body attachments too.
 - 🧍 **Every classic body**: **R6** (six parts, classic pivots) and **R15** in five shapes (`classic`, `slender`, `buff`, `tall`, `child`) or your own proportions, with Roblox-style `height / width / depth / head` scaling, swappable body-part meshes, and R15 ⇄ R6 clip retargeting.
 - 😃 **Live facial expressions**: 17 built-in expressions drawn from 21 blendable parameters (brows, eye shape, look direction, wink, `><` and `x` eyes, mouth curve/open/skew, teeth, tongue, blush, tears, sweat), with automatic blinking, talking, smooth fades and `face:` markers inside clips. Works on BlockRig heads or as a decal on any head.
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
@@ -57,7 +58,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **85 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **96 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -157,6 +158,44 @@ const r6Clips = retargetAll(clips, toR6);
 ```
 
 Layered clothing needs an R15 rig (garments are skinned to the 15 R15 bones). It follows every R15 shape, staying attached to its bones as they move apart.
+
+## Roblox avatars: body packages, BodyColors and clothing
+
+<img src="docs/clothing.png" alt="Four original characters: plain BodyColors, a shirt with pants and a T-shirt, an R6 rig in the same clothes, and a body package with longer limbs" width="100%">
+
+Dress a rig the way Roblox does. Any of these options switches the body to Roblox's avatar mode:
+
+```js
+import { createRig, parseRbxm, parseMesh, describeBodyParts, describeBodyColors, describeClothing } from "blockrig";
+
+const rig = createRig({
+  bodyColors: { HeadColor3: "#f5cd30", TorsoColor3: "#0d69ac", LeftLegColor3: "#a4bd47", RightLegColor3: "#a4bd47" },
+  clothing: { shirt: shirtImage, pants: pantsImage, tshirt: logoImage }, // loaded images or textures
+});
+rig.setClothing({ shirt: otherShirt, tshirt: null });   // swap or take off
+rig.setBodyColors({ TorsoColor3: "#ffffff" });
+```
+
+| Roblox | BlockRig |
+|---|---|
+| `BodyColors` (six `*Color3` regions) | `bodyColors`, `rig.setBodyColors()`, `describeBodyColors(roots)` |
+| `Shirt.ShirtTemplate`, `Pants.PantsTemplate`, `ShirtGraphic.Graphic` | `clothing: { shirt, pants, tshirt }`, `rig.setClothing()`, `describeClothing(roots)` |
+| Body package MeshParts (`R15ArtistIntent` / `R15Fixed`) | `describeBodyParts(roots)` + `createRig({ bodyParts })` |
+| `Humanoid:BuildRigFromAttachments()` | `buildBodyFromParts()`: every joint sits where the parent's and child's `<Joint>RigAttachment` meet |
+| Body attachments (`BodyBackAttachment`, `RightGripAttachment`, …) | `rig.addAccessory()` welds to them too; `rig.bodyAttachments` |
+
+Clothing is composited per body region like Roblox does it: the body colour first, then Pants, then Shirt (the shirt covers the pants on the torso), then the T-shirt on the torso front. The images use the classic **585×559** template (`TEMPLATE` gives every face's rectangle). On blocky R15 parts each limb's rectangle is split between its parts by height, so classic clothes line up across shoulder, elbow and wrist.
+
+A body package brings its own proportions. Pass each part's mesh, `Size` and attachments, and the joints move with them:
+
+```js
+const parts = describeBodyParts([...parseRbxm(leftArmFile), ...parseRbxm(torsoFile)]); // { LeftUpperArm: { meshId, size, attachments }, ... }
+const bodyParts = {};
+for (const [name, p] of Object.entries(parts)) bodyParts[name] = { ...p, mesh: parseMesh(await fetchMesh(p.meshId)) }; // fetchMesh: your own loader for the asset bytes
+const rig = createRig({ bodyParts, bodyColors, clothing });  // parts you leave out stay blocky
+```
+
+Meshes are fitted to their part's `Size`, as MeshParts are, and keep their own UVs, which Roblox lays out on the same clothing template. The example page [`examples/clothing.html`](examples/clothing.html) draws its shirt, pants and T-shirt in code, so it needs no downloads.
 
 ## Expressions
 
@@ -304,7 +343,7 @@ flowchart LR
 npm test             # 85 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
-npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html and faces.html)
+npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html, faces.html and clothing.html)
 ```
 
 - **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every expression (valid parameters, the right shapes for open mouths, `x` and `><` eyes), face blending, blinking, look/talk, face markers and decals, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion.

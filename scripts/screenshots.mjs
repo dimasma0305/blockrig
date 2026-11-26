@@ -1,6 +1,7 @@
 // Renders README screenshots into docs/ with a local Chromium-based browser (Edge or Chrome).
 //   npm run screenshots                 # uses Edge/Chrome found on this machine
 //   CHROME_PATH=/path/to/chrome npm run screenshots
+//   ONLY=clothing npm run screenshots   # just some of them
 import { chromium } from "playwright-core";
 import { mkdirSync, existsSync } from "node:fs";
 import { serve } from "./serve.mjs";
@@ -15,7 +16,10 @@ const SHOTS = [
   { file: "idle", clip: "idle", t: 1.0, yaw: 2.6 },
   { file: "bodies", page: "bodies.html", w: 1400, h: 440 },
   { file: "faces", page: "faces.html", w: 1200, h: 640 },
+  { file: "clothing", page: "clothing.html", w: 1400, h: 560 },
 ];
+// ONLY=bodies,clothing npm run screenshots  renders just those
+const only = (process.env.ONLY || "").split(",").filter(Boolean);
 
 const candidates = [process.env.CHROME_PATH,
   "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
@@ -28,7 +32,7 @@ mkdirSync("docs", { recursive: true });
 const server = await serve(8799);
 const browser = await chromium.launch({ executablePath, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 try {
-  for (const s of SHOTS) {
+  for (const s of SHOTS.filter((x) => !only.length || only.includes(x.file))) {
     const page = await browser.newPage({ viewport: { width: s.w || 520, height: s.h || 620 }, deviceScaleFactor: 2 });
     page.on("pageerror", (e) => console.error(`  ${s.file}: ${e.message}`));
     await page.goto(s.page ? `http://127.0.0.1:8799/examples/${s.page}?shot` : `http://127.0.0.1:8799/examples/index.html?shot&clip=${s.clip}&t=${s.t}&yaw=${s.yaw}`);

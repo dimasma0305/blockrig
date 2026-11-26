@@ -4,6 +4,7 @@ import { cframeToMatrix } from "./cframe.js";
 import { HEAD_ATTACHMENTS } from "./skeleton.js";
 import { buildBody } from "./body.js";
 import { lodIndices } from "./mesh.js";
+import { buildBodyFromParts, defaultBodyAttachments, templateUVs, regionSlices, paintRegion, colorHex, BODY_REGION, TEMPLATE_SIZE } from "./avatar.js";
 
 const REV = parseInt(THREE.REVISION, 10);
 const LEGACY_SKINNING_FLAG = REV < 129; // r128 and older need material.skinning = true
@@ -114,6 +115,24 @@ function partMesh(p, mats) {
   return mesh;
 }
 
+// a body MeshPart: the mesh is fitted to the part's Size by its bounding box and centred on the part, as
+// MeshParts render
+function fittedGeometry(mesh, size) {
+  const g = geometryFromMesh(mesh); g.computeBoundingBox();
+  const c = g.boundingBox.getCenter(new THREE.Vector3()), e = g.boundingBox.getSize(new THREE.Vector3());
+  g.translate(-c.x, -c.y, -c.z);
+  if (size) g.scale(e.x > 1e-6 ? size[0] / e.x : 1, e.y > 1e-6 ? size[1] / e.y : 1, e.z > 1e-6 ? size[2] / e.z : 1);
+  return { geometry: g, centre: c, extent: e };
+}
+const cssColor = (v) => (Array.isArray(v) ? colorHex(v) : "#" + new THREE.Color(v).getHexString());
+const imageOf = (v) => (v && v.isTexture ? v.image : v) || null;
+const ready = (img) => !!img && img.complete !== false && (img.width > 0 || img.naturalWidth > 0);
+function makeCanvas(w, h) {
+  if (typeof document !== "undefined" && document.createElement) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+  if (typeof OffscreenCanvas !== "undefined") return new OffscreenCanvas(w, h);
+  return null;
+}
+
 // classic part layout re-fitted to an arbitrary R15 bind pose
 function partsFromJoints(bind, spec) {
   const y = (n) => bind.find((b) => b.name === n).pos[1], x = (n) => bind.find((b) => b.name === n).pos[0], z0 = bind[0].pos[2];
@@ -140,10 +159,21 @@ function partsFromJoints(bind, spec) {
  * @param {{skin?:string, shirt?:string, pants?:string, shoes?:string}|false} [o.body] blocky body colours, or false for none
  * @param {HTMLImageElement|HTMLCanvasElement|null} [o.face] face decal wrapped onto the head
  * @param {number} [o.outline] cartoon outline width in studs (0 = none)
+ * @param {Record<string, {mesh?:object, size?:number[], attachments?:Record<string, number[]|{pos:number[]}>, map?:THREE.Texture|CanvasImageSource}>} [o.bodyParts]
+ *   an R15 body package: parts by name, as describeBodyParts() reads them, plus their parsed meshes. Joints are
+ *   built from the parts' rig attachments (Humanoid:BuildRigFromAttachments); parts left out stay blocky.
+ * @param {Record<string, any>} [o.bodyColors] Roblox BodyColors: HeadColor3, TorsoColor3, LeftArmColor3,
+ *   RightArmColor3, LeftLegColor3, RightLegColor3 (a three.js colour, "#rrggbb", or [r, g, b] 0..1)
+ * @param {{shirt?:any, pants?:any, tshirt?:any}} [o.clothing] classic clothing images or textures on the
+ *   585x559 template (Shirt.ShirtTemplate, Pants.PantsTemplate, ShirtGraphic.Graphic)
  */
 export function createRig(o = {}) {
   const opts = Object.assign({ body: {}, face: null, outline: 0 }, o);
-  const spec = buildBody({ rigType: opts.rigType, shape: opts.shape, scale: opts.scale });
+  const avatarMode = !!(opts.bodyParts || opts.bodyColors || opts.clothing);
+  if (opts.bodyParts && (opts.rigType || "R15").toUpperCase() !== "R15") throw new Error("blockrig: bodyParts needs an R15 rig");
+  const spec = opts.bodyParts
+    ? buildBodyFromParts(Object.fromEntries(Object.entries(opts.bodyParts).map(([k, v]) => [k, { size: v.size, attachments: v.attachments }])), { scale: opts.scale })
+    : buildBody({ rigType: opts.rigType, shape: opts.shape, scale: opts.scale });
   if (opts.skeleton) { // a custom bind pose keeps the classic parts layout, re-fitted to its joints
     if (spec.rigType !== "R15") throw new Error("blockrig: a custom skeleton needs rigType R15");
     spec.bind = opts.skeleton; spec.parts = partsFromJoints(opts.skeleton, spec);
@@ -199,6 +229,54 @@ export function createRig(o = {}) {
   const headAtt = Object.fromEntries(Object.entries(HEAD_ATTACHMENTS).map(([k, v]) => [k, v.slice()]));
   head.scale.setScalar(spec.headScale);
 
+  // ---- Roblox avatar body: BodyColors + classic clothing composited per region ----
+  // Each region (Torso, LeftArm, RightArm, LeftLeg, RightLeg) gets one canvas texture on the 585x559 template:
+  // body colour, then Pants, then Shirt, then the T-shirt (torso front). A part with its own TextureID gets a
+  // canvas of its own with that texture under the clothing.
+  const avatar = { colors: {}, clothing: {}, layers: {}, extra: [] };
+  const bodyAtt = Object.assign(defaultBodyAttachments(spec), spec.attachments || {});
+  function buildAvatarBody() {
+    for (const r of ["Head", "Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg"]) avatar.colors[r] = cssColor((opts.bodyColors || {})[r + "Color3"] ?? colors.skin);
+    colors.skin = avatar.colors.Head; // the head (and a face's background) wear HeadColor3
+    Object.assign(avatar.clothing, opts.clothing || {});
+    const slices = regionSlices(spec.parts);
+    for (const p of spec.parts) {
+      const region = BODY_REGION[p.bone], src = (opts.bodyParts || {})[p.bone];
+      let g;
+      if (src && src.mesh) g = fittedGeometry(src.mesh, p.size).geometry;
+      else {
+        g = new THREE.BoxGeometry(p.size[0], p.size[1], p.size[2]);
+        g.setAttribute("uv", new THREE.BufferAttribute(templateUVs(g.attributes.position.array, g.attributes.normal.array, p.size, region, slices[p.bone]), 2));
+        if (p.taper && p.taper !== 1) { const a = g.attributes.position; for (let i = 0; i < a.count; i++) if (a.getY(i) < 0) a.setX(i, a.getX(i) * p.taper); g.computeVertexNormals(); }
+      }
+      g.translate(p.center[0], p.center[1], p.center[2]);
+      const m = new THREE.Mesh(g, skinLayer(region, src && src.map ? src.map : null).mat); m.name = p.bone;
+      parts[p.bone] = hang(p.bone, m);
+    }
+    paintAvatar();
+  }
+  function skinLayer(region, partMap) {
+    if (!partMap && avatar.layers[region]) return avatar.layers[region];
+    const k = 2, canvas = makeCanvas(TEMPLATE_SIZE[0] * k, TEMPLATE_SIZE[1] * k), L = { region, partMap, ctx: null, tex: null, mat: null };
+    const ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
+    if (ctx) { L.ctx = ctx; L.tex = setSRGB(new THREE.CanvasTexture(canvas)); L.tex.flipY = false; L.mat = material({ map: L.tex }); }
+    else L.mat = material({ color: avatar.colors[region] }); // no 2D canvas (e.g. Node): body colours only
+    if (partMap) avatar.extra.push(L); else avatar.layers[region] = L;
+    return L;
+  }
+  function paintAvatar() {
+    const clothing = {};
+    for (const k of ["shirt", "pants", "tshirt"]) { const img = imageOf(avatar.clothing[k]); if (ready(img)) clothing[k] = img; }
+    for (const L of [...Object.values(avatar.layers), ...avatar.extra]) {
+      const colour = avatar.colors[L.region];
+      if (!L.ctx) { L.mat.color.set(colour); continue; }
+      const own = imageOf(L.partMap);
+      paintRegion(L.ctx, L.region, colour, clothing, ready(own) ? own : null);
+      L.tex.needsUpdate = true;
+    }
+    if (headMaterial && !headMaterial.map) headMaterial.color.set(avatar.colors.Head);
+  }
+
   // ---- blocky body ----
   const parts = {};
   let headMaterial = null, colors = null;
@@ -206,8 +284,11 @@ export function createRig(o = {}) {
   const mats = {};
   if (opts.body !== false) {
     colors = Object.assign({ skin: "#f6dcc0", shirt: "#1e1619", pants: "#241c1f", shoes: "#0b0708" }, opts.body);
-    for (const k of ["skin", "shirt", "pants", "shoes"]) mats[k] = material({ color: colors[k] });
-    for (const p of spec.parts) parts[p.bone] = hang(p.bone, partMesh(p, mats));
+    if (avatarMode) buildAvatarBody();
+    else {
+      for (const k of ["skin", "shirt", "pants", "shoes"]) mats[k] = material({ color: colors[k] });
+      for (const p of spec.parts) parts[p.bone] = hang(p.bone, partMesh(p, mats));
+    }
     const hg = headGeometry(); hg.translate(0, HEAD_H / 2, 0);
     headMaterial = material({ color: colors.skin });
     const live = opts.face && opts.face.isFace ? opts.face : null;
@@ -300,10 +381,16 @@ export function createRig(o = {}) {
      */
     addAccessory(mesh, { attachment, map = null, color = 0xffffff } = {}) {
       if (!attachment) throw new Error("blockrig: addAccessory needs the handle attachment");
-      const body = headAtt[attachment.name];
-      if (!body) throw new Error(`blockrig: unsupported attachment ${attachment.name}`);
+      const body = headAtt[attachment.name], onBody = !body && bodyAtt[attachment.name];
+      if (!body && !onBody) throw new Error(`blockrig: unsupported attachment ${attachment.name}`);
       const m = new THREE.Mesh(geometryFromMesh(mesh), material({ map, color, side: THREE.DoubleSide, roughness: 1 }));
       m.name = attachment.name;
+      if (onBody) { // weld to the body part that carries the attachment (bind-pose character space)
+        const [x, y, z] = onBody.pos, i = index.get(onBody.part);
+        m.applyMatrix4(new THREE.Matrix4().copy(bindWorld[i]).invert().multiply(new THREE.Matrix4().makeTranslation(x, y, z)).multiply(cframeToMatrix(attachment.cframe).invert()));
+        bones[onBody.part].add(m); rig.accessories.push(m);
+        return m;
+      }
       const weld = new THREE.Matrix4().makeTranslation(body[0], body[1], body[2]).multiply(cframeToMatrix(attachment.cframe).invert());
       m.applyMatrix4(weld);
       head.add(m); rig.accessories.push(m);
@@ -331,6 +418,28 @@ export function createRig(o = {}) {
       parts[partName] = m;
       return m;
     },
+
+    /** Body attachments accessories can weld to: `{ Name: { part, pos } }` (bind-pose character space). */
+    get bodyAttachments() { return bodyAtt; },
+    /**
+     * Put on classic clothing: `{ shirt, pants, tshirt }` images or textures on the 585x559 template (null takes
+     * one off). Images must be loaded; call again, or refreshAvatar(), once they are.
+     */
+    setClothing(c = {}) {
+      if (!avatarMode) throw new Error("blockrig: create the rig with bodyColors, clothing or bodyParts to use Roblox clothing");
+      for (const k of ["shirt", "pants", "tshirt"]) if (k in c) { if (c[k]) avatar.clothing[k] = c[k]; else delete avatar.clothing[k]; }
+      paintAvatar(); return rig;
+    },
+    /** Change BodyColors: `{ HeadColor3, TorsoColor3, LeftArmColor3, RightArmColor3, LeftLegColor3, RightLegColor3 }`. */
+    setBodyColors(bc = {}) {
+      if (!avatarMode) throw new Error("blockrig: create the rig with bodyColors, clothing or bodyParts to use BodyColors");
+      for (const [k, v] of Object.entries(bc)) { const r = k.replace(/Color3$/, ""); if (r in avatar.colors) avatar.colors[r] = cssColor(v); }
+      paintAvatar(); return rig;
+    },
+    /** Repaint the avatar textures (after clothing or body-part images finish loading). */
+    refreshAvatar() { if (avatarMode) paintAvatar(); return rig; },
+    /** BodyColors ("#rrggbb" by region) and clothing in use, or null for a BlockRig-coloured body. */
+    get avatar() { return avatarMode ? { bodyColors: { ...avatar.colors }, clothing: { ...avatar.clothing } } : null; },
 
     /** The live face (createFace controller) driving this rig's head, if any. */
     get face() { return faceState.face; },
@@ -381,5 +490,14 @@ export function createRig(o = {}) {
     /** Replace the face decal. */
     setFace(image) { if (!headMaterial) return; const t = faceTexture(image, headMaterial.color.getStyle()); if (t) { headMaterial.map = t; headMaterial.color.set(0xffffff); headMaterial.needsUpdate = true; } },
   };
+
+  // a body package's head: a MeshPart fitted to its Size and placed by its NeckRigAttachment
+  const headPart = opts.bodyParts && opts.bodyParts.Head;
+  if (headPart && headPart.mesh && opts.body !== false) {
+    const atts = Object.fromEntries(Object.entries(headPart.attachments || {}).map(([k, v]) => [k, Array.isArray(v) ? v : v.pos]));
+    const { centre, extent } = fittedGeometry(headPart.mesh, null), sz = headPart.size || [extent.x, extent.y, extent.z];
+    const sc = [extent.x > 1e-6 ? sz[0] / extent.x : 1, extent.y > 1e-6 ? sz[1] / extent.y : 1, extent.z > 1e-6 ? sz[2] / extent.z : 1];
+    rig.setHead(headPart.mesh, { scale: sc, offset: [-centre.x * sc[0], -centre.y * sc[1], -centre.z * sc[2]], attachments: atts, map: headPart.map && headPart.map.isTexture ? headPart.map : null });
+  }
   return rig;
 }

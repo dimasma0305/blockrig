@@ -97,6 +97,8 @@ function readValues(c, type, n, sstr) {
     case 0x02: { const a = []; for (let i = 0; i < n; i++) a.push(c.u8() !== 0); return a; } // Bool
     case 0x03: return readI32s(c, n); // Int32
     case 0x04: return readF32s(c, n); // Float32
+    case 0x0b: { const d = interleaved(c, n, 4), a = []; for (let i = 0; i < n; i++) a.push(d.getUint32(i * 4, false)); return a; } // BrickColor (palette number)
+    case 0x0c: { const r = readF32s(c, n), g = readF32s(c, n), b = readF32s(c, n); return r.map((_, i) => [r[i], g[i], b[i]]); } // Color3
     case 0x0e: { const x = readF32s(c, n), y = readF32s(c, n), z = readF32s(c, n); return x.map((_, i) => [x[i], y[i], z[i]]); } // Vector3
     case 0x10: case 0x11: { // CFrame / Quaternion-CFrame
       const rots = [];

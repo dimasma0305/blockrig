@@ -67,6 +67,11 @@ export interface Rig {
   setExpression(nameOrParams: ExpressionName | string | Partial<FaceParams>, o?: { fade?: number }): Rig;
   updateFace(dt: number): void;
   addFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
+  readonly bodyAttachments: Record<string, BodyAttachment>;
+  setClothing(c: Clothing): Rig;
+  setBodyColors(c: BodyColors): Rig;
+  refreshAvatar(): Rig;
+  readonly avatar: { bodyColors: Record<BodyRegion, string>; clothing: Clothing } | null;
   setBodyPart(partName: string, mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; scale?: number[] }): THREE.Mesh;
 }
 export type RigType = "R15" | "R6";
@@ -78,12 +83,43 @@ export interface Body { rigType: RigType; bind: BindBone[]; parts: BodyPart[]; f
 export const R15_SHAPES: Record<ShapeName, ShapeSpec>;
 export function buildBody(o?: { rigType?: RigType; shape?: ShapeName | Partial<ShapeSpec>; scale?: BodyScale }): Body;
 export function jointsOf(body: Body): string[];
+
+export const R15_JOINT_OF: Record<string, string>;
+export const BODY_REGION: Record<string, BodyRegion>;
+export const BODY_COLOR_KEYS: string[];
+export function defaultR15Parts(): Record<string, { size: number[]; attachments: Record<string, number[]>; kind?: string; taper?: number }>;
+export function buildBodyFromParts(parts?: Record<string, { size?: number[]; attachments?: Record<string, AttachmentPos> }>, o?: { scale?: BodyScale }): Body & { attachments: Record<string, BodyAttachment> };
+export function defaultBodyAttachments(body: Body): Record<string, BodyAttachment>;
+export function describeBodyParts(roots: RbxInstance[], o?: { folder?: string }): Record<string, { meshId: number | null; textureId: number | null; size: number[] | null; attachments: Record<string, number[]> }>;
+export function describeBodyColors(roots: RbxInstance[]): Partial<Record<"HeadColor3" | "TorsoColor3" | "LeftArmColor3" | "RightArmColor3" | "LeftLegColor3" | "RightLegColor3", string>>;
+export function describeClothing(roots: RbxInstance[]): { shirt: number | null; pants: number | null; tshirt: number | null };
+export const TEMPLATE_SIZE: [number, number];
+export const TEMPLATE: Record<"Torso" | "RightLimb" | "LeftLimb", Record<"F" | "B" | "L" | "R" | "U" | "D", [number, number, number, number]>>;
+export const T_SHIRT_RECT: [number, number, number, number];
+export function templateUVs(positions: ArrayLike<number>, normals: ArrayLike<number>, size: number[], region: Exclude<BodyRegion, "Head">, slice?: [number, number]): Float32Array;
+export function regionSlices(parts: BodyPart[]): Record<string, [number, number]>;
+export function clothingLayers(region: BodyRegion): ("pants" | "shirt" | "tshirt")[];
+export function paintRegion(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, region: BodyRegion, color: string, clothing?: { shirt?: CanvasImageSource; pants?: CanvasImageSource; tshirt?: CanvasImageSource }, partImage?: CanvasImageSource | null): void;
 export function toR6(clip: Clip): Clip;
 export function toR15(clip: Clip): Clip;
 export function retargetAll<T extends Record<string, Clip>>(clips: T, fn: (c: Clip) => Clip): Record<keyof T, Clip>;
 
+export type BodyColors = Partial<Record<"HeadColor3" | "TorsoColor3" | "LeftArmColor3" | "RightArmColor3" | "LeftLegColor3" | "RightLegColor3", THREE.ColorRepresentation | [number, number, number]>>;
+export type ClothingImage = CanvasImageSource | THREE.Texture;
+export interface Clothing { shirt?: ClothingImage | null; pants?: ClothingImage | null; tshirt?: ClothingImage | null }
+export type AttachmentPos = [number, number, number] | number[] | CFrame;
+export interface BodyPartSpec {
+  mesh?: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">;
+  size?: number[]; attachments?: Record<string, AttachmentPos>; map?: ClothingImage | null;
+}
+export type BodyRegion = "Head" | "Torso" | "LeftArm" | "RightArm" | "LeftLeg" | "RightLeg";
+export interface BodyAttachment { part: string; pos: number[] }
+
 export function createRig(o?: {
   rigType?: RigType;
+  bodyParts?: Record<string, BodyPartSpec>;
+  bodyColors?: BodyColors;
+  clothing?: Clothing;
   shape?: ShapeName | Partial<ShapeSpec>;
   scale?: BodyScale;
   skeleton?: BindBone[];

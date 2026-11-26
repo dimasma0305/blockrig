@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlockRig Avatar Bodies and Clothing</title>
+<style>
+  :root{--ink:#141012;--paper:#f6efe9;--muted:#a3948e;color-scheme:dark}
+  html,body{margin:0;height:100%;background:var(--ink);color:var(--paper);font:600 14px/1.3 system-ui,-apple-system,Segoe UI,sans-serif}
+  #wrap{position:relative;width:100%;height:100%}
+  canvas{display:block;width:100%;height:100%}
+  #labels{position:absolute;left:0;right:0;bottom:14px;display:grid;grid-template-columns:repeat(4,1fr);text-align:center;pointer-events:none}
+  #labels b{display:block;font-size:15px}
+  #labels span{color:var(--muted);font:500 12px ui-monospace,Consolas,monospace}
+  #tpl{position:absolute;right:10px;top:10px;width:234px;border:1px solid #3a2f33;background:#fff}
+</style>
+<script type="importmap">
+  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js", "blockrig": "../src/index.js" } }
+</script>
+</head>
+<body>
+<div id="wrap"><div id="labels"></div></div>
+<script type="module">
+// Roblox-style avatar bodies: BodyColors, classic Shirt/Pants/T-shirt templates (585x559) and a body package
+// whose joints come from its parts' rig attachments. The clothing here is drawn in code (original art).
+import * as THREE from "three";
+import { createRig, Animator, clips, toR6, defaultR15Parts, templateUVs, TEMPLATE, TEMPLATE_SIZE, BODY_REGION, regionSlices, buildBodyFromParts } from "blockrig";
+
+const SHOT = new URLSearchParams(location.search).has("shot");
+const wrap = document.getElementById("wrap");
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: SHOT });
+renderer.setPixelRatio(SHOT ? 1 : Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.2;
+wrap.prepend(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color("#141012");
+const cam = new THREE.PerspectiveCamera(22, 1, 0.1, 200);
+cam.position.set(0, 3.6, 44); cam.lookAt(0, 2.6, 0);
+scene.add(new THREE.HemisphereLight(0xfff2ea, 0x3a2a30, 3));
+const key = new THREE.DirectionalLight(0xffffff, 3); key.position.set(6, 10, 12); scene.add(key);
+
+// ---- original clothing templates, drawn on the 585x559 layout ----
+const [TW, TH] = TEMPLATE_SIZE;
+function template(paint) { const c = document.createElement("canvas"); c.width = TW; c.height = TH; paint(c.getContext("2d")); return c; }
+const fillFaces = (g, rects, colour, from = 0, to = 1) => { g.fillStyle = colour; for (const [x, y, w, h] of Object.values(rects)) g.fillRect(x, y + h * from, w, h * (to - from)); };
+const sides = (rects) => Object.fromEntries(Object.entries(rects).filter(([k]) => k !== "U" && k !== "D"));
+const shirt = template((g) => {
+  fillFaces(g, TEMPLATE.Torso, "#e63946"); fillFaces(g, TEMPLATE.RightLimb, "#e63946"); fillFaces(g, TEMPLATE.LeftLimb, "#e63946");
+  for (const L of [TEMPLATE.RightLimb, TEMPLATE.LeftLimb]) { fillFaces(g, sides(L), "#f1faee", 0.18, 0.26); fillFaces(g, sides(L), "#f1faee", 0.86, 1); }
+  const [fx, fy, fw, fh] = TEMPLATE.Torso.F;
+  g.fillStyle = "#f1faee"; g.beginPath(); g.moveTo(fx + fw / 2 - 22, fy); g.lineTo(fx + fw / 2, fy + 26); g.lineTo(fx + fw / 2 + 22, fy); g.fill(); // collar
+  g.fillStyle = "#c1121f"; g.fillRect(fx, fy + fh - 12, fw, 12); // hem
+  const [bx, by, bw] = TEMPLATE.Torso.B; g.fillStyle = "#f1faee"; g.font = "bold 54px sans-serif"; g.textAlign = "center"; g.fillText("07", bx + bw / 2, by + 84);
+});
+const pants = template((g) => {
+  fillFaces(g, TEMPLATE.Torso, "#264b7a", 0.78, 1); fillFaces(g, { D: TEMPLATE.Torso.D }, "#264b7a");
+  g.fillStyle = "#3d2b1f"; for (const r of Object.values(sides(TEMPLATE.Torso))) g.fillRect(r[0], r[1] + r[3] * 0.78, r[2], 7); // belt
+  for (const L of [TEMPLATE.RightLimb, TEMPLATE.LeftLimb]) { fillFaces(g, sides(L), "#2f5d95"); fillFaces(g, { U: L.U }, "#2f5d95"); fillFaces(g, sides(L), "#f1faee", 0.84, 1); fillFaces(g, { D: L.D }, "#1b1b1b"); }
+});
+const tshirt = document.createElement("canvas"); tshirt.width = tshirt.height = 128; // T-shirt images are square
+{ const g = tshirt.getContext("2d"); g.fillStyle = "#ffd166"; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? 16 : 36; g.lineTo(64 + Math.cos(a) * r, 74 + Math.sin(a) * r); } g.fill(); }
+
+// ---- an original "body package": rounded blocks with longer limbs and a narrow waist ----
+function roundedPart(size, region, slice) {
+  const g = new THREE.BoxGeometry(size[0], size[1], size[2], 3, 4, 3), p = g.attributes.position, v = new THREE.Vector3();
+  const uv = templateUVs(p.array, g.attributes.normal.array, size, region, slice);
+  const r = Math.min(size[0], size[2]) * 0.22, half = size.map((s) => s / 2 - r);
+  for (let i = 0; i < p.count; i++) { // round the vertical edges
+    v.fromBufferAttribute(p, i); const cx = Math.max(-half[0], Math.min(half[0], v.x)), cz = Math.max(-half[2], Math.min(half[2], v.z));
+    const dx = v.x - cx, dz = v.z - cz, d = Math.hypot(dx, dz); if (d > 1e-6) { p.setX(i, cx + (dx / d) * Math.min(d, r)); p.setZ(i, cz + (dz / d) * Math.min(d, r)); }
+  }
+  g.computeVertexNormals();
+  const idx = g.index.array;
+  return { positions: g.attributes.position.array, normals: g.attributes.normal.array, uvs: uv, indices: Uint32Array.from(idx), faceCount: idx.length / 3, lods: [0, idx.length / 3], vertexCount: p.count };
+}
+function bodyPackage() {
+  const parts = defaultR15Parts(), out = {};
+  const stretch = { LeftUpperArm: 1.25, RightUpperArm: 1.25, LeftLowerArm: 1.2, RightLowerArm: 1.2, LeftUpperLeg: 1.3, RightUpperLeg: 1.3, LeftLowerLeg: 1.25, RightLowerLeg: 1.25 };
+  for (const [name, p] of Object.entries(parts)) {
+    if (name === "HumanoidRootPart") continue;
+    const k = stretch[name] || 1, slim = /Arm|Hand/.test(name) ? 0.8 : /Leg|Foot/.test(name) ? 0.85 : name.includes("Torso") ? 0.85 : 1;
+    const size = [p.size[0] * slim, p.size[1] * k, p.size[2] * (name.includes("Torso") ? 0.85 : slim)];
+    // attachments scale with the part (a taller part puts its joints further apart)
+    const attachments = Object.fromEntries(Object.entries(p.attachments).map(([a, pos]) => [a, [pos[0] * slim, pos[1] * k, pos[2]]]));
+    out[name] = { size, attachments };
+  }
+  const body = buildBodyFromParts(out), slices = regionSlices(body.parts);
+  for (const p of body.parts) out[p.bone].mesh = roundedPart(out[p.bone].size, BODY_REGION[p.bone], slices[p.bone]);
+  return out;
+}
+
+const CAST = [
+  { label: "BodyColors", note: "bodyColors only", opts: { bodyColors: { HeadColor3: "#f5cd30", TorsoColor3: "#0d69ac", LeftArmColor3: "#f5cd30", RightArmColor3: "#f5cd30", LeftLegColor3: "#a4bd47", RightLegColor3: "#a4bd47" } }, clip: clips.wave, t: 0.3 },
+  { label: "Shirt + Pants + T-shirt", note: "clothing: { shirt, pants, tshirt }", opts: { bodyColors: { HeadColor3: "#eec39a", TorsoColor3: "#eec39a", LeftArmColor3: "#eec39a", RightArmColor3: "#eec39a", LeftLegColor3: "#eec39a", RightLegColor3: "#eec39a" }, clothing: { shirt, pants, tshirt } }, clip: clips.idle, t: 1.0, backpack: true },
+  { label: "R6, same clothes", note: 'rigType: "R6"', opts: { rigType: "R6", bodyColors: { HeadColor3: "#8d5a3b", TorsoColor3: "#8d5a3b", LeftArmColor3: "#8d5a3b", RightArmColor3: "#8d5a3b", LeftLegColor3: "#8d5a3b", RightLegColor3: "#8d5a3b" }, clothing: { shirt, pants } }, clip: toR6(clips.wave), t: 0.6 },
+  { label: "Body package", note: "bodyParts (joints from attachments)", opts: { bodyParts: bodyPackage(), bodyColors: { HeadColor3: "#fbe6cf", TorsoColor3: "#fbe6cf", LeftArmColor3: "#fbe6cf", RightArmColor3: "#fbe6cf", LeftLegColor3: "#fbe6cf", RightLegColor3: "#fbe6cf" }, clothing: { shirt, pants } }, clip: clips.showtime, t: 0.6 },
+];
+
+function smile() { const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d"); g.fillStyle = "#111"; g.strokeStyle = "#111"; g.lineWidth = 10; g.lineCap = "round"; for (const s of [-1, 1]) { g.beginPath(); g.ellipse(128 + s * 40, 106, 11, 17, 0, 0, Math.PI * 2); g.fill(); } g.beginPath(); g.arc(128, 128, 54, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke(); return c; }
+
+const labels = document.getElementById("labels"), anims = [];
+CAST.forEach((c, i) => {
+  const rig = createRig({ ...c.opts, face: smile(), outline: 0.035 });
+  rig.object.position.x = (i - (CAST.length - 1) / 2) * 4.4;
+  rig.object.rotation.y = +(new URLSearchParams(location.search).get("yaw") || 0) * Math.PI / 180;
+  scene.add(rig.object);
+  if (c.backpack) { // a rigid accessory welded to BodyBackAttachment (Handle = Body * BodyAtt * HandleAtt^-1)
+    const b = new THREE.BoxGeometry(1.4, 1.5, 0.7), idx = b.index.array;
+    rig.addAccessory({ positions: b.attributes.position.array, normals: b.attributes.normal.array, uvs: b.attributes.uv.array, indices: Uint32Array.from(idx), faceCount: idx.length / 3, lods: [0, idx.length / 3] },
+      { attachment: { name: "BodyBackAttachment", cframe: { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, 0, -0.35] } }, color: 0xf4a261 });
+  }
+  const an = new Animator(rig); an.play(c.clip, { fade: 0 }); an.update(c.t);
+  anims.push(an);
+  labels.insertAdjacentHTML("beforeend", `<div><b>${c.label}</b><span>${c.note}</span></div>`);
+});
+if (!SHOT) { const img = document.createElement("img"); img.id = "tpl"; img.src = shirt.toDataURL(); img.title = "the shirt template (585x559)"; wrap.append(img); }
+
+// fit the row of four (4.4 studs apart) to the page width, so each character stands over its label column
+function size() {
+  const w = wrap.clientWidth, h = wrap.clientHeight; renderer.setSize(w, h, false); cam.aspect = w / h;
+  const t = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)), z = Math.max(4 * 4.4 / (2 * t * cam.aspect), 8 / (2 * t));
+  cam.position.set(0, 3.2, z); cam.lookAt(0, 2.6, 0); cam.updateProjectionMatrix();
+}
+addEventListener("resize", size); size();
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => { const dt = SHOT ? 0 : Math.min(clock.getDelta(), 0.05); for (const a of anims) a.update(dt); renderer.render(scene, cam); window.__ready = true; });
+</script>
+</body>
+</html>
