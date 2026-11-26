@@ -24,7 +24,9 @@ export function describeHead(roots: RbxInstance[]): { meshId: number | null; tex
 export function describeAccessory(roots: RbxInstance[]): {
   name: string; meshId: number | null; textureId: number | null;
   attachment: { name: string; cframe: CFrame } | null;
-  layered: { order: number; cageMeshId: number | null; referenceMeshId: number | null } | null;
+  layered: { order: number; cageMeshId: number | null; referenceMeshId: number | null; cageOrigin: number[]; referenceOrigin: number[] } | null;
+  /** SurfaceAppearance.ColorMap, where modern layered clothing keeps its colour texture. */
+  colorMapId: number | null;
 };
 
 export function cframeToMatrix(cf: CFrame | number[], target?: THREE.Matrix4): THREE.Matrix4;
@@ -57,7 +59,13 @@ export interface Rig {
   resetPose(): void;
   setPose(pose: Pose): void;
   jointPosition(name: string, target?: THREE.Vector3): THREE.Vector3;
-  addLayeredClothing(mesh: ParsedMesh, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; lod?: number; side?: THREE.Side }): THREE.SkinnedMesh;
+  /**
+   * Dress the rig in a skinned layered-clothing mesh. With `wrap` (the WrapLayer's cages) and a body that has
+   * WrapTarget cages (bodyParts[*].cage), the garment is fitted to the body first, and layers stack by Order.
+   */
+  addLayeredClothing(mesh: ParsedMesh, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; lod?: number; side?: THREE.Side; wrap?: WrapLayerSpec | null }): THREE.SkinnedMesh;
+  /** The body's WrapTarget cages in character space (template UV key -> position). */
+  readonly bodyCage: Map<string, number[]>;
   addAccessory(mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o: { attachment: { name: string; cframe: CFrame }; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
   setFace(image: CanvasImageSource): void;
   readonly headAttachments: Record<string, number[]>;
@@ -96,7 +104,7 @@ export const BODY_COLOR_KEYS: string[];
 export function defaultR15Parts(): Record<string, { size: number[]; attachments: Record<string, number[]>; kind?: string; taper?: number }>;
 export function buildBodyFromParts(parts?: Record<string, { size?: number[]; attachments?: Record<string, AttachmentPos> }>, o?: { scale?: BodyScale }): Body & { attachments: Record<string, BodyAttachment> };
 export function defaultBodyAttachments(body: Body): Record<string, BodyAttachment>;
-export function describeBodyParts(roots: RbxInstance[], o?: { folder?: string }): Record<string, { meshId: number | null; textureId: number | null; size: number[] | null; attachments: Record<string, number[]> }>;
+export function describeBodyParts(roots: RbxInstance[], o?: { folder?: string }): Record<string, { meshId: number | null; textureId: number | null; size: number[] | null; attachments: Record<string, number[]>; cage: { meshId: number | null; origin: number[] } | null }>;
 export function describeBodyColors(roots: RbxInstance[]): Partial<Record<"HeadColor3" | "TorsoColor3" | "LeftArmColor3" | "RightArmColor3" | "LeftLegColor3" | "RightLegColor3", string>>;
 export function describeClothing(roots: RbxInstance[]): { shirt: number | null; pants: number | null; tshirt: number | null };
 export const TEMPLATE_SIZE: [number, number];
@@ -114,8 +122,12 @@ export type BodyColors = Partial<Record<"HeadColor3" | "TorsoColor3" | "LeftArmC
 export type ClothingImage = CanvasImageSource | THREE.Texture;
 export interface Clothing { shirt?: ClothingImage | null; pants?: ClothingImage | null; tshirt?: ClothingImage | null }
 export type AttachmentPos = [number, number, number] | number[] | CFrame;
+export interface CageMesh { positions: ArrayLike<number>; uvs: ArrayLike<number> }
+export interface WrapLayerSpec { inner: CageMesh; innerOrigin?: number[]; outer?: CageMesh; outerOrigin?: number[]; order?: number }
 export interface BodyPartSpec {
   mesh?: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">;
+  /** The part's WrapTarget cage (CageMeshId) and CageOrigin, for fitting layered clothing. */
+  cage?: { mesh: CageMesh; origin?: number[] } | null;
   size?: number[]; attachments?: Record<string, AttachmentPos>; map?: ClothingImage | null;
   /** "template" (default): classic clothing is projected onto the mesh; "mesh": keep the mesh's own UVs */
   uvs?: "template" | "mesh";
@@ -243,4 +255,7 @@ export interface Facs {
 export function parseFacs(bytes: Uint8Array): Facs;
 export function facsWeights(facs: Facs, values: Partial<Record<string, number>>): Float32Array;
 export function facsBoneOffsets(facs: Facs, values: Partial<Record<string, number>>, out?: Float32Array): Float32Array;
+export function cageKey(u: number, v: number): string;
+export function cageMap(cage: CageMesh, o?: { origin?: number[]; at?: number[]; scale?: number[]; into?: Map<string, number[]> }): Map<string, number[]>;
+export function fitLayer(positions: ArrayLike<number>, layer: WrapLayerSpec, target: Map<string, number[]>, o?: { k?: number; normals?: ArrayLike<number> | null; inflate?: number }): { positions: Float32Array; target: Map<string, number[]>; matched: number };
 export const VERSION: string;

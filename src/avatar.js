@@ -120,7 +120,9 @@ export function describeBodyParts(roots, { folder } = {}) {
     const attachments = {};
     for (const a of mp.children) if (a.className === "Attachment" && a.props.CFrame) attachments[a.props.Name] = a.props.CFrame.pos.slice();
     const size = mp.props.size || mp.props.Size || (orig && orig.props.Value) || null;
-    out[name] = { meshId: assetId(mp.props.MeshId ?? mp.props.MeshID), textureId: assetId(mp.props.TextureID ?? mp.props.TextureId), size: size ? size.slice() : null, attachments };
+    const wt = mp.children.find((x) => x.className === "WrapTarget");
+    const cage = wt ? { meshId: assetId(wt.props.CageMeshId), origin: wt.props.CageOrigin ? wt.props.CageOrigin.pos.slice() : [0, 0, 0] } : null;
+    out[name] = { meshId: assetId(mp.props.MeshId ?? mp.props.MeshID), textureId: assetId(mp.props.TextureID ?? mp.props.TextureId), size: size ? size.slice() : null, attachments, cage };
     rank[name] = r;
   };
   // MeshParts in a preferred folder win (in order); parts outside any folder come next; other folders

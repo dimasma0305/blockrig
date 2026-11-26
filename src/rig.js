@@ -5,6 +5,7 @@ import { HEAD_ATTACHMENTS } from "./skeleton.js";
 import { buildBody } from "./body.js";
 import { lodIndices } from "./mesh.js";
 import { parseFacs, facsBoneOffsets, FACE_CONTROLS } from "./facs.js";
+import { fitLayer, cageMap } from "./wrap.js";
 import { buildBodyFromParts, defaultBodyAttachments, templateUVs, regionSlices, paintRegion, colorHex, BODY_REGION, TEMPLATE_SIZE } from "./avatar.js";
 
 const REV = parseInt(THREE.REVISION, 10);
@@ -332,6 +333,20 @@ export function createRig(o = {}) {
   }
   const bindQ = (name) => (name === "Neck" ? neckBindQ : bindLocalQ[index.get(name)]);
 
+  // ---- layered clothing: the body's WrapTarget cages and the fitted layers ----
+  const bodyCage = new Map(), layers = [];
+  const WRAP_INFLATE = 0.015; // studs each layer sits further out than the one below (and the body)
+  const GARMENT_BONE_ALIAS = { Root: "HumanoidRootPart", HumanoidRootNode: "HumanoidRootPart" };
+  const garmentBone = (name) => (name === "Head" ? neck : bones[GARMENT_BONE_ALIAS[name] || name]);
+  if (opts.bodyParts) for (const p of spec.parts) {
+    const src = opts.bodyParts[p.bone];
+    if (!src || !src.cage || !src.cage.mesh) continue;
+    // a part's cage is in its part space (CageOrigin offset), scaled like the part's mesh
+    let sc = [1, 1, 1];
+    if (src.mesh) { const e = fittedGeometry(src.mesh, null).extent; sc = [0, 1, 2].map((k) => (e.getComponent(k) > 1e-6 ? p.size[k] / e.getComponent(k) : 1)); }
+    cageMap(src.cage.mesh, { origin: src.cage.origin || [0, 0, 0], at: p.center, scale: sc, into: bodyCage });
+  }
+
   // ---- dynamic head (FACS) state ----
   const faceControls = Object.fromEntries(FACE_CONTROLS.map((n) => [n, 0]));
   let dyn = null;
@@ -371,29 +386,47 @@ export function createRig(o = {}) {
      * Dress the rig in a skinned layered-clothing mesh (from parseMesh). The garment keeps its own bind
      * pose, so it deforms correctly even if its skeleton differs slightly from the rig's.
      */
-    addLayeredClothing(mesh, { map = null, color = 0xffffff, lod = 0, side = THREE.DoubleSide } = {}) {
+    addLayeredClothing(mesh, { map = null, color = 0xffffff, lod = 0, side = THREE.DoubleSide, wrap = null } = {}) {
       if (rigType !== "R15") throw new Error("blockrig: layered clothing needs an R15 rig");
       if (!mesh.skinIndex || !mesh.bones.length) throw new Error("blockrig: mesh has no skinning data (need .mesh v4+)");
+      const fit = !!(wrap && wrap.inner && bodyCage.size);
       const geo = geometryFromMesh(mesh, { lod, skinned: true });
       const mat = material({ map, color, side }, true);
       const sm = new THREE.SkinnedMesh(geo, mat); sm.name = "LayeredClothing"; sm.frustumCulled = false;
       stage.add(sm);
-      const saved = list.map((b) => [b.quaternion.clone(), b.position.clone()]);
+      const saved = list.map((b) => [b.quaternion.clone(), b.position.clone()]), neckSaved = [neck.quaternion.clone(), neck.position.clone()];
       rig.resetPose(); model.updateMatrixWorld(true);
       const skBones = [], inverses = [];
       for (const b of mesh.bones) {
-        const bone = bones[b.name];
+        const bone = garmentBone(b.name);
         if (!bone) throw new Error(`blockrig: garment bone "${b.name}" is not in the rig`);
         skBones.push(bone);
-        inverses.push(new THREE.Matrix4().multiplyMatrices(stage.matrixWorld, cframeToMatrix(b.cframe)).invert());
+        // a fitted garment sits on this rig's own bind pose; an unfitted one keeps the garment's bind pose
+        inverses.push(fit ? bone.matrixWorld.clone().invert() : new THREE.Matrix4().multiplyMatrices(stage.matrixWorld, cframeToMatrix(b.cframe)).invert());
       }
       const skeleton = new THREE.Skeleton(skBones, inverses);
       sm.bind(skeleton, sm.matrixWorld.clone());
       if (outline) { const ol = new THREE.SkinnedMesh(geo, outlineMaterial(opts.outline, true)); ol.frustumCulled = false; stage.add(ol); ol.updateMatrixWorld(true); ol.bind(skeleton, sm.bindMatrix.clone()); }
-      list.forEach((b, i) => { b.quaternion.copy(saved[i][0]); b.position.copy(saved[i][1]); });
+      list.forEach((b, i) => { b.quaternion.copy(saved[i][0]); b.position.copy(saved[i][1]); }); neck.quaternion.copy(neckSaved[0]); neck.position.copy(neckSaved[1]);
       rig.garments.push(sm);
+      if (fit) {
+        // WrapLayer -> WrapTarget: refit the whole stack in Order (then the order garments were added in)
+        layers.push({ sm, base: Float32Array.from(geo.attributes.position.array), normals: Float32Array.from(geo.attributes.normal.array), wrap, order: wrap.order ?? 1, seq: layers.length });
+        layers.sort((x, y) => x.order - y.order || x.seq - y.seq);
+        let target = bodyCage;
+        layers.forEach((L, i) => { L.inflate = WRAP_INFLATE * (i + 1); });
+        for (const L of layers) {
+          const r = fitLayer(L.base, L.wrap, target, { normals: L.normals, inflate: L.inflate });
+          const pos = L.sm.geometry.attributes.position; pos.array.set(r.positions); pos.needsUpdate = true;
+          L.sm.geometry.computeVertexNormals(); L.sm.geometry.computeBoundingSphere();
+          L.matched = r.matched; target = r.target;
+        }
+        sm.userData.wrap = { matched: layers.find((L) => L.sm === sm).matched };
+      }
       return sm;
     },
+    /** The body's WrapTarget cages in character space (template UV -> position); empty without body-part cages. */
+    get bodyCage() { return bodyCage; },
 
     /**
      * Attach a rigid accessory mesh by attachment matching:

@@ -175,6 +175,10 @@ export function describeAccessory(roots) {
     meshId: assetId(meshSrc.props.MeshId),
     textureId: assetId(special ? special.props.TextureId : handle.props.TextureID),
     attachment: att ? { name: att.props.Name, cframe: att.props.CFrame } : null,
-    layered: wrap ? { order: wrap.props.Order ?? 1, cageMeshId: assetId(wrap.props.CageMeshId), referenceMeshId: assetId(wrap.props.ReferenceMeshId) } : null,
+    layered: wrap ? {
+      order: wrap.props.Order ?? 1, cageMeshId: assetId(wrap.props.CageMeshId), referenceMeshId: assetId(wrap.props.ReferenceMeshId),
+      cageOrigin: wrap.props.CageOrigin ? wrap.props.CageOrigin.pos.slice() : [0, 0, 0], referenceOrigin: wrap.props.ReferenceOrigin ? wrap.props.ReferenceOrigin.pos.slice() : [0, 0, 0],
+    } : null,
+    colorMapId: (() => { const sa = handle && handle.children.find((x) => x.className === "SurfaceAppearance"); return sa ? assetId(sa.props.ColorMap) : null; })(),
   };
 }

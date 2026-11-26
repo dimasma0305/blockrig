@@ -64,10 +64,10 @@ test("rbxm: every axis-aligned rotation id is a proper rotation matrix", () => {
 
 test("describeAccessory: rigid and layered", () => {
   const [h, j] = parseRbxm(writeRbxm([hair, jacket]));
-  assert.deepEqual(describeAccessory([h]), { name: "Test Hair", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: ROT90Y, pos: [0.25, -0.5, 0.125] } }, layered: null });
+  assert.deepEqual(describeAccessory([h]), { name: "Test Hair", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: ROT90Y, pos: [0.25, -0.5, 0.125] } }, layered: null, colorMapId: null });
   const d = describeAccessory([j]);
   assert.equal(d.meshId, 333); assert.equal(d.textureId, 444);
-  assert.deepEqual(d.layered, { order: 3, cageMeshId: 555, referenceMeshId: 666 });
+  assert.deepEqual(d.layered, { order: 3, cageMeshId: 555, referenceMeshId: 666, cageOrigin: [0, 0, 0], referenceOrigin: [0, 0, 0] });
 });
 
 test("assetId parses the common content URL shapes", () => {
@@ -111,6 +111,6 @@ test("rbxmx (XML): same instance tree as the binary reader, auto-detected by par
     assert.equal(roots[0].children[0].props.CanCollide, false);
     assert.equal(roots[0].children[0].parent, roots[0]);
   }
-  assert.deepEqual(describeAccessory(viaText), { name: "Spiky & Blue", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: [0, 0, 1, 0, 1, 0, -1, 0, 0], pos: [0, 0.15, -0.5] } }, layered: null });
+  assert.deepEqual(describeAccessory(viaText), { name: "Spiky & Blue", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: [0, 0, 1, 0, 1, 0, -1, 0, 0], pos: [0, 0.15, -0.5] } }, layered: null, colorMapId: null });
   assert.throws(() => parseRbxmx("<notroblox/>"), /not an XML Roblox model/);
 });

@@ -53,13 +53,13 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 🧍 **Every classic body**: **R6** (six parts, classic pivots) and **R15** in five shapes (`classic`, `slender`, `buff`, `tall`, `child`) or your own proportions, with Roblox-style `height / width / depth / head` scaling, swappable body-part meshes, and R15 ⇄ R6 clip retargeting.
 - 😃 **Live facial expressions**: 17 built-in expressions drawn from 21 blendable parameters (brows, eye shape, look direction, wink, `><` and `x` eyes, mouth curve/open/skew, teeth, tongue, blush, tears, sweat), with automatic blinking, talking, smooth fades and `face:` markers inside clips. Works on BlockRig heads or as a decal on any head.
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
-- 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, with its bind pose retargeted onto your rig.
+- 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, **fitted to the body through its WrapLayer/WrapTarget cages** (matched by template UV, like Roblox) and stacked by `Order`.
 - 🎩 **Rigid accessories** placed by attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`).
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion, and Roblox-style `AnimationTrack`s (seek, speed, weight, looped, priority, marker and keyframe signals, Stopped/Ended/DidLoop).
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **109 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **113 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -97,6 +97,25 @@ const jacket = parseMesh(bytes);
 console.log(jacket.version, jacket.bones.map((b) => b.name));          // "version 4.01", 15 R15 bones
 rig.addLayeredClothing(jacket, { map: loadRobloxTexture("jacket.png") });
 ```
+
+### Fit layered clothing to any body (WrapLayer → WrapTarget)
+
+A garment's `WrapLayer` carries an inner cage, made around Roblox's reference body, and an outer cage. A body package's parts carry `WrapTarget` cages. Every cage is cut from the same template, and a vertex keeps its template UV, so BlockRig matches cages by UV the way Roblox does. It moves the garment's inner cage onto the body's cage and carries the garment along. Layers stack by `Order`: each one fits to the outer cage of the one below.
+
+```js
+const parts = describeBodyParts(bodyRoots);                       // ... each part's cage: { meshId, origin }
+bodyParts[name].cage = { mesh: parseMesh(cageBytes), origin: parts[name].cage.origin };
+const rig = createRig({ bodyParts, bodyColors });
+
+const acc = describeAccessory(parseRbxm(hoodieBytes));            // layered: cage / reference mesh ids and origins
+rig.addLayeredClothing(parseMesh(hoodieMeshBytes), {
+  map: loadRobloxTexture(colorMapUrl),                            // acc.colorMapId (SurfaceAppearance.ColorMap)
+  wrap: { inner: parseMesh(referenceBytes), innerOrigin: acc.layered.referenceOrigin,
+          outer: parseMesh(cageBytes), outerOrigin: acc.layered.cageOrigin, order: acc.layered.order },
+});
+```
+
+Checked with Roblox's own Zip Hoodie, Knit Sweater and Casual Sweats on the official ROBLOX Boy and Woman bodies. The same garments fit both bodies, the sweater layers under the hoodie, and the clothes follow animation. Without body cages, garments are skinned as they come, which fits bodies close to Roblox's reference body. Download layered accessories with the `Roblox-AssetFormat: avatar_meshpart_accessory` header to get the MeshPart version with its `WrapLayer`.
 
 ### Read an accessory file
 
@@ -345,7 +364,7 @@ anim.play(salute, { fade: 0.15 });
 | `EXPRESSIONS` · `FACE_DEFAULTS` · `expression()` · `mixFace()` · `drawFace()` · `createFaceDecal()` | Expression data and drawing. |
 | `rig.setPose(pose)` / `rig.resetPose()` | `{ Joint: [x, y, z], rootOffset: [x, y, z] }` in radians and studs. |
 | `rig.setJoint(name, x, y, z)` · `setJointQuat(name, q)` · `nudgeJoint(name, x, y, z)` | Set one joint, or add on top of the current pose (good for look-at). |
-| `rig.addLayeredClothing(mesh, { map?, color?, lod? })` | Skinned garment from `parseMesh` (v4+) or `makeCoat()`. |
+| `rig.addLayeredClothing(mesh, { map?, color?, lod?, wrap? })` | Skinned garment from `parseMesh` (v4+) or `makeCoat()`; with `wrap` cages and a caged body, fitted to the body and stacked by Order. |
 | `rig.addAccessory(mesh, { attachment, map?, color? })` | Rigid accessory welded by attachment name (`HairAttachment`, `HatAttachment`, `FaceFrontAttachment`, `FaceCenterAttachment`). |
 | `new Animator(rig)` | `.play(clip, { fade, weight, speed })` · `.loadAnimation(clip)` · `.stop(clipOrName, fade)` · `.update(dt)` · `.getPlayingAnimationTracks()` · `.onMarker(fn)` · `.isPlaying(name)` |
 | `AnimationTrack` | `.play(fade, weight, speed)` · `.stop(fade)` · `.adjustSpeed()` · `.adjustWeight()` · `.timePosition` · `.looped` · `.priority` · `.getMarkerReachedSignal()` · `.getTimeOfKeyframe()` · events `stopped` `ended` `didLoop` `keyframeReached` |

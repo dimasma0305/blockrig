@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Layered clothing fit (WrapLayer → WrapTarget)**: body parts take their `WrapTarget` cage (`bodyParts[name].cage`, read by `describeBodyParts`), and `rig.addLayeredClothing(mesh, { wrap })` fits a garment to the body by matching its inner cage to the body cages through their template UVs, then skins it on the rig's bind pose. Layers stack by `Order` (each fits to the outer cage of the one below). `fitLayer()`, `cageMap()`, `cageKey()`; `describeAccessory()` returns the WrapLayer origins and the SurfaceAppearance ColorMap. Checked with Roblox's Zip Hoodie, Knit Sweater and Casual Sweats on the ROBLOX Boy and Woman bodies.
+- Garment bones named `Root`, `HumanoidRootNode` and `Head` map to the rig's root and neck.
+
 - **AnimationTrack**: `animator.loadAnimation(clip)` and `animator.play()` return Roblox-style tracks: `play(fadeTime, weight, speed)`, `stop(fadeTime)`, `adjustSpeed` (negative plays backwards), `adjustWeight(weight, fadeTime)`, settable `timePosition`, `looped`, `priority`, `length`, `isPlaying`, `weightCurrent` / `weightTarget`, `getTimeOfKeyframe`, `getMarkerReachedSignal(name)` (with the marker's value), and `stopped` / `ended` / `didLoop` / `keyframeReached` signals; `animator.getPlayingAnimationTracks()`.
 - **Behaviour change (parity)**: a fade's time is now the time to go from the current weight to the target, as in Roblox (it was a rate of one full weight per fadeTime). Markers fire in time order. Imported markers carry `kind: "marker" | "keyframe"`.
 - The story example poses frames with `timePosition` and `update(0)` instead of reaching into the Animator.
@@ -18,7 +21,7 @@
 - `examples/clothing.html` and `docs/clothing.png`; `ONLY=name npm run screenshots`.
 - The story example (`examples/story`): a 26-second short made with BlockRig, Remotion and three.js.
 - Bundlers: version-specific three.js colour-space constants are read at run time.
-- 109 tests.
+- 113 tests.
 
 ## 0.2.0
 
