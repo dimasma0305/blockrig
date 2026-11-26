@@ -164,8 +164,14 @@ export function mixFace(a, b, t) { const o = {}; for (const k in FACE_DEFAULTS) 
 
 /**
  * A live face: blends towards a target expression, blinks, looks around and can talk.
+ *
+ * Image faces: pass `images: { happy: img, angry: img, ... }` (any canvas-drawable images, e.g. face decals
+ * you have the rights to use). Setting a name found in `images` crossfades to that picture; names without
+ * an image fall back to the procedural face. `images.blink` (optional) is shown while blinking. Image
+ * names do not have to be built-in expression names.
  * @param {{ size?: number, canvas?: {width:number,height:number,getContext:Function}, ink?: string, eyeColor?: string,
- *           glow?: string, background?: string|null, blink?: boolean, expression?: string|object, seed?: number }} [o]
+ *           glow?: string, background?: string|null, blink?: boolean, expression?: string|object, seed?: number,
+ *           images?: Record<string, CanvasImageSource>, imageOffset?: number }} [o]
  */
 export function createFace(o = {}) {
   const size = o.size || 256;
@@ -173,25 +179,51 @@ export function createFace(o = {}) {
   if (!canvas && typeof document !== "undefined") { canvas = document.createElement("canvas"); canvas.width = canvas.height = size; }
   const ctx = canvas ? canvas.getContext("2d") : null;
   const style = { size, ink: o.ink || "#111111", eyeColor: o.eyeColor || null, glow: o.glow || null, background: o.background || null };
+  const images = o.images || {};
+  let scratch = null; // offscreen canvas for crossfading a procedural face with an image
+  const scratchCtx = () => {
+    if (!scratch && typeof document !== "undefined") { scratch = document.createElement("canvas"); scratch.width = scratch.height = size; }
+    return scratch ? scratch.getContext("2d") : null;
+  };
   let seed = (o.seed ?? 7) >>> 0;
   const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const startName = typeof o.expression === "string" ? o.expression : "neutral";
+  const layerFor = (n) => (typeof n === "string" && images[n] ? images[n] : "proc");
   const face = {
-    isFace: true, canvas, style,
-    current: expression(o.expression || "neutral"),
-    target: expression(o.expression || "neutral"),
-    name: typeof o.expression === "string" ? o.expression : "neutral",
+    isFace: true, canvas, style, images,
+    current: EXPRESSIONS[startName] || typeof o.expression === "object" ? expression(o.expression || "neutral") : expression("neutral"),
+    target: EXPRESSIONS[startName] || typeof o.expression === "object" ? expression(o.expression || "neutral") : expression("neutral"),
+    name: startName,
     rate: 1 / 0.15,
+    // image crossfade: the picture (or "proc" for the procedural face) shown now and the one fading out
+    layer: { cur: layerFor(startName), prev: null, mix: 1, rate: 1 / 0.15 },
     blinking: o.blink !== false, nextBlink: 1.5 + rnd() * 2.5, blinkT: -1,
     look: { x: 0, y: 0 }, talking: false, talkT: 0,
     listeners: [], dirty: true, time: 0,
-    /** Change expression: a name from EXPRESSIONS or a partial parameter object. fade in seconds. */
-    set(nameOrParams, { fade = 0.15 } = {}) {
-      this.target = expression(nameOrParams);
+    /**
+     * Change expression: an image name, a name from EXPRESSIONS, or a partial parameter object.
+     * Image faces swap instantly by default, like replacing the Texture of a Roblox Head's "face" Decal;
+     * pass `fade` (seconds) to crossfade instead (a BlockRig extra). Procedural faces fade over 0.15 s.
+     */
+    set(nameOrParams, { fade } = {}) {
+      const isImage = typeof nameOrParams === "string" && images[nameOrParams];
+      if (fade === undefined) fade = isImage || (this.layer.cur !== "proc") ? 0 : 0.15;
+      if (!isImage) {
+        this.target = expression(nameOrParams);
+        this.rate = fade > 0 ? 1 / fade : Infinity;
+        if (!(fade > 0)) this.current = { ...this.target };
+      }
       this.name = typeof nameOrParams === "string" ? nameOrParams : "custom";
-      this.rate = fade > 0 ? 1 / fade : Infinity;
-      if (!(fade > 0)) { this.current = { ...this.target }; this.dirty = true; }
+      const next = layerFor(nameOrParams);
+      if (next !== this.layer.cur) {
+        this.layer.prev = this.layer.cur; this.layer.cur = next;
+        this.layer.mix = fade > 0 ? 0 : 1; this.layer.rate = fade > 0 ? 1 / fade : Infinity;
+      }
+      this.dirty = true;
       return this;
     },
+    /** True while an image (not the procedural face) is showing. */
+    get usingImage() { return this.layer.cur !== "proc"; },
     /** Point the eyes (-1..1 each); added on top of the expression's own lookX / lookY. */
     lookAt(x = 0, y = 0) { this.look.x = x; this.look.y = y; this.dirty = true; return this; },
     talk(on = true) { this.talking = on; this.dirty = true; return this; },
@@ -218,10 +250,38 @@ export function createFace(o = {}) {
         else if ((this.nextBlink -= dt) <= 0) { this.blinkT = 0; changed = true; }
       }
       if (this.talking) { this.talkT += dt; changed = true; }
+      if (this.layer.mix < 1) { this.layer.mix = this.layer.rate === Infinity ? 1 : Math.min(1, this.layer.mix + dt * this.layer.rate); changed = true; }
       if (changed) { this.draw(); this.dirty = false; for (const fn of this.listeners) fn(this); }
       return changed;
     },
-    draw() { if (ctx) drawFace(ctx, this.params(), style); return this; },
+    draw() {
+      if (!ctx) return this;
+      const L = this.layer;
+      if (L.cur === "proc" && L.mix >= 1) { drawFace(ctx, this.params(), style); return this; }
+      const p = this.params(), s = size / 256;
+      const paint = (layer, alpha) => {
+        if (!layer || alpha <= 0.001) return;
+        ctx.globalAlpha = alpha;
+        if (layer === "proc") {
+          const sc = scratchCtx();
+          if (sc) { drawFace(sc, p, { ...style, background: null }); ctx.drawImage(scratch, 0, 0, size, size); }
+          else drawFace(ctx, p, { ...style, background: null }); // no offscreen canvas (e.g. tests): draw directly
+          return;
+        }
+        // blinking swaps in images.blink if given; look direction nudges the decal
+        const img = this.blinkT >= 0 && images.blink && layer !== images.blink ? images.blink : layer;
+        const ox = clamp(p.lookX, -1, 1) * 8 * s * (o.imageOffset ?? 1), oy = clamp(p.lookY, -1, 1) * 6 * s * (o.imageOffset ?? 1);
+        ctx.drawImage(img, ox, oy, size, size);
+      };
+      ctx.save();
+      ctx.clearRect(0, 0, size, size);
+      if (style.background) { ctx.fillStyle = style.background; ctx.fillRect(0, 0, size, size); }
+      if (L.mix < 1) paint(L.prev, 1 - L.mix);
+      paint(L.cur, L.mix < 1 ? L.mix : 1);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+      return this;
+    },
   };
   face.draw();
   return face;

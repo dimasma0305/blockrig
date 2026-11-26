@@ -1,0 +1,70 @@
+# AGENTS.md: how to work on BlockRig
+
+BlockRig reproduces how **Roblox** builds, dresses and animates characters, in three.js. The rule for every change is:
+
+> **Do it the way Roblox does it.** Find the Roblox mechanism first (engine class, property, formula, file format) and implement *that*, with Roblox's names, units, axes and defaults. Only invent something when Roblox has no equivalent. Then make it opt-in and label it as a BlockRig extra.
+
+A change that "looks right" but works differently from Roblox is a bug, even if it renders fine.
+
+## Before you change anything
+
+1. **Name the Roblox mechanism** the change relates to, for example `Motor6D.Transform`, `Humanoid:AddAccessory`, `Decal` on `Head`, `AnimationTrack:Play(fadeTime, weight, speed)`.
+2. **Read the source of truth.** Use the Roblox Creator docs (`create.roblox.com/docs/reference/engine/...`). Then use the community format specs listed in the README. Put the URL in a code comment next to the implementation.
+3. **Match Roblox's behaviour by default.** That covers defaults (fade 0.1 s, weight 1, speed 1), enum names (`EasingStyle`, `AnimationPriority`), evaluation order and edge cases. If the docs leave something unspecified, say so in a comment (`// Roblox docs do not specify …; we assume …`).
+4. **Write a parity test** that pins the Roblox behaviour: a formula, a default, an order of operations. Put Roblox's name for the behaviour in the test title.
+5. **Anything without a Roblox equivalent** must be opt-in (an option or a separate function), be marked "BlockRig extra" in JSDoc and the README, and never change the default behaviour of a Roblox-equivalent path.
+
+## Mechanism map
+
+Keep this table current. **Parity** means it behaves like Roblox. **Approximation** means the same idea with known differences, listed below. **Extra** means Roblox has no such thing.
+
+| Roblox mechanism | BlockRig | Status |
+|---|---|---|
+| R15 rig: 15 parts, joint hierarchy (`LowerTorso`, `UpperTorso`, …) | `createRig()` / `buildBody({ shape: "classic" })`, bone names = part names | Parity |
+| R6 rig: `Torso`, `Left Arm`, …; shoulder and hip pivots | `createRig({ rigType: "R6" })` | Parity |
+| `Motor6D`: `Part1 = Part0 · C0 · Transform · C1⁻¹`; animation writes `Transform` | `motor6D()`; joints pose by a `Transform` delta on top of the bind pose | Parity (see note 1) |
+| `Humanoid:BuildRigFromAttachments()`: joints from `*RigAttachment` pairs | bind skeleton from joint positions (`R15_BIND`, `buildBody`) | Approximation (note 2) |
+| `Humanoid:AddAccessory()`: weld so `Handle = Part · BodyAtt · HandleAtt⁻¹` | `rig.addAccessory()` / `accessoryWeld()` | Parity (head attachments only) |
+| Layered clothing: `WrapLayer` / `WrapTarget` cages, then skinning | `rig.addLayeredClothing()`: skinning with the garment's own bone weights | Approximation (note 3) |
+| `.mesh` v2–v7 (LODs, bones, subsets, skinning, FACS) | `parseMesh()` / `writeMesh()` | Parity (v7 Draco via hook) |
+| Binary `.rbxm` (chunks, LZ4/ZSTD, interleaved encodings) | `parseRbxm()`, `describeAccessory()` | Parity for the supported property types |
+| `KeyframeSequence` → `Keyframe(Time)` → `Pose(CFrame, EasingStyle, EasingDirection, Weight)` | clip JSON: `keyframes[{ t, poses: { Joint: { r, p, ease, dir } } }]` | Approximation (note 4) |
+| `EasingStyle` Linear / Constant / Cubic / Elastic / Bounce + `EasingDirection` | `ease(style, dir, t)` | Parity (curves follow TweenService; note 5) |
+| `AnimationTrack` priority, weight, fade, speed, `Looped`, `KeyframeReached` / markers | `Animator.play/stop`, `PRIORITY`, `onMarker` | Parity (note 6) |
+| Body scaling `BodyHeightScale` / `BodyWidthScale` / `BodyDepthScale` / `HeadScale` | `createRig({ scale })` | Approximation (note 7) |
+| `BodyTypeScale` / `BodyProportionScale` (Rthro blending) | `shape: "slender" | "buff" | "tall" | "child"` | **Extra**: not Roblox's tables (note 7) |
+| Classic face: a `Decal` named `face` on `Head`, `Face = Front`; changing the expression = replacing its `Texture` (instant) | `createFace({ images })` + `rig.addFaceDecal()` / head wrap; `set(name)` swaps instantly | Parity |
+| Dynamic heads: FACS (`FaceControls` properties driving head bones/blend shapes) | none yet (FACS data is read by `parseMesh` but not played) | Missing: the next face work goes here |
+| Procedural drawn expressions (`EXPRESSIONS`, `drawFace`, parameter blending, auto-blink, talk) | `createFace()` without images | **Extra** |
+| Crossfading face images | `set(name, { fade })` | **Extra** (opt-in) |
+| R15 ⇄ R6 clip retargeting | `toR6` / `toR15` | **Extra**: Roblox plays nothing across rig types |
+| Procedural coat `makeCoat()`, outline shader | | **Extra** (test fixture / style) |
+
+### Known differences (fix these toward parity when you touch them)
+
+1. **Joint axes.** In Roblox, `Pose.CFrame` / `Motor6D.Transform` act in the joint frame given by `C0`. On the standard R15 rig the RigAttachments are axis-aligned, so that frame equals the character's axes. BlockRig always expresses rotations in character axes, converting through each bone's bind rotation. A rig whose C0 frames are rotated would differ. If you add `.rbxm` rig import, carry C0/C1 through and apply `Transform` in the C0 frame.
+2. **BuildRigFromAttachments.** BlockRig takes joint positions directly (or from bounding boxes for downloaded avatars) rather than from `*RigAttachment` CFrames. When rig/body-part `.rbxm` files are available, build joints from the attachments.
+3. **Layered clothing.** Roblox fits each garment's inner cage to the body's outer cage (`WrapTarget`) and to lower layers (`Order`), then skins it. BlockRig only skins the garment with its own weights and retargets its bind pose onto the rig's bones. Cage fitting, `Order` stacking, `ShrinkFactor` and `Puffiness` are not implemented.
+4. **Poses.** A Roblox `Pose.CFrame` holds rotation *and* position for every joint, plus `Weight`. BlockRig clips store Euler rotation `r` per joint and position `p` only for `HumanoidRootPart`; `Pose.Weight` and `CurveAnimation` are not implemented. Prefer adding CFrame-valued poses and `.rbxm` `KeyframeSequence` import over inventing more JSON fields.
+5. **Easing curves.** Roblox doesn't document the exact Elastic and Bounce formulas or the Cubic direction quirk (`CubicV2`). BlockRig uses the TweenService-style curves. Verify against Studio when possible.
+6. **Blending.** Per-joint priority override and slerp weight averaging follow the commonly documented behaviour. Roblox doesn't publish the exact blend maths.
+7. **Scaling.** BlockRig scales joint positions about the feet. Roblox scales each part's `OriginalSize` and attachment `OriginalPosition`, then rebuilds joints, and uses `R15_TO_RTHRO_NORMAL` / `SLENDER` tables for body type and proportion. The `shape` presets are BlockRig's own proportions, not Roblox data.
+
+## Conventions (all Roblox's)
+
+- Units are **studs**. **Y up.** Characters **face −Z**. Right-handed. BlockRig turns the whole rig 180° (the `stage` group) so it faces a three.js camera; everything inside is Roblox space.
+- CFrame rotation matrices are **row-major** `R00..R22`; their columns are `RightVector`, `UpVector` and `ZVector` (`LookVector = −ZVector`). Use `cframeToMatrix` / `matrixToCFrame`; never hand-roll the transpose.
+- Use Roblox's names everywhere they exist: part and joint names, `HairAttachment`, `HatAttachment`, `Priority` values, `EasingStyle` and `EasingDirection` names, `Looped`.
+- Default values must match Roblox's: `Play(fadeTime = 0.1, weight = 1, speed = 1)` and `Stop(fadeTime = 0.1)`.
+
+## Assets
+
+- **Never commit Roblox assets** to this repo or the npm package. That covers catalog meshes, textures, face decals, animations, and Roblox's own body parts. Tests and screenshots use generated content (`makeCoat`, `writeMesh`, procedural faces).
+- APIs take assets from the caller (`parseMesh(bytes)`, `createFace({ images })`). Documentation may explain how to fetch assets for personal use, with a note about Roblox's Terms of Use and creators' rights.
+
+## Tests and releases
+
+- `npm test` must pass on Node 20/22/24 × three r128/r184 (CI does this).
+- Behaviour changes need a unit test. Intentional output changes need `npm run test:update`, and the snapshot diff has to be reviewed in the PR.
+- Re-render README images with `npm run screenshots` when visuals change.
+- Bump the version in `package.json` and `src/index.js`, add a `CHANGELOG.md` entry, then tag `vX.Y.Z` to publish (see `.github/workflows/release.yml`).

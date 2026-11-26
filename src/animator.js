@@ -89,7 +89,7 @@ export class Animator {
       const hit = tr.time >= prev ? m.t > prev && m.t <= tr.time : m.t > prev || m.t <= tr.time;
       if (!hit || tr.target <= 0) return;
       // "face:<expression>" markers change the rig's live face
-      if (m.name.startsWith("face:") && rig.setExpression) rig.setExpression(m.name.slice(5), { fade: m.fade ?? 0.12 });
+      if (m.name.startsWith("face:") && rig.setExpression) rig.setExpression(m.name.slice(5), m.fade !== undefined ? { fade: m.fade } : undefined);
       this.listeners.forEach((fn) => fn(m.name, tr.clip));
     });
       const step = tr.fade > 0 ? dt / tr.fade : 1;

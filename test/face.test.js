@@ -101,3 +101,46 @@ test("addFaceDecal puts a live face on any rig's head", () => {
   rig.setExpression("grin"); rig.updateFace(1);
   assert.equal(face.name, "grin");
 });
+
+test("image faces: swap instantly like a Roblox face Decal, crossfade only when asked", () => {
+  const happy = { width: 420, height: 420, id: "happy" }, mad = { width: 420, height: 420, id: "mad" }, blink = { width: 420, height: 420, id: "blink" };
+  const c = mockCanvas();
+  const f = createFace({ canvas: c, images: { happy, mad, blink }, expression: "happy", blink: false });
+  const drawn = () => c.calls.filter((x) => x[0] === "drawImage").map((x) => x[1].id);
+  c.reset(); f.update(0.016);
+  assert.deepEqual(drawn(), ["happy"]);
+  f.set("mad"); // default: instant swap
+  assert.equal(f.layer.mix, 1);
+  c.reset(); f.update(0.016);
+  assert.deepEqual(drawn(), ["mad"]);
+  f.set("happy", { fade: 0.2 }); // opt-in crossfade draws both, the old one fading out
+  c.reset(); f.update(0.1);
+  assert.deepEqual(drawn(), ["mad", "happy"]);
+  const alphas = c.calls.filter((x) => x[0] === "=globalAlpha").map((x) => x[1]);
+  assert.ok(alphas.some((a) => a > 0.4 && a < 0.6));
+  for (let i = 0; i < 10; i++) f.update(0.05);
+  c.reset(); f.draw(); assert.deepEqual(drawn(), ["happy"]);
+  assert.equal(f.usingImage, true);
+});
+
+test("image faces: names without an image fall back to the procedural face; blink image shows while blinking", () => {
+  const c = mockCanvas();
+  const happy = { width: 420, height: 420, id: "happy" }, blink = { width: 420, height: 420, id: "blink" };
+  const f = createFace({ canvas: c, images: { happy, blink }, expression: "happy", seed: 3 });
+  f.set("angry");
+  assert.equal(f.usingImage, false);
+  f.set("happy");
+  let sawBlink = false;
+  for (let i = 0; i < 600 && !sawBlink; i++) { c.reset(); f.update(1 / 60); sawBlink = c.calls.some((x) => x[0] === "drawImage" && x[1].id === "blink"); }
+  assert.ok(sawBlink, "the blink image should appear within 10 s");
+});
+
+test("face markers swap image faces instantly", () => {
+  const c = mockCanvas();
+  const face = createFace({ canvas: c, images: { calm: { width: 1, height: 1 }, rage: { width: 1, height: 1 } }, expression: "calm", blink: false });
+  const rig = createRig({ face });
+  const an = new Animator(rig);
+  an.play({ name: "x", length: 1, markers: [{ t: 0.1, name: "face:rage" }], keyframes: [{ t: 0, poses: { Neck: { r: [0, 0, 0] } } }] }, { fade: 0 });
+  an.update(0.15);
+  assert.equal(face.name, "rage"); assert.equal(face.layer.mix, 1);
+});

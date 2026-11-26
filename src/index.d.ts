@@ -58,7 +58,7 @@ export interface Rig {
   addAccessory(mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o: { attachment: { name: string; cframe: CFrame }; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
   setFace(image: CanvasImageSource): void;
   readonly face: Face | null;
-  setExpression(nameOrParams: ExpressionName | Partial<FaceParams>, o?: { fade?: number }): Rig;
+  setExpression(nameOrParams: ExpressionName | string | Partial<FaceParams>, o?: { fade?: number }): Rig;
   updateFace(dt: number): void;
   addFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
   setBodyPart(partName: string, mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; scale?: number[] }): THREE.Mesh;
@@ -128,7 +128,9 @@ export interface FaceStyle { size?: number; ink?: string; eyeColor?: string | nu
 export function drawFace(ctx: CanvasRenderingContext2D, params: Partial<FaceParams>, style?: FaceStyle): void;
 export interface Face {
   isFace: true; canvas: HTMLCanvasElement | null; name: string; current: FaceParams; target: FaceParams;
-  set(nameOrParams: ExpressionName | Partial<FaceParams>, o?: { fade?: number }): Face;
+  set(nameOrParams: ExpressionName | string | Partial<FaceParams>, o?: { fade?: number }): Face;
+  readonly usingImage: boolean;
+  images: Record<string, CanvasImageSource>;
   lookAt(x?: number, y?: number): Face;
   talk(on?: boolean): Face;
   onChange(fn: (face: Face) => void): Face;
@@ -136,6 +138,6 @@ export interface Face {
   update(dt: number): boolean;
   draw(): Face;
 }
-export function createFace(o?: FaceStyle & { canvas?: HTMLCanvasElement; blink?: boolean; expression?: ExpressionName | Partial<FaceParams>; seed?: number }): Face;
+export function createFace(o?: FaceStyle & { canvas?: HTMLCanvasElement; blink?: boolean; expression?: ExpressionName | string | Partial<FaceParams>; seed?: number; images?: Record<string, CanvasImageSource>; imageOffset?: number }): Face;
 export function createFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
 export const VERSION: string;

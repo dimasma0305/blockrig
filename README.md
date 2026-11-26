@@ -39,7 +39,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion.
 - 📦 **File readers**: `.mesh` **v2.00 → v7.00** (LODs, bones, subsets, skinning, FACS; v7 Draco via a hook) and binary **`.rbxm`** (LZ4 / ZSTD chunks, 12 property types).
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
-- 🧪 **73 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **76 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -148,6 +148,21 @@ const taunt = { name: "taunt", length: 1.2, keyframes: [/* ... */],
   markers: [{ t: 0.1, name: "face:smug" }, { t: 0.8, name: "face:laugh" }] };
 ```
 
+### Face decals, the Roblox way
+
+Classic Roblox faces are a `Decal` named `face` on the `Head`. Changing the expression means replacing its `Texture`, and the change is instant. BlockRig does the same with images you supply:
+
+```js
+const face = createFace({ images: { calm: calmImg, angry: angryImg, hurt: hurtImg, blink: blinkImg }, expression: "calm" });
+const rig = createRig({ face });        // or rig.addFaceDecal(face) on a downloaded avatar's head
+rig.setExpression("angry");             // instant swap, like setting Decal.Texture
+rig.setExpression("hurt", { fade: 0.2 }); // optional crossfade (BlockRig extra)
+```
+
+Image names can be anything. A name with no image falls back to the procedural face, and `images.blink` (optional) shows while the face blinks. BlockRig ships no Roblox decals; use images you have the right to use.
+
+### Procedural expressions (BlockRig extra)
+
 Each expression is a set of numbers, so any two blend smoothly. You can mix your own with `mixFace(a, b, t)`, or draw a single frame onto any 2D canvas with `drawFace(ctx, params, style)`. For heads that aren't BlockRig's barrel, such as downloaded avatars, `rig.addFaceDecal(face, { radius, height, arc })` puts the live face on a curved decal that follows the neck. Style options are `ink`, `eyeColor`, `glow` (glowing monster eyes) and `background` (an opaque decal that covers a baked-in face).
 
 | Parameter | Range | | Parameter | Range |
@@ -195,7 +210,7 @@ anim.play(salute, { fade: 0.15 });
 | `buildBody({ rigType, shape, scale })` · `R15_SHAPES` | The bind skeleton and part layout a rig is built from. |
 | `rig.setBodyPart(name, mesh, { map?, color?, scale? })` | Swap a blocky part (or `"Head"`) for a mesh. |
 | `toR6(clip)` · `toR15(clip)` · `retargetAll(clips, fn)` | Retarget clips between rig types. |
-| `createFace({ expression, ink, eyeColor, glow, background, blink })` | A live face: `.set(name or params, { fade })`, `.lookAt(x, y)`, `.talk(on)`, `.update(dt)`, `.onChange(fn)` |
+| `createFace({ expression, images, ink, eyeColor, glow, background, blink })` | A live face: `.set(name or params, { fade })`, `.lookAt(x, y)`, `.talk(on)`, `.update(dt)`, `.onChange(fn)` |
 | `rig.setExpression(...)` · `rig.addFaceDecal(face, o)` · `rig.face` | Drive the rig's face; markers named `face:<expression>` do it from a clip. |
 | `EXPRESSIONS` · `FACE_DEFAULTS` · `expression()` · `mixFace()` · `drawFace()` · `createFaceDecal()` | Expression data and drawing. |
 | `rig.setPose(pose)` / `rig.resetPose()` | `{ Joint: [x, y, z], rootOffset: [x, y, z] }` in radians and studs. |
@@ -232,7 +247,7 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 73 unit + regression tests (node:test, no browser needed)
+npm test             # 76 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
 npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html and faces.html)
@@ -241,6 +256,10 @@ npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html and fac
 - **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every expression (valid parameters, the right shapes for open mouths, `x` and `><` eyes), face blending, blinking, look/talk, face markers and decals, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion.
 - **Regression tests** pin the writer's output byte-for-byte (SHA-256), the parse of a committed fixture file, the joint positions plus skinned coat vertices of every bundled clip at four points in time, the joint layout of every body shape, a scaled body, R6 and an R6-retargeted clip, and the exact drawing commands for every expression.
 - **CI** runs everything on Node 20, 22 and 24 against three.js r128 and r184, builds the UMD bundle, smoke-tests it in a VM and checks the package contents. Pushing a `v*` tag publishes to npm with provenance and creates a GitHub release. `main` deploys the demo to GitHub Pages.
+
+## Roblox parity
+
+BlockRig follows Roblox's own mechanisms wherever they exist: Motor6D joints, attachment welds, KeyframeSequence-style clips with Roblox easing, AnimationTrack priorities and fades, R6/R15 part names, and face Decals. Anything Roblox doesn't have is opt-in and labelled as a BlockRig extra. [AGENTS.md](AGENTS.md) holds the full mechanism map, the known differences still being closed, and the rules for contributors and coding agents.
 
 ## Assets and trademarks
 
