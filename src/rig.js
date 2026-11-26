@@ -9,9 +9,13 @@ const REV = parseInt(THREE.REVISION, 10);
 const LEGACY_SKINNING_FLAG = REV < 129; // r128 and older need material.skinning = true
 const HEAD_H = 1.2, HEAD_R = 0.62;
 
+// Look up constants that exist only in some three.js versions at run time. A static `THREE.sRGBEncoding`
+// (removed in r162) or `THREE.SRGBColorSpace` (added in r152) breaks bundlers that check named imports.
+const threeConst = (name) => THREE[name];
 export function setSRGB(tex) {
-  if ("colorSpace" in tex && THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
-  else tex.encoding = THREE.sRGBEncoding;
+  const srgb = threeConst("SRGBColorSpace");
+  if ("colorSpace" in tex && srgb) tex.colorSpace = srgb;
+  else tex.encoding = threeConst("sRGBEncoding");
   return tex;
 }
 

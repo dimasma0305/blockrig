@@ -6,5 +6,5 @@ coverage/
 # never commit downloaded third-party game assets
 *.rbxm
 *.rbxmx
-assets/
+/assets/
 !test/fixtures/*.mesh

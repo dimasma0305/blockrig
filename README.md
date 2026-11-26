@@ -25,6 +25,19 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 | <img src="docs/wave.png" width="200" alt="wave clip"> | <img src="docs/run.png" width="200" alt="run clip"> | <img src="docs/card.png" width="200" alt="card throw clip"> | <img src="docs/victory.png" width="200" alt="victory jump clip"> |
 | `wave` | `run` | `card` | `victory` |
 
+## Made with BlockRig: a story short
+
+<table><tr>
+<td width="300"><a href="docs/story.mp4"><img src="docs/story-preview.gif" width="300" alt="The Ice Statue: a blocky kid touches a giant ice statue in a snowy park and it wakes up"></a></td>
+<td>
+
+**"The Ice Statue"**: a 26-second vertical short in the viral *"In this town…"* format, made entirely in code. BlockRig plays the cast (a kid, a giant ice statue on the `buff` body, the townsfolk) with its Animator and drawn expressions. Remotion and three.js render it frame by frame over a CC0 town, with a narrated voice, an original score and word-timed captions.
+
+▶ [**Watch it with sound**](docs/story.mp4) · [How it's made](examples/story/README.md)
+
+</td>
+</tr></table>
+
 ## Scope
 
 BlockRig is a **character** library: rigs, bodies, heads, clothing, accessories, faces and animation for Roblox-style characters. It doesn't build worlds (Parts, Terrain, materials, Lighting, Sky) or handle physics, controllers or cameras. Put your character in any three.js scene you like. See [AGENTS.md](AGENTS.md#scope-characters-only).
