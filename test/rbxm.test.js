@@ -78,6 +78,39 @@ test("assetId parses the common content URL shapes", () => {
 });
 
 test("rbxm: errors", () => {
-  assert.throws(() => parseRbxm(new Uint8Array(40)), /not a binary Roblox model/);
+  assert.throws(() => parseRbxm(new Uint8Array(40)), /not a Roblox model/);
   if (zlib.zstdCompressSync) assert.throws(() => parseRbxm(writeRbxm([hair], { mode: "zstd" })), /options\.zstd/);
+});
+
+test("rbxmx (XML): same instance tree as the binary reader, auto-detected by parseRbxm", async () => {
+  const { parseRbxmx } = await import("../src/rbxmx.js");
+  const xml = `<?xml version="1.0"?>
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" version="4">
+  <External>null</External>
+  <Item class="Accessory" referent="RBX1">
+    <Properties><string name="Name">Spiky &amp; Blue</string><token name="AccessoryType">1</token></Properties>
+    <Item class="Part" referent="RBX2">
+      <Properties><string name="Name">Handle</string><Vector3 name="size"><X>1.5</X><Y>1</Y><Z>-2</Z></Vector3><bool name="CanCollide">false</bool></Properties>
+      <Item class="SpecialMesh" referent="RBX3"><Properties>
+        <Content name="MeshId"><url>http://www.roblox.com/asset/?id=111 </url></Content>
+        <Content name="TextureId"><url>rbxassetid://222</url></Content>
+      </Properties></Item>
+      <Item class="Attachment" referent="RBX4"><Properties>
+        <string name="Name">HairAttachment</string>
+        <CoordinateFrame name="CFrame"><X>0</X><Y>0.15</Y><Z>-0.5</Z><R00>0</R00><R01>0</R01><R02>1</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>-1</R20><R21>0</R21><R22>0</R22></CoordinateFrame>
+      </Properties></Item>
+    </Item>
+  </Item>
+</roblox>`;
+  const viaBytes = parseRbxm(new TextEncoder().encode(xml)), viaText = parseRbxmx(xml);
+  for (const roots of [viaBytes, viaText]) {
+    assert.equal(roots.length, 1);
+    assert.equal(roots[0].props.Name, "Spiky & Blue");
+    assert.equal(roots[0].props.AccessoryType, 1);
+    assert.deepEqual(roots[0].children[0].props.size, [1.5, 1, -2]);
+    assert.equal(roots[0].children[0].props.CanCollide, false);
+    assert.equal(roots[0].children[0].parent, roots[0]);
+  }
+  assert.deepEqual(describeAccessory(viaText), { name: "Spiky & Blue", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: [0, 0, 1, 0, 1, 0, -1, 0, 0], pos: [0, 0.15, -0.5] } }, layered: null });
+  assert.throws(() => parseRbxmx("<notroblox/>"), /not an XML Roblox model/);
 });

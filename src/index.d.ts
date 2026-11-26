@@ -16,7 +16,8 @@ export function lodIndices(mesh: ParsedMesh, level?: number): Uint32Array;
 export function writeMesh(mesh: Partial<ParsedMesh> & Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "vertexCount" | "faceCount">, version?: "2.00" | "3.00" | "4.00" | "6.00"): Uint8Array;
 
 export interface RbxInstance { className: string; ref: number; props: Record<string, any>; children: RbxInstance[]; parent: RbxInstance | null }
-export function parseRbxm(input: ArrayBuffer | ArrayBufferView, options?: { zstd?: (compressed: Uint8Array, size: number) => Uint8Array }): RbxInstance[];
+export function parseRbxm(input: ArrayBuffer | ArrayBufferView | string, options?: { zstd?: (compressed: Uint8Array, size: number) => Uint8Array }): RbxInstance[];
+export function parseRbxmx(text: string): RbxInstance[];
 export function findInstance(roots: RbxInstance[], pred: (x: RbxInstance) => boolean): RbxInstance | null;
 export function assetId(content: unknown): number | null;
 export function describeAccessory(roots: RbxInstance[]): {

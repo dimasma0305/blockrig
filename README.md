@@ -37,10 +37,10 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, with its bind pose retargeted onto your rig.
 - 🎩 **Rigid accessories** placed by attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`).
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion.
-- 📦 **File readers**: `.mesh` **v2.00 → v7.00** (LODs, bones, subsets, skinning, FACS; v7 Draco via a hook) and binary **`.rbxm`** (LZ4 / ZSTD chunks, 12 property types).
+- 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **82 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **84 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -192,7 +192,7 @@ new Animator(rig).play(clip, { fade: 0.1 });
 - Named keyframes and `KeyframeMarker`s arrive through `animator.onMarker((name, clip) => …)`, like `KeyframeReached` / `GetMarkerReachedSignal`.
 - R6 animations are converted out of the classic R6 joint frames, so they play correctly on `rigType: "R6"` rigs.
 - Joints your rig doesn't have (Rthro extras, face bones) are skipped.
-- Not supported yet: `CurveAnimation` and XML `.rbxmx`.
+- XML `.rbxmx` files work the same way (`parseRbxm` detects them). Not supported yet: `CurveAnimation`.
 
 BlockRig ships no Roblox animations. Use animations you made or have the right to use.
 
@@ -242,9 +242,9 @@ anim.play(salute, { fade: 0.15 });
 | `rig.addLayeredClothing(mesh, { map?, color?, lod? })` | Skinned garment from `parseMesh` (v4+) or `makeCoat()`. |
 | `rig.addAccessory(mesh, { attachment, map?, color? })` | Rigid accessory welded by attachment name (`HairAttachment`, `HatAttachment`, `FaceFrontAttachment`, `FaceCenterAttachment`). |
 | `new Animator(rig)` | `.play(clip, { fade, weight, speed })` · `.stop(clipOrName, fade)` · `.update(dt)` · `.onMarker(fn)` · `.isPlaying(name)` |
-| `parseMesh(bytes, { decodeDraco? })` | `.mesh` v2–v7 → `{ positions, normals, uvs, indices, lods, bones, skinIndex, skinWeight, subsets, facs }` |
+| `parseMesh(bytes, { decodeDraco? })` | `.mesh` v1–v7 → `{ positions, normals, uvs, indices, lods, bones, skinIndex, skinWeight, subsets, facs }` |
 | `writeMesh(mesh, "2.00" \| "3.00" \| "4.00" \| "6.00")` | Encode a mesh, including skinning. |
-| `parseRbxm(bytes, { zstd? })` · `describeAccessory(roots)` · `findInstance` · `assetId` | Binary model files. |
+| `parseRbxm(bytes or text, { zstd? })` · `parseRbxmx(text)` · `describeAccessory(roots)` · `findInstance` · `assetId` | Binary and XML model files. |
 | `cframeToMatrix` · `matrixToCFrame` · `motor6D` · `accessoryWeld` | CFrame maths. |
 | `makeCoat({ length, slices, puff, tails })` | Procedural skinned coat (no external assets). |
 | `clips` | `idle`, `wave`, `showtime`, `run`, `card`, `victory`: original keyframes. |
@@ -271,7 +271,7 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 82 unit + regression tests (node:test, no browser needed)
+npm test             # 84 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
 npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html and faces.html)

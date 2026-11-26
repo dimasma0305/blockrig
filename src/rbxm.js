@@ -1,6 +1,7 @@
 // Reader for the binary Roblox model format (.rbxm / .rbxl).
 // Format reference: https://dom.rojo.space/binary.html
 import { Reader, toBytes, latin1, utf8, lz4Block } from "./binary.js";
+import { parseRbxmx } from "./rbxmx.js";
 
 const MAGIC = "<roblox!";
 
@@ -16,8 +17,14 @@ const MAGIC = "<roblox!";
  * @returns {RbxInstance[]} root instances
  */
 export function parseRbxm(input, options = {}) {
+  if (typeof input === "string") return parseRbxmx(input);
   const bytes = toBytes(input);
-  if (latin1(bytes.subarray(0, 8)) !== MAGIC) throw new Error("blockrig: not a binary Roblox model");
+  if (latin1(bytes.subarray(0, 8)) !== MAGIC) {
+    // XML models (.rbxmx) start with "<roblox " (possibly after a BOM / XML declaration)
+    const head = latin1(bytes.subarray(0, 256)).replace(/^﻿|^ï»¿/, "").trimStart();
+    if (/^(<\?xml[^>]*>\s*)?<roblox[\s>]/.test(head)) return parseRbxmx(utf8(bytes));
+    throw new Error("blockrig: not a Roblox model (binary or XML)");
+  }
   const r = new Reader(bytes, 32);
   const classes = new Map(), inst = new Map(), sstr = [], props = [];
   let prnt = null;

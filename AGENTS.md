@@ -26,10 +26,10 @@ Keep this table current. **Parity** means it behaves like Roblox. **Approximatio
 | `Humanoid:BuildRigFromAttachments()`: joints from `*RigAttachment` pairs | bind skeleton from joint positions (`R15_BIND`, `buildBody`) | Approximation (note 2) |
 | `Humanoid:AddAccessory()`: weld so `Handle = Part · BodyAtt · HandleAtt⁻¹` | `rig.addAccessory()` / `accessoryWeld()` | Parity (head attachments only) |
 | Layered clothing: `WrapLayer` / `WrapTarget` cages, then skinning | `rig.addLayeredClothing()`: skinning with the garment's own bone weights | Approximation (note 3) |
-| `.mesh` v2–v7 (LODs, bones, subsets, skinning, FACS) | `parseMesh()` / `writeMesh()` | Parity (v7 Draco via hook) |
-| Binary `.rbxm` (chunks, LZ4/ZSTD, interleaved encodings) | `parseRbxm()`, `describeAccessory()` | Parity for the supported property types |
+| `.mesh` v1–v7 (v1 text with v1.00 half scale; LODs, bones, subsets, skinning, FACS) | `parseMesh()` / `writeMesh()` | Parity (v7 Draco via hook) |
+| Binary `.rbxm` (chunks, LZ4/ZSTD, interleaved encodings) and XML `.rbxmx` | `parseRbxm()` (auto-detects XML), `parseRbxmx()`, `describeAccessory()` | Parity for the supported property types |
 | `KeyframeSequence` → `Keyframe(Time, Name)` → `Pose(CFrame, EasingStyle, EasingDirection, Weight)`, `KeyframeMarker` | `keyframeSequenceToClip(parseRbxm(bytes))` → clip with per-joint quaternion + translation, Pose.Weight, `KeyframeReached` / marker events | Parity for binary `.rbxm` (note 4) |
-| `CurveAnimation` (FloatCurve / RotationCurve / Vector3Curve) and XML `.rbxmx` | not imported yet | Missing |
+| `CurveAnimation` (FloatCurve / RotationCurve / Vector3Curve) | not imported yet | Missing |
 | `EasingStyle` Linear / Constant / Cubic / Elastic / Bounce + `EasingDirection` | `ease(style, dir, t)` | Parity (curves follow TweenService; note 5) |
 | `AnimationTrack` priority, weight, fade, speed, `Looped`, `KeyframeReached` / markers | `Animator.play/stop`, `PRIORITY`, `onMarker` | Parity (note 6) |
 | Body scaling `BodyHeightScale` / `BodyWidthScale` / `BodyDepthScale` / `HeadScale` | `createRig({ scale })` | Approximation (note 7) |

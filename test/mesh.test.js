@@ -92,10 +92,22 @@ test("mesh: LOD index ranges", () => {
 
 test("mesh: rejects bad input", () => {
   assert.throws(() => parseMesh(Buffer.from("hello world")), /not a Roblox mesh/);
-  assert.throws(() => parseMesh(Buffer.from("version 1.00\n1\n[0,0,0]")), /1\.x/);
+  assert.throws(() => parseMesh(Buffer.from("version 1.00\n1\n[0,0,0]")), /expected 3/);
   assert.throws(() => parseMesh(Buffer.from("version 9.00\n")), /unsupported/);
   const ok = Buffer.from(writeMesh(coat, "2.00"));
   assert.throws(() => parseMesh(ok.subarray(0, ok.length - 10)), /end of data/);
   const bad = Buffer.from(ok); bad.writeUInt32LE(99999, bad.length - 4);
   assert.throws(() => parseMesh(bad), /out of range/);
+});
+
+test("mesh v1.00 / v1.01 (text): positions, normals, flipped UVs, v1.00 half scale", () => {
+  const body = "1\n[2,0,0][0,1,0][0.5,0.25,0][0,2,0][0,1,0][0,0,0][0,0,2][0,1,0][1,1,0]";
+  const a = parseMesh(Buffer.from(`version 1.00\n${body}`));
+  assert.equal(a.vertexCount, 3); assert.equal(a.faceCount, 1);
+  assert.deepEqual(Array.from(a.positions), [1, 0, 0, 0, 1, 0, 0, 0, 1]);
+  assert.deepEqual(Array.from(a.uvs), [0.5, 0.75, 0, 1, 1, 0]);
+  assert.deepEqual(Array.from(a.normals.subarray(0, 3)), [0, 1, 0]);
+  const b = parseMesh(Buffer.from(`version 1.01\n${body}`));
+  assert.deepEqual(Array.from(b.positions.subarray(0, 3)), [2, 0, 0]);
+  assert.throws(() => parseMesh(Buffer.from("version 1.00\n2\n[0,0,0][0,1,0][0,0,0]")), /expected 6/);
 });

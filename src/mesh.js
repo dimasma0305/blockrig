@@ -29,7 +29,7 @@ export function parseMesh(input, options = {}) {
   const major = +m[1];
   const r = new Reader(bytes, nl + 1);
   const out = blank(header);
-  if (major === 1) throw new Error("blockrig: mesh version 1.x (text) is not supported");
+  if (major === 1) return readV1(bytes.subarray(nl + 1), out, +m[2]);
   if (major === 2) return readV2(r, out);
   if (major === 3) return readV3(r, out);
   if (major === 4 || major === 5) return readV45(r, out, major);
@@ -59,6 +59,30 @@ function readFaces(r, out, n) {
   for (let i = 0; i < n * 3; i++) I[i] = r.u32();
   for (let i = 0; i < I.length; i++) if (I[i] >= out.vertexCount) throw new RangeError(`blockrig: face index ${I[i]} out of range`);
   out.faceCount = n; out.indices = I;
+}
+
+// v1.00 / v1.01: ASCII. A face-count line, then for every face three vertices, each written as three
+// bracketed triples: [position][normal][uv w]. v1.00 positions are at double scale (multiply by 0.5).
+// UVs are stored with v pointing down; flip to match the binary versions.
+function readV1(body, out, minor) {
+  const text = latin1(body);
+  const nl = text.indexOf("\n");
+  const nFaces = parseInt(text.slice(0, nl < 0 ? undefined : nl), 10);
+  if (!(nFaces >= 0)) throw new Error("blockrig: mesh v1 is missing its face count");
+  const nums = [];
+  for (const t of text.slice(nl + 1).matchAll(/\[([^\]]*)\]/g)) { const p = t[1].split(","); nums.push(+p[0], +p[1], +p[2]); }
+  const nV = nFaces * 3;
+  if (nums.length < nV * 9) throw new RangeError(`blockrig: mesh v1 has ${nums.length / 9} vertices, expected ${nV}`);
+  const scale = minor === 0 ? 0.5 : 1;
+  const P = new Float32Array(nV * 3), N = new Float32Array(nV * 3), U = new Float32Array(nV * 2), I = new Uint32Array(nV);
+  for (let i = 0; i < nV; i++) {
+    const o = i * 9;
+    for (let k = 0; k < 3; k++) { P[i * 3 + k] = nums[o + k] * scale; N[i * 3 + k] = nums[o + 3 + k]; }
+    U[i * 2] = nums[o + 6]; U[i * 2 + 1] = 1 - nums[o + 7];
+    I[i] = i;
+  }
+  Object.assign(out, { vertexCount: nV, faceCount: nFaces, positions: P, normals: N, uvs: U, indices: I, lods: [0, nFaces] });
+  return out;
 }
 
 function readV2(r, out) {
