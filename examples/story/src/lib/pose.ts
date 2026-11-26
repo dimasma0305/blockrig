@@ -1,28 +1,32 @@
-// Frame-pure animation on top of BlockRig's Animator: the pose at time t is rebuilt from scratch each frame
-// from a list of layers, so frames can render in any order (as Remotion does).
+// Frame-pure animation with BlockRig's Animator: every frame seeks each layer's AnimationTrack to its own time
+// (timePosition), sets its weight with no fade, and steps the Animator by 0. Nothing carries over between
+// frames, so Remotion can render them in any order.
 import * as THREE from "three";
-import { Animator } from "blockrig";
+import { Animator, type AnimationTrack } from "blockrig";
 
 export type Layer = { clip: any; at?: number; fade?: number; weight?: number; speed?: number };
 
-const clipLength = (clip: any) => clip.length || (clip.keyframes.length ? Math.max(...clip.keyframes.map((k: any) => k.t)) : 0);
-const animators = new WeakMap<object, Animator>();
+const state = new WeakMap<object, { an: Animator; tracks: Map<any, AnimationTrack> }>();
 
-/** Pose `rig` at local time `t` (seconds) from layers. Later layers at higher priority override earlier ones. */
+/** Pose `rig` at local time `t` (seconds) from layers. Higher-priority clips override lower ones. */
 export function poseAt(rig: any, layers: Layer[], t: number) {
-  let an = animators.get(rig);
-  if (!an) { an = new Animator(rig); animators.set(rig, an); }
-  an.tracks.length = 0;
+  let s = state.get(rig);
+  if (!s) { s = { an: new Animator(rig), tracks: new Map() }; state.set(rig, s); }
+  const used = new Set<AnimationTrack>();
   for (const L of layers) {
     const lt = (t - (L.at ?? 0)) * (L.speed ?? 1);
     if (lt < 0) continue;
     const w = (L.weight ?? 1) * Math.min(1, L.fade ? lt / L.fade : 1);
     if (w <= 0) continue;
-    const tr: any = an.play(L.clip, { fade: 0, weight: w });
-    const len = clipLength(L.clip);
-    tr.time = len <= 0 ? 0 : L.clip.loop === false ? Math.min(lt, len - 1e-4) : lt % len;
+    let tr = s.tracks.get(L.clip);
+    if (!tr) { tr = s.an.loadAnimation(L.clip); s.tracks.set(L.clip, tr); }
+    if (!tr.isPlaying) tr.play(0, w, 0); else tr.adjustWeight(w, 0);
+    // a non-looped clip holds its last pose (just short of the end, where Roblox would stop the track)
+    tr.timePosition = tr.length <= 0 ? 0 : tr.looped ? lt % tr.length : Math.min(lt, tr.length - 1e-4);
+    used.add(tr);
   }
-  an.update(0);
+  for (const tr of s.an.getPlayingAnimationTracks()) if (!used.has(tr)) tr.stop(0);
+  s.an.update(0);
 }
 
 const v = new THREE.Vector3();

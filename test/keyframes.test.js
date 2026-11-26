@@ -31,7 +31,7 @@ test("KeyframeSequence -> clip: timing, Loop, Priority, names, KeyframeReached a
   assert.deepEqual(c.keyframes.map((k) => k.t), [0, 0.5, 1]);
   assert.ok(!("HumanoidRootPart" in c.keyframes[0].poses), "the HumanoidRootPart pose has no motor and is skipped");
   assert.deepEqual(Object.keys(c.keyframes[0].poses).sort(), ["LowerTorso", "RightUpperArm", "UpperTorso"]);
-  assert.deepEqual(c.markers, [{ t: 0.5, name: "Sound", value: "whoosh" }, { t: 0.5, name: "Dip" }]);
+  assert.deepEqual(c.markers, [{ t: 0.5, name: "Sound", value: "whoosh", kind: "marker" }, { t: 0.5, name: "Dip", kind: "keyframe" }]);
   close(c.keyframes[1].poses.LowerTorso.p, [0, -0.3, 0]);
   assert.equal(c.keyframes[0].poses.RightUpperArm.p, undefined, "zero translation is left out");
 });

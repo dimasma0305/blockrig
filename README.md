@@ -55,11 +55,11 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
 - 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, with its bind pose retargeted onto your rig.
 - 🎩 **Rigid accessories** placed by attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`).
-- 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion.
+- 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion, and Roblox-style `AnimationTrack`s (seek, speed, weight, looped, priority, marker and keyframe signals, Stopped/Ended/DidLoop).
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **101 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **109 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -274,12 +274,32 @@ new Animator(rig).play(clip, { fade: 0.1 });
 
 - Each `Pose` drives the joint whose part has its name. Its `CFrame` becomes the Motor6D `Transform` (rotation and translation), and `Weight` is honoured.
 - `EasingStyle` / `EasingDirection` (including legacy Cubic's reversed direction and `CubicV2`), `Loop` and `Priority` come across as they are.
-- Named keyframes and `KeyframeMarker`s arrive through `animator.onMarker((name, clip) => …)`, like `KeyframeReached` / `GetMarkerReachedSignal`.
+- Named keyframes fire the track's `keyframeReached`, and `KeyframeMarker`s fire `getMarkerReachedSignal(name)` with their value (see below).
 - R6 animations are converted out of the classic R6 joint frames, so they play correctly on `rigType: "R6"` rigs.
 - Joints your rig doesn't have (Rthro extras, face bones) are skipped.
 - XML `.rbxmx` files work the same way (`parseRbxm` detects them). Not supported yet: `CurveAnimation`.
 
 BlockRig ships no Roblox animations. Use animations you made or have the right to use.
+
+## Animation tracks
+
+`animator.play()` and `animator.loadAnimation()` return an `AnimationTrack` that works like Roblox's:
+
+```js
+const track = animator.loadAnimation(clip);          // not playing yet, like Animator:LoadAnimation
+track.play(0.2, 1, 1);                               // fadeTime, weight, speed
+track.adjustSpeed(-1);                               // play backwards
+track.adjustWeight(0.5, 0.3);                        // fade to half weight over 0.3 s
+track.timePosition = 1.25;                           // seek
+track.looped = false; track.priority = "Action2";
+track.getMarkerReachedSignal("Footstep").connect((value) => playStep(value));
+track.keyframeReached.connect((name) => console.log(name));
+track.didLoop.connect(() => {}); track.stopped.connect(() => {}); track.ended.connect(() => {});
+track.stop(0.3);
+animator.getPlayingAnimationTracks();
+```
+
+`fadeTime` is the time to go from the current weight to the target, as in Roblox. `stopped` fires when `stop()` is called or a non-looped track reaches its end, and `ended` once it has faded out. Setting `timePosition` and calling `animator.update(0)` poses the rig at an exact time, so a renderer can draw frames in any order. The story example does this with Remotion.
 
 ## Write your own clips
 
@@ -327,7 +347,8 @@ anim.play(salute, { fade: 0.15 });
 | `rig.setJoint(name, x, y, z)` · `setJointQuat(name, q)` · `nudgeJoint(name, x, y, z)` | Set one joint, or add on top of the current pose (good for look-at). |
 | `rig.addLayeredClothing(mesh, { map?, color?, lod? })` | Skinned garment from `parseMesh` (v4+) or `makeCoat()`. |
 | `rig.addAccessory(mesh, { attachment, map?, color? })` | Rigid accessory welded by attachment name (`HairAttachment`, `HatAttachment`, `FaceFrontAttachment`, `FaceCenterAttachment`). |
-| `new Animator(rig)` | `.play(clip, { fade, weight, speed })` · `.stop(clipOrName, fade)` · `.update(dt)` · `.onMarker(fn)` · `.isPlaying(name)` |
+| `new Animator(rig)` | `.play(clip, { fade, weight, speed })` · `.loadAnimation(clip)` · `.stop(clipOrName, fade)` · `.update(dt)` · `.getPlayingAnimationTracks()` · `.onMarker(fn)` · `.isPlaying(name)` |
+| `AnimationTrack` | `.play(fade, weight, speed)` · `.stop(fade)` · `.adjustSpeed()` · `.adjustWeight()` · `.timePosition` · `.looped` · `.priority` · `.getMarkerReachedSignal()` · `.getTimeOfKeyframe()` · events `stopped` `ended` `didLoop` `keyframeReached` |
 | `parseMesh(bytes, { decodeDraco? })` | `.mesh` v1–v7 → `{ positions, normals, uvs, indices, lods, bones, skinIndex, skinWeight, subsets, facs }` |
 | `writeMesh(mesh, "2.00" \| "3.00" \| "4.00" \| "6.00")` | Encode a mesh, including skinning. |
 | `parseRbxm(bytes or text, { zstd? })` · `parseRbxmx(text)` · `describeAccessory(roots)` · `findInstance` · `assetId` | Binary and XML model files. |

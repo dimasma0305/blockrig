@@ -64,7 +64,7 @@ export function keyframeSequenceToClip(roots, o = {}) {
     };
     const walk = (node) => {
       for (const c of node.children) {
-        if (c.className === "KeyframeMarker") markers.push({ t, name: c.props.Name, value: c.props.Value ?? "" });
+        if (c.className === "KeyframeMarker") markers.push({ t, name: c.props.Name, value: c.props.Value ?? "", kind: "marker" });
         if (c.className === "Folder" && c.props.Name === "FaceControls") {
           for (const n of c.children) if (n.className === "NumberPose") { const [ease, dir] = easing(n); faces[n.props.Name] = { v: n.props.Value ?? 0, ease, dir, weight: n.props.Weight ?? 1 }; }
           continue;
@@ -86,7 +86,7 @@ export function keyframeSequenceToClip(roots, o = {}) {
     };
     walk(kf);
     const label = kf.props.Name;
-    if (label && label !== "Keyframe") markers.push({ t, name: label });
+    if (label && label !== "Keyframe") markers.push({ t, name: label, kind: "keyframe" });
     keyframes.push(Object.keys(faces).length ? { t, poses, faces } : { t, poses });
   }
   const length = keyframes.length ? keyframes[keyframes.length - 1].t : 0;

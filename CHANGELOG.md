@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **AnimationTrack**: `animator.loadAnimation(clip)` and `animator.play()` return Roblox-style tracks: `play(fadeTime, weight, speed)`, `stop(fadeTime)`, `adjustSpeed` (negative plays backwards), `adjustWeight(weight, fadeTime)`, settable `timePosition`, `looped`, `priority`, `length`, `isPlaying`, `weightCurrent` / `weightTarget`, `getTimeOfKeyframe`, `getMarkerReachedSignal(name)` (with the marker's value), and `stopped` / `ended` / `didLoop` / `keyframeReached` signals; `animator.getPlayingAnimationTracks()`.
+- **Behaviour change (parity)**: a fade's time is now the time to go from the current weight to the target, as in Roblox (it was a rate of one full weight per fadeTime). Markers fire in time order. Imported markers carry `kind: "marker" | "keyframe"`.
+- The story example poses frames with `timePosition` and `update(0)` instead of reaching into the Animator.
+
 - **Dynamic heads (FACS)**: `parseFacs()` reads a head mesh's FACS block (bone and control names, quantized pose matrices, 2- and 3-pose correctives); `rig.setHead()` with such a mesh makes a dynamic head driven by `rig.faceControls` (Roblox's 50 FaceControls) and `rig.applyFaceControls()`; the head texture is layered over HeadColor3. Checked on the official Woman Face and Man Face heads.
 - **Face animation**: `keyframeSequenceToClip()` imports FaceControls NumberPoses (mood animations), and the Animator blends face controls by priority and weight.
 - `.rbxm` reader: Float64 properties (NumberPose.Value).
@@ -14,7 +18,7 @@
 - `examples/clothing.html` and `docs/clothing.png`; `ONLY=name npm run screenshots`.
 - The story example (`examples/story`): a 26-second short made with BlockRig, Remotion and three.js.
 - Bundlers: version-specific three.js colour-space constants are read at run time.
-- 101 tests.
+- 109 tests.
 
 ## 0.2.0
 

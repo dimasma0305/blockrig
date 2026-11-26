@@ -53,7 +53,7 @@ Keep this table current. **Parity** means it behaves like Roblox. **Approximatio
 | `KeyframeSequence` → `Keyframe(Time, Name)` → `Pose(CFrame, EasingStyle, EasingDirection, Weight)`, `KeyframeMarker` | `keyframeSequenceToClip(parseRbxm(bytes))` → clip with per-joint quaternion + translation, Pose.Weight, `KeyframeReached` / marker events | Parity for binary `.rbxm` (note 4) |
 | `CurveAnimation` (FloatCurve / RotationCurve / Vector3Curve) | not imported yet | Missing |
 | `EasingStyle` Linear / Constant / Cubic / Elastic / Bounce + `EasingDirection` | `ease(style, dir, t)` | Parity (curves follow TweenService; note 5) |
-| `AnimationTrack` priority, weight, fade, speed, `Looped`, `KeyframeReached` / markers | `Animator.play/stop`, `PRIORITY`, `onMarker` | Parity (note 6) |
+| `Animator:LoadAnimation`, `AnimationTrack` (`Play/Stop(fadeTime)`, `AdjustSpeed`, `AdjustWeight(w, fadeTime)`, `TimePosition`, `Looped`, `Priority`, `Length`, `IsPlaying`, `WeightCurrent/Target`, `GetTimeOfKeyframe`, `GetMarkerReachedSignal`, `KeyframeReached`, `Stopped`, `Ended`, `DidLoop`), `GetPlayingAnimationTracks` | `animator.loadAnimation()` / `play()` -> `AnimationTrack` (camelCase), `Signal.connect()` | Parity (note 6) |
 | Body scaling `BodyHeightScale` / `BodyWidthScale` / `BodyDepthScale` / `HeadScale` | `createRig({ scale })` | Approximation (note 7) |
 | `BodyTypeScale` / `BodyProportionScale` (Rthro blending) | `shape: "slender" | "buff" | "tall" | "child"` | **Extra**: not Roblox's tables (note 7) |
 | Classic face: a `Decal` named `face` on `Head`, `Face = Front`; changing the expression = replacing its `Texture` (instant) | `createFace({ images })` + `rig.addFaceDecal()` / head wrap; `set(name)` swaps instantly | Parity |

@@ -146,16 +146,51 @@ export type Priority = "Core" | "Idle" | "Movement" | "Action" | "Action2" | "Ac
 export interface Clip {
   name: string; length?: number; loop?: boolean; priority?: Priority;
   keyframes: { t: number; poses: Record<string, { r?: [number, number, number]; q?: [number, number, number, number]; p?: [number, number, number]; weight?: number; ease?: EasingStyle; dir?: EasingDirection }>; faces?: Partial<Record<FaceControlName, number | { v: number; ease?: EasingStyle; dir?: EasingDirection; weight?: number }>> }[];
-  markers?: { t: number; name: string; value?: string; fade?: number }[];
+  markers?: { t: number; name: string; value?: string; fade?: number; kind?: "marker" | "keyframe" }[];
 }
-export interface Track { clip: Clip; time: number; weight: number; target: number; fade: number; speed: number }
+export interface Connection { disconnect(): void }
+export class Signal<A extends unknown[] = []> {
+  connect(fn: (...args: A) => void): Connection;
+  once(fn: (...args: A) => void): Connection;
+  fire(...args: A): void;
+}
+/** A clip loaded on an Animator, like Roblox's AnimationTrack. */
+export class AnimationTrack {
+  readonly animator: Animator; readonly clip: Clip; readonly name: string; readonly length: number;
+  /** Current time in seconds; set it to seek (clamped to 0..length; markers in between don't fire). */
+  timePosition: number;
+  looped: boolean; priority: Priority;
+  readonly speed: number; readonly isPlaying: boolean; readonly weightCurrent: number; readonly weightTarget: number;
+  /** Fired when stop() is called or a non-looped track reaches its end. */
+  readonly stopped: Signal;
+  /** Fired once the track has fully faded out. */
+  readonly ended: Signal;
+  readonly didLoop: Signal;
+  readonly keyframeReached: Signal<[string]>;
+  play(fadeTime?: number, weight?: number, speed?: number): this;
+  stop(fadeTime?: number): this;
+  /** Negative speeds play backwards. */
+  adjustSpeed(speed?: number): this;
+  /** Fade from the current weight to `weight` over `fadeTime` seconds. */
+  adjustWeight(weight?: number, fadeTime?: number): this;
+  getTimeOfKeyframe(name: string): number;
+  getMarkerReachedSignal(name: string): Signal<[string]>;
+  /** @deprecated use timePosition */ time: number;
+  /** @deprecated use weightCurrent */ weight: number;
+}
+/** @deprecated use AnimationTrack */
+export type Track = AnimationTrack;
 export class Animator {
   constructor(rig: Rig);
-  rig: Rig; tracks: Track[];
-  play(clip: Clip, o?: { fade?: number; weight?: number; speed?: number }): Track;
+  rig: Rig; tracks: AnimationTrack[];
+  /** A track that isn't playing yet (Animator:LoadAnimation). */
+  loadAnimation(clip: Clip): AnimationTrack;
+  /** Play a clip (restarts it if it's already playing). */
+  play(clip: Clip, o?: { fade?: number; weight?: number; speed?: number }): AnimationTrack;
   stop(clipOrName?: Clip | string, fade?: number): void;
   isPlaying(name: string): boolean;
-  onMarker(fn: (name: string, clip: Clip) => void): void;
+  getPlayingAnimationTracks(): AnimationTrack[];
+  onMarker(fn: (name: string, clip: Clip, value?: string) => void): void;
   update(dt: number): void;
 }
 export function ease(style: EasingStyle, dir: EasingDirection, t: number): number;

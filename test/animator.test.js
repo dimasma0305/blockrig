@@ -88,7 +88,8 @@ test("fades are linear in time", () => {
   const tr = an.play(clip("f", [arm(0, 1)], { length: 1 }), { fade: 0.4 });
   an.update(0.1); near(tr.weight, 0.25);
   an.update(0.1); near(tr.weight, 0.5);
-  an.stop("f", 0.2); an.update(0.1); near(tr.weight, 0);
+  // fadeTime is the time to reach the target from the current weight (Roblox): 0.5 -> 0 over 0.2 s
+  an.stop("f", 0.2); an.update(0.1); near(tr.weight, 0.25); an.update(0.1); near(tr.weight, 0);
 });
 
 test("markers fire once per loop, including across the wrap", () => {

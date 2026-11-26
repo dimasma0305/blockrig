@@ -6,7 +6,7 @@ export { cframeToMatrix, matrixToCFrame, motor6D, accessoryWeld } from "./cframe
 export { R15_BIND, R15_JOINTS, R15_FLOOR, R15_NECK_Y, HEAD_ATTACHMENTS } from "./skeleton.js";
 export { createRig, headGeometry, faceTexture, createFaceDecal, loadRobloxTexture, setSRGB } from "./rig.js";
 export { createFace, drawFace, expression, mixFace, EXPRESSIONS, FACE_DEFAULTS } from "./face.js";
-export { Animator, ease, PRIORITY } from "./animator.js";
+export { Animator, AnimationTrack, Signal, ease, PRIORITY } from "./animator.js";
 export { clips } from "./clips.js";
 export { makeCoat } from "./garment.js";
 export { buildBody, R15_SHAPES, jointsOf } from "./body.js";
