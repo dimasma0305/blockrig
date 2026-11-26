@@ -21,7 +21,7 @@ npm run preview      # docs/story.mp4 (small copy) + docs/story-preview.gif
 npm run studio       # Remotion Studio, to scrub the timeline
 ```
 
-`VOICE_ENGINE=edge npm run voice` uses the Microsoft neural voice through `edge-tts` (`pip install edge-tts`). That sends the narration text to Microsoft's online service; the default voice stays offline.
+The published video uses the Microsoft neural voice: `VOICE_ENGINE=edge npm run voice` (needs `pip install edge-tts`). It sends the narration text to Microsoft's online service and returns real per-word timings, which the captions lock to. Plain `npm run voice` stays offline (Windows SAPI) and estimates the word timings.
 
 ## How it is put together
 
