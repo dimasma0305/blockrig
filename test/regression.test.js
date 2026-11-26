@@ -85,3 +85,15 @@ test("regression: body shapes, scaling and R6 keep their joint layout", async ()
   out["R6 card @35%"] = sample(r6);
   snapshot("bodies", out);
 });
+
+test("regression: every expression draws the same shapes", async () => {
+  const { drawFace, expression, EXPRESSIONS } = await import("../src/face.js");
+  const { mockCanvas } = await import("./helpers/mock-canvas.js");
+  const { createHash } = await import("node:crypto");
+  const out = {};
+  for (const name of Object.keys(EXPRESSIONS)) {
+    const c = mockCanvas(); drawFace(c.getContext(), expression(name));
+    out[name] = { ops: c.calls.length, sha256: createHash("sha256").update(JSON.stringify(c.calls)).digest("hex").slice(0, 16) };
+  }
+  snapshot("faces", out);
+});

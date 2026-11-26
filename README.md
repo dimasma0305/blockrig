@@ -32,13 +32,14 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 ## Features
 
 - 🧍 **Every classic body**: **R6** (six parts, classic pivots) and **R15** in five shapes (`classic`, `slender`, `buff`, `tall`, `child`) or your own proportions, with Roblox-style `height / width / depth / head` scaling, swappable body-part meshes, and R15 ⇄ R6 clip retargeting.
+- 😃 **Live facial expressions**: 17 built-in expressions drawn from 21 blendable parameters (brows, eye shape, look direction, wink, `><` and `x` eyes, mouth curve/open/skew, teeth, tongue, blush, tears, sweat), with automatic blinking, talking, smooth fades and `face:` markers inside clips. Works on BlockRig heads or as a decal on any head.
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
 - 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, with its bind pose retargeted onto your rig.
 - 🎩 **Rigid accessories** placed by attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`).
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion.
 - 📦 **File readers**: `.mesh` **v2.00 → v7.00** (LODs, bones, subsets, skinning, FACS; v7 Draco via a hook) and binary **`.rbxm`** (LZ4 / ZSTD chunks, 12 property types).
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
-- 🧪 **64 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **73 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -127,6 +128,37 @@ const r6Clips = retargetAll(clips, toR6);
 
 Layered clothing needs an R15 rig (garments are skinned to the 15 R15 bones). It follows every R15 shape, staying attached to its bones as they move apart.
 
+## Expressions
+
+<img src="docs/faces.png" alt="Eighteen blocky heads showing BlockRig expressions: neutral, happy, grin, laugh, smug, wink, determined, angry, furious, roar, shocked, scared, sad, hurt, sleepy, embarrassed, dazed and talking" width="100%">
+
+```js
+import { createRig, createFace, Animator } from "blockrig";
+
+const face = createFace({ expression: "determined" });   // blinks on its own
+const rig = createRig({ face });                          // wrapped onto the block head, updated by the Animator
+
+rig.setExpression("furious", { fade: 0.15 });            // blend to another expression
+rig.setExpression({ mouthOpen: 0.8, browY: 0.6 });       // or set any parameters directly
+face.lookAt(0.6, -0.2);                                  // eyes follow a target
+face.talk(true);                                         // mouth flaps until talk(false)
+
+// switch faces from inside a clip
+const taunt = { name: "taunt", length: 1.2, keyframes: [/* ... */],
+  markers: [{ t: 0.1, name: "face:smug" }, { t: 0.8, name: "face:laugh" }] };
+```
+
+Each expression is a set of numbers, so any two blend smoothly. You can mix your own with `mixFace(a, b, t)`, or draw a single frame onto any 2D canvas with `drawFace(ctx, params, style)`. For heads that aren't BlockRig's barrel, such as downloaded avatars, `rig.addFaceDecal(face, { radius, height, arc })` puts the live face on a curved decal that follows the neck. Style options are `ink`, `eyeColor`, `glow` (glowing monster eyes) and `background` (an opaque decal that covers a baked-in face).
+
+| Parameter | Range | | Parameter | Range |
+|---|---|---|---|---|
+| `browAngle` | −1 worried → 1 angry | | `mouthCurve` | −1 frown → 1 smile |
+| `browY` | −1 low → 1 raised | | `mouthOpen` | 0 → 1 |
+| `eyeOpen`, `squint`, `eyeSize` | blink, smiling eyes, size | | `mouthWidth`, `mouthSkew` | width, smirk |
+| `whites` | 0 ink → 1 white with pupil | | `teeth`, `tongue` | 0 → 1 |
+| `lookX`, `lookY` | −1 → 1 | | `blush`, `tears`, `sweat` | 0 → 1 |
+| `wink`, `wince`, `ko` | right-eye wink, `><`, `x` | | `brows` | 0 hidden → 1 |
+
 ## Write your own clips
 
 Clips are plain JSON, shaped like a Roblox `KeyframeSequence`. A pose's `ease`/`dir` shape the move **from** its keyframe to the joint's next keyframe. A joint can be left out of any keyframe and will interpolate across the gap.
@@ -163,6 +195,9 @@ anim.play(salute, { fade: 0.15 });
 | `buildBody({ rigType, shape, scale })` · `R15_SHAPES` | The bind skeleton and part layout a rig is built from. |
 | `rig.setBodyPart(name, mesh, { map?, color?, scale? })` | Swap a blocky part (or `"Head"`) for a mesh. |
 | `toR6(clip)` · `toR15(clip)` · `retargetAll(clips, fn)` | Retarget clips between rig types. |
+| `createFace({ expression, ink, eyeColor, glow, background, blink })` | A live face: `.set(name or params, { fade })`, `.lookAt(x, y)`, `.talk(on)`, `.update(dt)`, `.onChange(fn)` |
+| `rig.setExpression(...)` · `rig.addFaceDecal(face, o)` · `rig.face` | Drive the rig's face; markers named `face:<expression>` do it from a clip. |
+| `EXPRESSIONS` · `FACE_DEFAULTS` · `expression()` · `mixFace()` · `drawFace()` · `createFaceDecal()` | Expression data and drawing. |
 | `rig.setPose(pose)` / `rig.resetPose()` | `{ Joint: [x, y, z], rootOffset: [x, y, z] }` in radians and studs. |
 | `rig.setJoint(name, x, y, z)` · `setJointQuat(name, q)` · `nudgeJoint(name, x, y, z)` | Set one joint, or add on top of the current pose (good for look-at). |
 | `rig.addLayeredClothing(mesh, { map?, color?, lod? })` | Skinned garment from `parseMesh` (v4+) or `makeCoat()`. |
@@ -197,14 +232,14 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 64 unit + regression tests (node:test, no browser needed)
+npm test             # 73 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
-npm run demo         # http://127.0.0.1:8787/examples/ (and /examples/bodies.html)
+npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html and faces.html)
 ```
 
-- **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion.
-- **Regression tests** pin the writer's output byte-for-byte (SHA-256), the parse of a committed fixture file, the joint positions plus skinned coat vertices of every bundled clip at four points in time, and the joint layout of every body shape, a scaled body, R6 and an R6-retargeted clip.
+- **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every expression (valid parameters, the right shapes for open mouths, `x` and `><` eyes), face blending, blinking, look/talk, face markers and decals, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion.
+- **Regression tests** pin the writer's output byte-for-byte (SHA-256), the parse of a committed fixture file, the joint positions plus skinned coat vertices of every bundled clip at four points in time, the joint layout of every body shape, a scaled body, R6 and an R6-retargeted clip, and the exact drawing commands for every expression.
 - **CI** runs everything on Node 20, 22 and 24 against three.js r128 and r184, builds the UMD bundle, smoke-tests it in a VM and checks the package contents. Pushing a `v*` tag publishes to npm with provenance and creates a GitHub release. `main` deploys the demo to GitHub Pages.
 
 ## Assets and trademarks

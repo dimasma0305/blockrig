@@ -85,7 +85,13 @@ export class Animator {
       const prev = tr.time; tr.time += dt * tr.speed;
       const L = tr.c.length;
       if (L > 0 && tr.time >= L) { if (tr.c.loop) tr.time %= L; else { tr.time = L; if (tr.target > 0) { tr.target = 0; tr.fade = tr.fade || 0.1; } } }
-      (tr.clip.markers || []).forEach((m) => { const hit = tr.time >= prev ? m.t > prev && m.t <= tr.time : m.t > prev || m.t <= tr.time; if (hit) this.listeners.forEach((fn) => fn(m.name, tr.clip)); });
+      (tr.clip.markers || []).forEach((m) => {
+      const hit = tr.time >= prev ? m.t > prev && m.t <= tr.time : m.t > prev || m.t <= tr.time;
+      if (!hit || tr.target <= 0) return;
+      // "face:<expression>" markers change the rig's live face
+      if (m.name.startsWith("face:") && rig.setExpression) rig.setExpression(m.name.slice(5), { fade: m.fade ?? 0.12 });
+      this.listeners.forEach((fn) => fn(m.name, tr.clip));
+    });
       const step = tr.fade > 0 ? dt / tr.fade : 1;
       tr.weight += Math.max(-step, Math.min(step, tr.target - tr.weight));
     }
@@ -120,5 +126,6 @@ export class Animator {
       if (wsum > 0) off.lerp(lv.divideScalar(wsum), Math.min(1, wsum));
     }
     rig.setRootOffset(off.x, off.y, off.z);
+    if (rig.updateFace) rig.updateFace(dt);
   }
 }

@@ -49,9 +49,10 @@ export function headGeometry(height = HEAD_H, radius = HEAD_R) {
 }
 
 /** Wrap a flat face decal (image or canvas) onto the front half of the head without stretching it. */
-export function faceTexture(image, skin = "#f6dcc0") {
-  if (typeof document === "undefined") return null;
-  const W = 1024, H = 512, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+export function faceTexture(image, skin = "#f6dcc0", target = null) {
+  if (typeof document === "undefined" && !target) return null;
+  const W = 1024, H = 512, cv = target || document.createElement("canvas");
+  if (!target) { cv.width = W; cv.height = H; }
   const g = cv.getContext("2d"); g.fillStyle = skin; g.fillRect(0, 0, W, H);
   if (image) {
     const half = W / 4;
@@ -61,7 +62,24 @@ export function faceTexture(image, skin = "#f6dcc0") {
       g.drawImage(image, sx, 0, sw, image.height, W / 2 + x, 0, 1.2, H);
     }
   }
+  if (target) return null;
   const t = new THREE.CanvasTexture(cv); t.anisotropy = 8; return setSRGB(t);
+}
+
+/**
+ * A face decal for any head (e.g. a downloaded avatar): a curved strip in front of the head that shows a
+ * createFace() canvas. Head space: origin at the neck, Y up, the face looks towards -Z.
+ * @param {object} face a createFace() controller
+ * @param {{ radius?: number, height?: number, arc?: number, y?: number, segments?: number }} [o]
+ */
+export function createFaceDecal(face, { radius = 0.63, height = 1.2, arc = Math.PI * 0.95, y = 0.6, segments = 24 } = {}) {
+  const g = new THREE.CylinderGeometry(radius, radius, height, segments, 1, true, Math.PI - arc / 2, arc);
+  g.translate(0, y, 0);
+  const tex = new THREE.CanvasTexture(face.canvas); setSRGB(tex); tex.anisotropy = 8;
+  const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.04, depthWrite: false, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2 });
+  const mesh = new THREE.Mesh(g, mat); mesh.name = "FaceDecal"; mesh.renderOrder = 2;
+  face.onChange(() => { tex.needsUpdate = true; });
+  return mesh;
 }
 
 function geometryFromMesh(mesh, { lod = 0, skinned = false } = {}) {
@@ -177,6 +195,7 @@ export function createRig(o = {}) {
   // ---- blocky body ----
   const parts = {};
   let headMaterial = null, colors = null;
+  const faceState = { face: null, tex: null, rewrap: null };
   const mats = {};
   if (opts.body !== false) {
     colors = Object.assign({ skin: "#f6dcc0", shirt: "#1e1619", pants: "#241c1f", shoes: "#0b0708" }, opts.body);
@@ -184,8 +203,13 @@ export function createRig(o = {}) {
     for (const p of spec.parts) parts[p.bone] = hang(p.bone, partMesh(p, mats));
     const hg = headGeometry(); hg.translate(0, HEAD_H / 2, 0);
     headMaterial = material({ color: colors.skin });
-    const tex = opts.face ? faceTexture(opts.face, colors.skin) : null;
+    const live = opts.face && opts.face.isFace ? opts.face : null;
+    const tex = opts.face ? faceTexture(live ? live.canvas : opts.face, colors.skin) : null;
     if (tex) { headMaterial.map = tex; headMaterial.color.set(0xffffff); }
+    if (live) {
+      faceState.face = live; faceState.tex = tex;
+      faceState.rewrap = () => { if (tex) { faceTexture(live.canvas, colors.skin, tex.image); tex.needsUpdate = true; } };
+    }
     parts.Head = new THREE.Mesh(hg, headMaterial); head.add(parts.Head);
     if (outline) { const ol = new THREE.Mesh(hg, olBox); parts.Head.userData.outline = ol; head.add(ol); }
   }
@@ -287,6 +311,22 @@ export function createRig(o = {}) {
       if (old) { old.visible = false; if (old.userData.outline) old.userData.outline.visible = false; }
       parts[partName] = m;
       return m;
+    },
+
+    /** The live face (createFace controller) driving this rig's head, if any. */
+    get face() { return faceState.face; },
+    /** Change expression with a fade (needs a live face). */
+    setExpression(nameOrParams, o) { if (faceState.face) faceState.face.set(nameOrParams, o); return rig; },
+    /** Advance the live face (blending, blinking, talking). The Animator calls this for you. */
+    updateFace(dt) { const f = faceState.face; if (f && f.update(dt) && faceState.rewrap) faceState.rewrap(); },
+    /**
+     * Show a live face as a decal on this rig's head (for heads that are not BlockRig's own barrel,
+     * e.g. downloaded avatars). The decal follows the neck joint.
+     */
+    addFaceDecal(face, o = {}) {
+      const d = createFaceDecal(face, o);
+      head.add(d); faceState.face = face; faceState.rewrap = null;
+      return d;
     },
 
     /** Replace the face decal. */

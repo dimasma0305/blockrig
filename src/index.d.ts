@@ -57,6 +57,10 @@ export interface Rig {
   addLayeredClothing(mesh: ParsedMesh, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; lod?: number; side?: THREE.Side }): THREE.SkinnedMesh;
   addAccessory(mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o: { attachment: { name: string; cframe: CFrame }; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
   setFace(image: CanvasImageSource): void;
+  readonly face: Face | null;
+  setExpression(nameOrParams: ExpressionName | Partial<FaceParams>, o?: { fade?: number }): Rig;
+  updateFace(dt: number): void;
+  addFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
   setBodyPart(partName: string, mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; scale?: number[] }): THREE.Mesh;
 }
 export type RigType = "R15" | "R6";
@@ -78,7 +82,7 @@ export function createRig(o?: {
   scale?: BodyScale;
   skeleton?: BindBone[];
   body?: { skin?: string; shirt?: string; pants?: string; shoes?: string } | false;
-  face?: CanvasImageSource | null;
+  face?: CanvasImageSource | Face | null;
   outline?: number;
 }): Rig;
 export function headGeometry(height?: number, radius?: number): THREE.LatheGeometry;
@@ -109,4 +113,29 @@ export const PRIORITY: Record<Priority, number>;
 export const clips: Record<"idle" | "wave" | "showtime" | "run" | "card" | "victory", Clip>;
 export function makeCoat(o?: { slices?: number; length?: number; puff?: number; tails?: boolean }): ParsedMesh;
 export function lz4Block(src: Uint8Array, outLen: number): Uint8Array;
+export type FaceParams = {
+  eyeOpen: number; eyeSize: number; squint: number; whites: number; lookX: number; lookY: number; wink: number; wince: number; ko: number;
+  brows: number; browAngle: number; browY: number;
+  mouthCurve: number; mouthOpen: number; mouthWidth: number; mouthSkew: number; teeth: number; tongue: number;
+  blush: number; sweat: number; tears: number;
+};
+export type ExpressionName = "neutral" | "happy" | "grin" | "laugh" | "smug" | "wink" | "determined" | "angry" | "furious" | "roar" | "shocked" | "scared" | "sad" | "hurt" | "sleepy" | "embarrassed" | "dazed";
+export const FACE_DEFAULTS: Readonly<FaceParams>;
+export const EXPRESSIONS: Readonly<Record<ExpressionName, Partial<FaceParams>>>;
+export function expression(nameOrParams: ExpressionName | Partial<FaceParams>, base?: FaceParams): FaceParams;
+export function mixFace(a: FaceParams, b: FaceParams, t: number): FaceParams;
+export interface FaceStyle { size?: number; ink?: string; eyeColor?: string | null; glow?: string | null; background?: string | null }
+export function drawFace(ctx: CanvasRenderingContext2D, params: Partial<FaceParams>, style?: FaceStyle): void;
+export interface Face {
+  isFace: true; canvas: HTMLCanvasElement | null; name: string; current: FaceParams; target: FaceParams;
+  set(nameOrParams: ExpressionName | Partial<FaceParams>, o?: { fade?: number }): Face;
+  lookAt(x?: number, y?: number): Face;
+  talk(on?: boolean): Face;
+  onChange(fn: (face: Face) => void): Face;
+  params(): FaceParams;
+  update(dt: number): boolean;
+  draw(): Face;
+}
+export function createFace(o?: FaceStyle & { canvas?: HTMLCanvasElement; blink?: boolean; expression?: ExpressionName | Partial<FaceParams>; seed?: number }): Face;
+export function createFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
 export const VERSION: string;

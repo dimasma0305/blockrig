@@ -1,7 +1,7 @@
 {
   "name": "blockrig",
-  "version": "0.1.0",
-  "description": "R15 block-character rig for three.js: reads Roblox-format .mesh (v2–v7) and .rbxm files, skins layered clothing with its own bone weights, attaches accessories by attachment point, and plays keyframe animations with Roblox-style easing, priorities and fades.",
+  "version": "0.2.0",
+  "description": "R15 block-character rig for three.js: reads Roblox-format .mesh (v2–v7) and .rbxm files, skins layered clothing with its own bone weights, attaches accessories by attachment point, and plays keyframe animations with Roblox-style easing, priorities and fades, with R6/R15 body types and live facial expressions.",
   "type": "module",
   "main": "./src/index.js",
   "module": "./src/index.js",
@@ -17,6 +17,7 @@
     "src",
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "sideEffects": false,
@@ -30,6 +31,8 @@
   },
   "keywords": [
     "three",
+    "facial-expressions",
+    "r6",
     "threejs",
     "r15",
     "rig",

@@ -14,6 +14,7 @@ const SHOTS = [
   { file: "showtime", clip: "showtime", t: 0.3, yaw: -0.35 },
   { file: "idle", clip: "idle", t: 1.0, yaw: 2.6 },
   { file: "bodies", page: "bodies.html", w: 1400, h: 440 },
+  { file: "faces", page: "faces.html", w: 1200, h: 640 },
 ];
 
 const candidates = [process.env.CHROME_PATH,
