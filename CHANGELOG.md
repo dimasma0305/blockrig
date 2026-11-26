@@ -2,14 +2,14 @@
 
 ## Unreleased
 
-- **Roblox avatar bodies**: `createRig({ bodyParts })` builds joints from body-package rig attachments (`buildBodyFromParts`, like `Humanoid:BuildRigFromAttachments`) and fits each MeshPart to its `Size`; `describeBodyParts()` reads `R15ArtistIntent` / `R15Fixed` folders.
+- **Roblox avatar bodies**: `createRig({ bodyParts })` builds joints from body-package rig attachments (`buildBodyFromParts`, like `Humanoid:BuildRigFromAttachments`) and fits each MeshPart to its `Size` (classic clothing is projected onto the meshes; tested on the official ROBLOX Boy and Woman packages); `describeBodyParts()` reads `R15ArtistIntent` / `R15Fixed` folders.
 - **BodyColors**: `createRig({ bodyColors })`, `rig.setBodyColors()`, `describeBodyColors()`; the binary `.rbxm` reader now decodes Color3 and BrickColor properties.
 - **Classic clothing**: Shirt, Pants and T-shirt images on the 585×559 template, composited per body region (body colour, Pants, Shirt, T-shirt); `rig.setClothing()`, `describeClothing()`, `templateUVs()`, `TEMPLATE`.
 - **Body attachments**: `rig.addAccessory()` welds to body attachments (`BodyBackAttachment`, grips, waist, collars, feet), `rig.bodyAttachments`.
 - `examples/clothing.html` and `docs/clothing.png`; `ONLY=name npm run screenshots`.
 - The story example (`examples/story`): a 26-second short made with BlockRig, Remotion and three.js.
 - Bundlers: version-specific three.js colour-space constants are read at run time.
-- 96 tests.
+- 97 tests.
 
 ## 0.2.0
 

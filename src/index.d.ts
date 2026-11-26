@@ -111,6 +111,8 @@ export type AttachmentPos = [number, number, number] | number[] | CFrame;
 export interface BodyPartSpec {
   mesh?: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">;
   size?: number[]; attachments?: Record<string, AttachmentPos>; map?: ClothingImage | null;
+  /** "template" (default): classic clothing is projected onto the mesh; "mesh": keep the mesh's own UVs */
+  uvs?: "template" | "mesh";
 }
 export type BodyRegion = "Head" | "Torso" | "LeftArm" | "RightArm" | "LeftLeg" | "RightLeg";
 export interface BodyAttachment { part: string; pos: number[] }

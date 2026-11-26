@@ -58,7 +58,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **96 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **97 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -195,7 +195,7 @@ for (const [name, p] of Object.entries(parts)) bodyParts[name] = { ...p, mesh: p
 const rig = createRig({ bodyParts, bodyColors, clothing });  // parts you leave out stay blocky
 ```
 
-Meshes are fitted to their part's `Size`, as MeshParts are, and keep their own UVs, which Roblox lays out on the same clothing template. The example page [`examples/clothing.html`](examples/clothing.html) draws its shirt, pants and T-shirt in code, so it needs no downloads.
+Meshes are fitted to their part's `Size`, as MeshParts are. R15 body meshes are UV-mapped to Roblox's per-limb composite textures, whose layout isn't published, so BlockRig projects the classic clothing onto each mesh from its shape, the same way it maps onto the blocky parts. Tested on the official ROBLOX Boy and Woman packages with Roblox-made shirts and pants. Pass `uvs: "mesh"` on a part to keep the mesh's own UVs (for example with its own `map`). The example page [`examples/clothing.html`](examples/clothing.html) draws its shirt, pants and T-shirt in code, so it needs no downloads.
 
 ## Expressions
 

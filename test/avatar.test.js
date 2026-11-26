@@ -161,6 +161,20 @@ test("createRig: body-package MeshParts are fitted to their Size", () => {
   assert.equal(d.LeftUpperArm.attachments.LeftShoulderRigAttachment.length, 3);
 });
 
+test("createRig: classic clothing is projected onto body-package meshes (their own UVs aren't template space)", () => {
+  const g = new THREE.BoxGeometry(1, 1, 1, 2, 2, 2), idx = g.index.array;
+  // UVs squeezed into one corner, as a per-limb composite layout would be: they must not be used
+  const odd = new Float32Array(g.attributes.uv.count * 2).fill(0.01);
+  const mesh = { positions: g.attributes.position.array, normals: g.attributes.normal.array, uvs: odd, indices: Uint32Array.from(idx), faceCount: idx.length / 3, lods: [0, idx.length / 3] };
+  const rig = createRig({ bodyParts: { LeftUpperArm: { mesh } }, clothing: {} });
+  const uv = rig.parts.LeftUpperArm.geometry.attributes.uv.array, [TW, TH] = TEMPLATE_SIZE, L = TEMPLATE.LeftLimb;
+  const xs = [...uv].filter((_, i) => i % 2 === 0).map((u) => u * TW), ys = [...uv].filter((_, i) => i % 2).map((v) => v * TH);
+  assert.ok(Math.min(...xs) >= L.U[0] && Math.max(...xs) <= L.R[0] + L.R[2], "inside the left-limb column");
+  assert.ok(Math.min(...ys) >= L.U[1] && Math.max(...ys) <= L.D[1] + L.D[3]);
+  const keep = createRig({ bodyParts: { LeftUpperArm: { mesh, uvs: "mesh" } }, clothing: {} });
+  assert.ok(Math.abs(keep.parts.LeftUpperArm.geometry.attributes.uv.array[0] - 0.01) < 1e-6, "uvs: \"mesh\" keeps them");
+});
+
 test("describeBodyParts / describeBodyColors / describeClothing read avatar items", () => {
   const mp = (name, size, atts, id) => ({ className: "MeshPart", props: { Name: [S, name], MeshId: [S, `rbxassetid://${id}`], TextureID: [S, ""], size: [V3, size] }, children: atts.map(([n, p]) => ({ className: "Attachment", props: { Name: [S, n], CFrame: [CF, { rot: I3, pos: p }] } })) });
   const model = { className: "Model", props: { Name: [S, "LeftArm"] }, children: [

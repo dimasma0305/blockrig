@@ -243,8 +243,23 @@ export function createRig(o = {}) {
     for (const p of spec.parts) {
       const region = BODY_REGION[p.bone], src = (opts.bodyParts || {})[p.bone];
       let g;
-      if (src && src.mesh) g = fittedGeometry(src.mesh, p.size).geometry;
-      else {
+      if (src && src.mesh) {
+        g = fittedGeometry(src.mesh, p.size).geometry;
+        // R15 body meshes are UV-mapped to Roblox's per-limb composite textures, whose layout isn't published,
+        // so classic clothing is projected onto the mesh from its shape (each vertex by its normal and height),
+        // the same way it maps onto the blocky parts. A part with its own texture keeps its own UVs.
+        if (!src.map && src.uvs !== "mesh") {
+          const gi = g.index ? g.toNonIndexed() : g, pos = gi.attributes.position.array, flat = new Float32Array(pos.length);
+          const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+          for (let t = 0; t < pos.length; t += 9) { // one normal per triangle decides its template face
+            a.fromArray(pos, t); b.fromArray(pos, t + 3); c.fromArray(pos, t + 6);
+            b.sub(a); c.sub(a); b.cross(c).normalize();
+            for (let k = 0; k < 3; k++) b.toArray(flat, t + k * 3);
+          }
+          gi.setAttribute("uv", new THREE.BufferAttribute(templateUVs(pos, flat, p.size, region, slices[p.bone]), 2));
+          g = gi; // shading keeps the mesh's own smooth normals
+        }
+      } else {
         g = new THREE.BoxGeometry(p.size[0], p.size[1], p.size[2]);
         g.setAttribute("uv", new THREE.BufferAttribute(templateUVs(g.attributes.position.array, g.attributes.normal.array, p.size, region, slices[p.bone]), 2));
         if (p.taper && p.taper !== 1) { const a = g.attributes.position; for (let i = 0; i < a.count; i++) if (a.getY(i) < 0) a.setX(i, a.getX(i) * p.taper); g.computeVertexNormals(); }
