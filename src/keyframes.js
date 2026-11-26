@@ -7,6 +7,9 @@
 //       Pose "HumanoidRootPart"          -- tree root; it has no Motor6D of its own
 //         Pose "LowerTorso" { CFrame, EasingStyle, EasingDirection, Weight }  -- drives the Root motor
 //           Pose "UpperTorso" ...        -- each Pose drives the Motor6D whose Part1 has its name
+//             Pose "Head"
+//               Folder "FaceControls"
+//                 NumberPose "JawDrop" { Value, EasingStyle, EasingDirection, Weight }  -- a dynamic head's FACS
 // Pose.CFrame is written to Motor6D.Transform (Part1 = Part0 * C0 * Transform * C1^-1), i.e. it is expressed
 // in the joint frame given by C0. The standard R15 rig attachments are axis-aligned, so that frame matches the
 // character axes BlockRig uses. R6 joints have rotated C0s, which are converted below.
@@ -52,10 +55,20 @@ export function keyframeSequenceToClip(roots, o = {}) {
   const frames = ks.children.filter((c) => c.className === "Keyframe").sort((a, b) => (a.props.Time || 0) - (b.props.Time || 0));
   const qC0 = new THREE.Quaternion(), qC0i = new THREE.Quaternion(), v = new THREE.Vector3();
   for (const kf of frames) {
-    const t = kf.props.Time || 0, poses = {};
+    const t = kf.props.Time || 0, poses = {}, faces = {};
+    const easing = (c) => {
+      let style = POSE_EASING_STYLE[c.props.EasingStyle ?? 0] || "Linear", dir = POSE_EASING_DIRECTION[c.props.EasingDirection ?? 0] || "In";
+      if (style === "Cubic" && legacy === "runtime" && dir !== "InOut") dir = dir === "In" ? "Out" : "In";
+      if (style === "CubicV2") style = "Cubic";
+      return [style, dir];
+    };
     const walk = (node) => {
       for (const c of node.children) {
         if (c.className === "KeyframeMarker") markers.push({ t, name: c.props.Name, value: c.props.Value ?? "" });
+        if (c.className === "Folder" && c.props.Name === "FaceControls") {
+          for (const n of c.children) if (n.className === "NumberPose") { const [ease, dir] = easing(n); faces[n.props.Name] = { v: n.props.Value ?? 0, ease, dir, weight: n.props.Weight ?? 1 }; }
+          continue;
+        }
         if (c.className !== "Pose") continue;
         const name = c.props.Name;
         if (name !== "HumanoidRootPart") {
@@ -63,9 +76,7 @@ export function keyframeSequenceToClip(roots, o = {}) {
           const q = rotToQuat(cf.rot || [1, 0, 0, 0, 1, 0, 0, 0, 1]); v.fromArray(cf.pos);
           const c0 = rigType === "R6" && R6_C0_ROTATIONS[name];
           if (c0) { qC0.copy(rotToQuat(c0)); qC0i.copy(qC0).invert(); q.premultiply(qC0).multiply(qC0i); v.applyQuaternion(qC0); }
-          let style = POSE_EASING_STYLE[c.props.EasingStyle ?? 0] || "Linear", dir = POSE_EASING_DIRECTION[c.props.EasingDirection ?? 0] || "In";
-          if (style === "Cubic" && legacy === "runtime" && dir !== "InOut") dir = dir === "In" ? "Out" : "In";
-          if (style === "CubicV2") style = "Cubic";
+          const [style, dir] = easing(c);
           const pose = { q: q.toArray(), ease: style, dir, weight: c.props.Weight ?? 1 };
           if (v.lengthSq() > 1e-12) pose.p = v.toArray();
           poses[rigType === "R6" && name === "Torso" ? "Torso" : name] = pose;
@@ -76,7 +87,7 @@ export function keyframeSequenceToClip(roots, o = {}) {
     walk(kf);
     const label = kf.props.Name;
     if (label && label !== "Keyframe") markers.push({ t, name: label });
-    keyframes.push({ t, poses });
+    keyframes.push(Object.keys(faces).length ? { t, poses, faces } : { t, poses });
   }
   const length = keyframes.length ? keyframes[keyframes.length - 1].t : 0;
   return {

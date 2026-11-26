@@ -39,9 +39,14 @@ const e2q = (r) => new THREE.Quaternion().setFromEuler(new THREE.Euler(r[0] || 0
 // on any other joint it is the translation part of the Motor6D Transform), and `weight` (Pose.Weight, default 1).
 function compile(clip) {
   if (clip._compiled) return clip._compiled;
-  const rot = {}, pos = [], offs = {};
+  const rot = {}, pos = [], offs = {}, faces = {};
   const kfs = clip.keyframes.slice().sort((a, b) => a.t - b.t);
   kfs.forEach((kf) => {
+    // FaceControls keys (dynamic heads): { faces: { JawDrop: { v, ease, dir, weight } } } or plain numbers
+    for (const n in kf.faces || {}) {
+      const f = kf.faces[n], k = typeof f === "number" ? { v: f } : f;
+      (faces[n] = faces[n] || []).push({ t: kf.t, v: k.v ?? 0, ease: k.ease || "Linear", dir: k.dir || "In", w: k.weight ?? 1 });
+    }
     for (const j in kf.poses) {
       const p = kf.poses[j], k = { t: kf.t, ease: p.ease || "Cubic", dir: p.dir || "InOut", w: p.weight ?? 1 };
       if (p.q || p.r) (rot[j] = rot[j] || []).push(Object.assign({ q: p.q ? new THREE.Quaternion().fromArray(p.q).normalize() : e2q(p.r) }, k));
@@ -52,7 +57,7 @@ function compile(clip) {
     }
   });
   const length = clip.length || (kfs.length ? kfs[kfs.length - 1].t : 0);
-  return (clip._compiled = { rot, pos, offs, length, priority: PRIORITY[clip.priority || "Action"] ?? 2, loop: clip.loop !== false });
+  return (clip._compiled = { rot, pos, offs, faces, length, priority: PRIORITY[clip.priority || "Action"] ?? 2, loop: clip.loop !== false });
 }
 
 // find the segment around time t in a key list and the eased blend factor
@@ -67,9 +72,10 @@ function seg(keys, t) {
 // sample a key list: returns the interpolated Pose.Weight and writes the value into out
 const sampleQ = (keys, t, out) => { const [a, b, f] = seg(keys, t); out.copy(a.q).slerp(b.q, f); return a.w + (b.w - a.w) * f; };
 const sampleV = (keys, t, out) => { const [a, b, f] = seg(keys, t); out.copy(a.v).lerp(b.v, f); return a.w + (b.w - a.w) * f; };
+const sampleN = (keys, t) => { const [a, b, f] = seg(keys, t); return [a.v + (b.v - a.v) * f, a.w + (b.w - a.w) * f]; };
 
 export class Animator {
-  constructor(rig) { this.rig = rig; this.tracks = []; this.listeners = []; this._q = new THREE.Quaternion(); this._v = new THREE.Vector3(); }
+  constructor(rig) { this.rig = rig; this.tracks = []; this.listeners = []; this._q = new THREE.Quaternion(); this._v = new THREE.Vector3(); this._faces = new Set(); }
   // play(clip, { fade = 0.1, weight = 1, speed = 1 }) -> track; replaces a playing copy of the same clip
   play(clip, o = {}) {
     const c = compile(clip);
@@ -150,6 +156,27 @@ export class Animator {
         }
         rig.setJointOffset(j, off.x, off.y, off.z);
       }
+    }
+    // FaceControls (dynamic heads): blended like joints, per priority level, from 0; controls the animation
+    // stops driving go back to 0
+    if (rig.faceControls) {
+      const fc = rig.faceControls, now = new Set();
+      this.tracks.forEach((tr) => Object.keys(tr.c.faces).forEach((n) => now.add(n)));
+      for (const n of this._faces) if (!now.has(n)) fc[n] = 0;
+      for (const n of now) {
+        let val = 0;
+        for (const L of levels) {
+          let wsum = 0, acc = 0;
+          for (const tr of this.tracks) {
+            if (tr.c.priority !== L || !tr.c.faces[n] || tr.weight <= 0) continue;
+            const [x, pw] = sampleN(tr.c.faces[n], tr.time), w = tr.weight * pw; if (w <= 0) continue;
+            acc += x * w; wsum += w;
+          }
+          if (wsum > 0) val += (acc / wsum - val) * Math.min(1, wsum);
+        }
+        fc[n] = val;
+      }
+      this._faces = now;
     }
     if (rig.updateFace) rig.updateFace(dt);
   }

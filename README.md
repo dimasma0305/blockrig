@@ -48,6 +48,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 
 ## Features
 
+- 🙂 **Dynamic heads**: Roblox FACS heads posed by the 50 `FaceControls`, with corrective poses, mood animations and face keys in imported clips.
 - 👕 **Roblox avatars**: `BodyColors`, classic **Shirt / Pants / T-shirt** templates composited the Roblox way, and **body packages** whose joints are built from their rig attachments (`BuildRigFromAttachments`), with accessories on body attachments too.
 - 🧍 **Every classic body**: **R6** (six parts, classic pivots) and **R15** in five shapes (`classic`, `slender`, `buff`, `tall`, `child`) or your own proportions, with Roblox-style `height / width / depth / head` scaling, swappable body-part meshes, and R15 ⇄ R6 clip retargeting.
 - 😃 **Live facial expressions**: 17 built-in expressions drawn from 21 blendable parameters (brows, eye shape, look direction, wink, `><` and `x` eyes, mouth curve/open/skew, teeth, tongue, blush, tears, sweat), with automatic blinking, talking, smooth fades and `face:` markers inside clips. Works on BlockRig heads or as a decal on any head.
@@ -58,7 +59,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **97 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **101 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -196,6 +197,22 @@ const rig = createRig({ bodyParts, bodyColors, clothing });  // parts you leave 
 ```
 
 Meshes are fitted to their part's `Size`, as MeshParts are. R15 body meshes are UV-mapped to Roblox's per-limb composite textures, whose layout isn't published, so BlockRig projects the classic clothing onto each mesh from its shape, the same way it maps onto the blocky parts. Tested on the official ROBLOX Boy and Woman packages with Roblox-made shirts and pants. Pass `uvs: "mesh"` on a part to keep the mesh's own UVs (for example with its own `map`). The example page [`examples/clothing.html`](examples/clothing.html) draws its shirt, pants and T-shirt in code, so it needs no downloads.
+
+## Dynamic heads (FACS)
+
+Roblox's dynamic heads are skinned head meshes with a FACS block: for each of the 50 `FaceControls` (JawDrop, LeftEyeClosed, EyesLookLeft, LeftLipCornerPuller, …) every face bone's offset at full strength, plus corrective poses for pairs and triples of controls. Give `setHead()` such a mesh and drive it the same way Roblox does:
+
+```js
+rig.setHead(parseMesh(headMeshBytes), { attachments, map: loadRobloxTexture(headTextureUrl) }); // or bodyParts.Head
+rig.faceControls.JawDrop = 0.8;
+rig.faceControls.LeftEyeClosed = rig.faceControls.RightEyeClosed = 1;
+rig.applyFaceControls();                                      // the Animator does this on every update
+
+const mood = keyframeSequenceToClip(parseRbxm(moodAnimationBytes)); // FaceControls NumberPoses become face keys
+new Animator(rig).play(mood);
+```
+
+Face controls blend by priority and weight like joints, and controls an animation stops driving go back to 0. The head's texture (the face painted over transparent skin) is layered over `HeadColor3`. Checked on the official *Woman Face* and *Man Face* heads; their FACS bones only translate, and rotation channels are read but not applied yet. Hand-written clips can key faces too: `{ t: 0.5, poses: {}, faces: { JawDrop: 0.6 } }`.
 
 ## Expressions
 

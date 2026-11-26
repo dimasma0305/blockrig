@@ -36,6 +36,7 @@ function encodeValues(type, vals) {
     case 0x03: return i32s(vals);
     case 0x04: return f32s(vals);
     case 0x0e: return Buffer.concat([f32s(vals.map((v) => v[0])), f32s(vals.map((v) => v[1])), f32s(vals.map((v) => v[2]))]);
+    case 0x05: { const b = Buffer.alloc(vals.length * 8); vals.forEach((v, i) => b.writeDoubleLE(v, i * 8)); return b; } // Float64
     case 0x0c: return Buffer.concat([f32s(vals.map((v) => v[0])), f32s(vals.map((v) => v[1])), f32s(vals.map((v) => v[2]))]); // Color3
     case 0x10: {
       const rot = Buffer.concat(vals.map((v) => {

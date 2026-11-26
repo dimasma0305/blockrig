@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Dynamic heads (FACS)**: `parseFacs()` reads a head mesh's FACS block (bone and control names, quantized pose matrices, 2- and 3-pose correctives); `rig.setHead()` with such a mesh makes a dynamic head driven by `rig.faceControls` (Roblox's 50 FaceControls) and `rig.applyFaceControls()`; the head texture is layered over HeadColor3. Checked on the official Woman Face and Man Face heads.
+- **Face animation**: `keyframeSequenceToClip()` imports FaceControls NumberPoses (mood animations), and the Animator blends face controls by priority and weight.
+- `.rbxm` reader: Float64 properties (NumberPose.Value).
+- Fixes: meshes with a degenerate LOD table (`[0, 0]`) rendered nothing; `setHead()` and body parts modified the parsed mesh they were given, so a mesh shared by several rigs went wrong.
+
 - **Roblox avatar bodies**: `createRig({ bodyParts })` builds joints from body-package rig attachments (`buildBodyFromParts`, like `Humanoid:BuildRigFromAttachments`) and fits each MeshPart to its `Size` (classic clothing is projected onto the meshes; tested on the official ROBLOX Boy and Woman packages); `describeBodyParts()` reads `R15ArtistIntent` / `R15Fixed` folders.
 - **BodyColors**: `createRig({ bodyColors })`, `rig.setBodyColors()`, `describeBodyColors()`; the binary `.rbxm` reader now decodes Color3 and BrickColor properties.
 - **Classic clothing**: Shirt, Pants and T-shirt images on the 585×559 template, composited per body region (body colour, Pants, Shirt, T-shirt); `rig.setClothing()`, `describeClothing()`, `templateUVs()`, `TEMPLATE`.
@@ -9,7 +14,7 @@
 - `examples/clothing.html` and `docs/clothing.png`; `ONLY=name npm run screenshots`.
 - The story example (`examples/story`): a 26-second short made with BlockRig, Remotion and three.js.
 - Bundlers: version-specific three.js colour-space constants are read at run time.
-- 97 tests.
+- 101 tests.
 
 ## 0.2.0
 

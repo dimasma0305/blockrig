@@ -68,6 +68,12 @@ export interface Rig {
   updateFace(dt: number): void;
   addFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
   readonly bodyAttachments: Record<string, BodyAttachment>;
+  /** Roblox FaceControls (50 values, 0..1) driving a dynamic head. */
+  faceControls: Record<FaceControlName, number>;
+  /** True once setHead() was given a dynamic (FACS) head mesh. */
+  readonly dynamicHead: boolean;
+  /** Pose the dynamic head from faceControls; returns true if it changed. The Animator calls it each update. */
+  applyFaceControls(): boolean;
   setClothing(c: Clothing): Rig;
   setBodyColors(c: BodyColors): Rig;
   refreshAvatar(): Rig;
@@ -139,7 +145,7 @@ export type EasingDirection = "In" | "Out" | "InOut";
 export type Priority = "Core" | "Idle" | "Movement" | "Action" | "Action2" | "Action3" | "Action4";
 export interface Clip {
   name: string; length?: number; loop?: boolean; priority?: Priority;
-  keyframes: { t: number; poses: Record<string, { r?: [number, number, number]; q?: [number, number, number, number]; p?: [number, number, number]; weight?: number; ease?: EasingStyle; dir?: EasingDirection }> }[];
+  keyframes: { t: number; poses: Record<string, { r?: [number, number, number]; q?: [number, number, number, number]; p?: [number, number, number]; weight?: number; ease?: EasingStyle; dir?: EasingDirection }>; faces?: Partial<Record<FaceControlName, number | { v: number; ease?: EasingStyle; dir?: EasingDirection; weight?: number }>> }[];
   markers?: { t: number; name: string; value?: string; fade?: number }[];
 }
 export interface Track { clip: Clip; time: number; weight: number; target: number; fade: number; speed: number }
@@ -189,4 +195,17 @@ export const POSE_EASING_DIRECTION: Record<number, EasingDirection>;
 export const ANIMATION_PRIORITY: Record<number, Priority>;
 export const R6_C0_ROTATIONS: Record<string, number[]>;
 export function keyframeSequenceToClip(roots: RbxInstance[], o?: { name?: string; rigType?: RigType; cubicLegacy?: "runtime" | "named" }): Clip;
+export type FaceControlName =
+  | "ChinRaiser" | "ChinRaiserUpperLip" | "Corrugator" | "EyesLookDown" | "EyesLookLeft" | "EyesLookRight" | "EyesLookUp" | "FlatPucker" | "Funneler"
+  | "JawDrop" | "JawLeft" | "JawRight" | "LipPresser" | "LipsTogether" | "LowerLipSuck" | "MouthLeft" | "MouthRight" | "Pucker" | "TongueDown" | "TongueOut" | "TongueUp" | "UpperLipSuck"
+  | `${"Left" | "Right"}${"BrowLowerer" | "CheekPuff" | "CheekRaiser" | "Dimpler" | "EyeClosed" | "EyeUpperLidRaiser" | "InnerBrowRaiser" | "LipCornerDown" | "LipCornerPuller" | "LowerLipDepressor" | "LipStretcher" | "NoseWrinkler" | "OuterBrowRaiser" | "UpperLipRaiser"}`;
+export const FACE_CONTROLS: FaceControlName[];
+export const FACS_CODES: Record<string, FaceControlName>;
+export interface Facs {
+  bones: string[]; codes: string[]; controls: string[]; twoPose: number[][]; threePose: number[][]; rows: number; cols: number;
+  px: Float32Array; py: Float32Array; pz: Float32Array; rx: Float32Array; ry: Float32Array; rz: Float32Array;
+}
+export function parseFacs(bytes: Uint8Array): Facs;
+export function facsWeights(facs: Facs, values: Partial<Record<string, number>>): Float32Array;
+export function facsBoneOffsets(facs: Facs, values: Partial<Record<string, number>>, out?: Float32Array): Float32Array;
 export const VERSION: string;

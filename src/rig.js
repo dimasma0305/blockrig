@@ -4,6 +4,7 @@ import { cframeToMatrix } from "./cframe.js";
 import { HEAD_ATTACHMENTS } from "./skeleton.js";
 import { buildBody } from "./body.js";
 import { lodIndices } from "./mesh.js";
+import { parseFacs, facsBoneOffsets, FACE_CONTROLS } from "./facs.js";
 import { buildBodyFromParts, defaultBodyAttachments, templateUVs, regionSlices, paintRegion, colorHex, BODY_REGION, TEMPLATE_SIZE } from "./avatar.js";
 
 const REV = parseInt(THREE.REVISION, 10);
@@ -89,9 +90,11 @@ export function createFaceDecal(face, { radius = 0.63, height = 1.2, arc = Math.
 
 function geometryFromMesh(mesh, { lod = 0, skinned = false } = {}) {
   const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.BufferAttribute(mesh.positions, 3));
-  g.setAttribute("normal", new THREE.BufferAttribute(mesh.normals, 3));
-  g.setAttribute("uv", new THREE.BufferAttribute(mesh.uvs, 2));
+  // copies: geometry is scaled, moved and (for dynamic heads) deformed in place, and a parsed mesh may be
+  // shared by several rigs
+  g.setAttribute("position", new THREE.BufferAttribute(Float32Array.from(mesh.positions), 3));
+  g.setAttribute("normal", new THREE.BufferAttribute(Float32Array.from(mesh.normals), 3));
+  g.setAttribute("uv", new THREE.BufferAttribute(Float32Array.from(mesh.uvs), 2));
   if (skinned) {
     g.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(mesh.skinIndex, 4));
     g.setAttribute("skinWeight", new THREE.BufferAttribute(mesh.skinWeight, 4));
@@ -329,6 +332,10 @@ export function createRig(o = {}) {
   }
   const bindQ = (name) => (name === "Neck" ? neckBindQ : bindLocalQ[index.get(name)]);
 
+  // ---- dynamic head (FACS) state ----
+  const faceControls = Object.fromEntries(FACE_CONTROLS.map((n) => [n, 0]));
+  let dyn = null;
+
   const rig = {
     object: model, stage, bones, neck, head, parts, rigType, body: spec, joints: def.map((b) => b.name).concat("Neck"), garments: [], accessories: [],
     /** Rotate a joint by quaternion q (character axes) relative to its bind pose. */
@@ -461,7 +468,7 @@ export function createRig(o = {}) {
     /** Change expression with a fade (needs a live face). */
     setExpression(nameOrParams, o) { if (faceState.face) faceState.face.set(nameOrParams, o); return rig; },
     /** Advance the live face (blending, blinking, talking). The Animator calls this for you. */
-    updateFace(dt) { const f = faceState.face; if (f && f.update(dt) && faceState.rewrap) faceState.rewrap(); },
+    updateFace(dt) { const f = faceState.face; if (f && f.update(dt) && faceState.rewrap) faceState.rewrap(); rig.applyFaceControls(); },
     /**
      * Show a live face as a decal on this rig's head (for heads that are not BlockRig's own barrel,
      * e.g. downloaded avatars). The decal follows the neck joint.
@@ -488,17 +495,58 @@ export function createRig(o = {}) {
       const g = geometryFromMesh(mesh);
       g.scale(scale[0], scale[1], scale[2]);
       g.translate(centre[0] + offset[0], centre[1] + offset[1], centre[2] + offset[2]);
-      const old = parts.Head;
-      const mat = material({ map, color: color ?? (map ? 0xffffff : (colors ? colors.skin : 0xf6dcc0)) });
+      const old = parts.Head, dynamic = !!(mesh.facs && mesh.skinIndex && mesh.bones && mesh.bones.length);
+      const skin = colors ? colors.skin : 0xf6dcc0;
+      // a dynamic head's texture is the face painted over transparent skin, so the head wears HeadColor and
+      // the texture rides on top as a layer that shares (and deforms with) the head geometry
+      const mat = material({ map: dynamic ? null : map, color: color ?? (map && !dynamic ? 0xffffff : skin) });
       if (!map && old && old.material && old.material.map && faceState.tex === old.material.map) mat.map = old.material.map; // keep a wrapped live face
       const m = new THREE.Mesh(g, mat); m.name = "Head";
       head.add(m);
+      if (dynamic && map) {
+        const layer = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map, transparent: true, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -1, depthWrite: false }));
+        layer.name = "HeadTexture"; layer.renderOrder = 1; m.add(layer);
+      }
       if (outline) { const ol = new THREE.Mesh(g, olBox); m.userData.outline = ol; head.add(ol); }
       if (old) { old.visible = false; if (old.userData.outline) old.userData.outline.visible = false; }
       parts.Head = m;
       for (const [k, v] of Object.entries(attachments)) if (k !== "NeckRigAttachment") headAtt[k] = [centre[0] + v[0], centre[1] + v[1], centre[2] + v[2]];
+      dyn = null;
+      if (dynamic) {
+        const facs = parseFacs(mesh.facs);
+        dyn = { facs, geom: g, scale, base: g.attributes.position.array.slice(), skinIndex: mesh.skinIndex, skinWeight: mesh.skinWeight,
+          rowOf: mesh.bones.map((b) => facs.bones.indexOf(b.name)), offsets: new Float32Array(facs.rows * 3), last: null };
+        rig.applyFaceControls();
+      }
       return m;
     },
+    /** True when the head is a dynamic (FACS) head driven by rig.faceControls. */
+    get dynamicHead() { return !!dyn; },
+    /**
+     * Pose a dynamic head from rig.faceControls (Roblox FaceControls: 50 values, 0..1). The Animator calls this
+     * every update; call it yourself after changing faceControls by hand. Returns true if the face changed.
+     */
+    applyFaceControls() {
+      if (!dyn) return false;
+      let key = ""; for (const n of FACE_CONTROLS) key += (faceControls[n] || 0) + ",";
+      if (key === dyn.last) return false;
+      dyn.last = key;
+      const off = facsBoneOffsets(dyn.facs, faceControls, dyn.offsets), { base, skinIndex, skinWeight, rowOf, scale: s } = dyn;
+      const pos = dyn.geom.attributes.position;
+      for (let v = 0; v < pos.count; v++) {
+        let x = 0, y = 0, z = 0;
+        for (let k = 0; k < 4; k++) {
+          const w = skinWeight[v * 4 + k]; if (!w) continue;
+          const r = rowOf[skinIndex[v * 4 + k]]; if (r === undefined || r < 0) continue;
+          x += w * off[r * 3]; y += w * off[r * 3 + 1]; z += w * off[r * 3 + 2];
+        }
+        pos.array[v * 3] = base[v * 3] + x * s[0]; pos.array[v * 3 + 1] = base[v * 3 + 1] + y * s[1]; pos.array[v * 3 + 2] = base[v * 3 + 2] + z * s[2];
+      }
+      pos.needsUpdate = true; dyn.geom.computeVertexNormals(); dyn.geom.computeBoundingSphere();
+      return true;
+    },
+    /** Roblox FaceControls for a dynamic head: `{ JawDrop: 0, LeftEyeClosed: 0, ... }` (all 50, 0..1). */
+    faceControls,
     /** Bounding box of the current head mesh in head space (useful to size a face decal). */
     headBounds() { const b = new THREE.Box3(); if (parts.Head) { parts.Head.geometry.computeBoundingBox(); b.copy(parts.Head.geometry.boundingBox).applyMatrix4(parts.Head.matrix); } return b; },
 

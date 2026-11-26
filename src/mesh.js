@@ -199,5 +199,7 @@ function readChunked(r, out, options) {
 /** Index buffer for one level of detail (0 = highest). */
 export function lodIndices(mesh, level = 0) {
   const begin = mesh.lods[level] ?? 0, end = mesh.lods[level + 1] ?? mesh.faceCount;
+  // some real meshes carry a degenerate LOD table such as [0, 0]: then the whole mesh is the first level
+  if (end <= begin) return level === 0 ? mesh.indices.subarray(0, mesh.faceCount * 3) : mesh.indices.subarray(0, 0);
   return mesh.indices.subarray(begin * 3, end * 3);
 }
