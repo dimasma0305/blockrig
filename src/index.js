@@ -10,5 +10,6 @@ export { clips } from "./clips.js";
 export { makeCoat } from "./garment.js";
 export { buildBody, R15_SHAPES, jointsOf } from "./body.js";
 export { toR6, toR15, retargetAll } from "./retarget.js";
+export { keyframeSequenceToClip, POSE_EASING_STYLE, POSE_EASING_DIRECTION, ANIMATION_PRIORITY, R6_C0_ROTATIONS } from "./keyframes.js";
 export { lz4Block } from "./binary.js";
 export const VERSION = "0.2.0";

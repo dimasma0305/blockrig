@@ -152,7 +152,7 @@ export function createRig(o = {}) {
   model.add(stage);
 
   // ---- bones ----
-  const bones = {}, list = [], bindWorld = [], bindLocalQ = [], bindWorldQ = [];
+  const bones = {}, list = [], bindWorld = [], bindLocalQ = [], bindWorldQ = [], bindLocalP = [], parentOf = [];
   const index = new Map(def.map((b, i) => [b.name, i]));
   def.forEach((b, i) => {
     const bone = new THREE.Bone(); bone.name = b.name;
@@ -162,7 +162,7 @@ export function createRig(o = {}) {
     if (b.parent != null && p === undefined) throw new Error(`blockrig: bone ${b.name} has unknown parent ${b.parent}`);
     const L = p < 0 ? W.clone() : new THREE.Matrix4().copy(bindWorld[p]).invert().multiply(W);
     L.decompose(bone.position, bone.quaternion, bone.scale);
-    bindLocalQ[i] = bone.quaternion.clone();
+    bindLocalQ[i] = bone.quaternion.clone(); bindLocalP[i] = bone.position.clone(); parentOf[i] = p;
     bindWorldQ[i] = new THREE.Quaternion().setFromRotationMatrix(W);
     if (p >= 0) list[p].add(bone); else stage.add(bone);
     bones[b.name] = bone; list.push(bone);
@@ -188,7 +188,7 @@ export function createRig(o = {}) {
   neck.position.fromArray(spec.neck.pos).applyMatrix4(new THREE.Matrix4().copy(bindWorld[np]).invert());
   neck.quaternion.copy(bindWorldQ[np]).invert(); // neck axes = character axes
   bones[spec.neck.parent].add(neck);
-  const neckBindQ = neck.quaternion.clone();
+  const neckBindQ = neck.quaternion.clone(), neckBindP = neck.position.clone();
   const head = new THREE.Group(); head.name = "Head"; neck.add(head);
   head.scale.setScalar(spec.headScale);
 
@@ -215,7 +215,7 @@ export function createRig(o = {}) {
   }
 
   // ---- posing (Motor6D-style Transform, expressed in character axes) ----
-  const tq = new THREE.Quaternion(), te = new THREE.Euler(), iq = new THREE.Quaternion(), dq = new THREE.Quaternion();
+  const tq = new THREE.Quaternion(), te = new THREE.Euler(), iq = new THREE.Quaternion(), dq = new THREE.Quaternion(), tv = new THREE.Vector3();
   const rootBind = rootBone.position.clone();
   const alias = (n) => (n === "Head" ? "Neck" : n);
   const joint = (name) => (alias(name) === "Neck" ? neck : bones[name]);
@@ -236,7 +236,19 @@ export function createRig(o = {}) {
     nudgeJoint(name, x = 0, y = 0, z = 0) { name = alias(name); const b = joint(name); if (!b) return false; tq.setFromEuler(te.set(x, y, z, "YXZ")); b.quaternion.multiply(delta(name, tq)); return true; },
     /** Move the whole body (HumanoidRootPart) in character space, studs. */
     setRootOffset(x = 0, y = 0, z = 0) { rootBone.position.set(rootBind.x + x, rootBind.y + y, rootBind.z + z); },
-    resetPose() { list.forEach((b, i) => { b.quaternion.copy(bindLocalQ[i]); }); neck.quaternion.copy(neckBindQ); rig.setRootOffset(0, 0, 0); },
+    resetPose() { list.forEach((b, i) => { b.quaternion.copy(bindLocalQ[i]); b.position.copy(bindLocalP[i]); }); neck.quaternion.copy(neckBindQ); neck.position.copy(neckBindP); rig.setRootOffset(0, 0, 0); },
+    /**
+     * Translate a joint (the position part of a Motor6D Transform), in character axes, studs.
+     * The offset is applied in the parent's frame, so it moves with the parent like Transform does.
+     */
+    setJointOffset(name, x = 0, y = 0, z = 0) {
+      name = alias(name);
+      if (name === "Neck") { tv.set(x, y, z).applyQuaternion(iq.copy(bindWorldQ[index.get(spec.neck.parent)]).invert()); neck.position.copy(neckBindP).add(tv); return true; }
+      const i = index.get(name); if (i === undefined) return false;
+      if (i === 0) { rig.setRootOffset(x, y, z); return true; }
+      tv.set(x, y, z).applyQuaternion(iq.copy(bindWorldQ[parentOf[i]]).invert());
+      list[i].position.copy(bindLocalP[i]).add(tv); return true;
+    },
     /** Set a whole pose: { JointName: [x, y, z], rootOffset: [x, y, z] } */
     setPose(pose) {
       rig.resetPose();

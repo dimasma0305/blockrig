@@ -39,7 +39,8 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion.
 - 📦 **File readers**: `.mesh` **v2.00 → v7.00** (LODs, bones, subsets, skinning, FACS; v7 Draco via a hook) and binary **`.rbxm`** (LZ4 / ZSTD chunks, 12 property types).
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
-- 🧪 **76 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 📥 **Real Roblox animations**: import `KeyframeSequence` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
+- 🧪 **82 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -174,6 +175,27 @@ Each expression is a set of numbers, so any two blend smoothly. You can mix your
 | `lookX`, `lookY` | −1 → 1 | | `blush`, `tears`, `sweat` | 0 → 1 |
 | `wink`, `wince`, `ko` | right-eye wink, `><`, `x` | | `brows` | 0 hidden → 1 |
 
+## Import Roblox animations
+
+Animations made in Roblox Studio or downloaded from Roblox are `KeyframeSequence` models. Read them with `parseRbxm` and convert:
+
+```js
+import { parseRbxm, keyframeSequenceToClip, Animator } from "blockrig";
+
+const bytes = await fetch("my-wave.rbxm").then((r) => r.arrayBuffer());
+const clip = keyframeSequenceToClip(parseRbxm(bytes, { zstd }), { name: "wave" }); // rigType: "R6" for R6 animations
+new Animator(rig).play(clip, { fade: 0.1 });
+```
+
+- Each `Pose` drives the joint whose part has its name. Its `CFrame` becomes the Motor6D `Transform` (rotation and translation), and `Weight` is honoured.
+- `EasingStyle` / `EasingDirection` (including legacy Cubic's reversed direction and `CubicV2`), `Loop` and `Priority` come across as they are.
+- Named keyframes and `KeyframeMarker`s arrive through `animator.onMarker((name, clip) => …)`, like `KeyframeReached` / `GetMarkerReachedSignal`.
+- R6 animations are converted out of the classic R6 joint frames, so they play correctly on `rigType: "R6"` rigs.
+- Joints your rig doesn't have (Rthro extras, face bones) are skipped.
+- Not supported yet: `CurveAnimation` and XML `.rbxmx`.
+
+BlockRig ships no Roblox animations. Use animations you made or have the right to use.
+
 ## Write your own clips
 
 Clips are plain JSON, shaped like a Roblox `KeyframeSequence`. A pose's `ease`/`dir` shape the move **from** its keyframe to the joint's next keyframe. A joint can be left out of any keyframe and will interpolate across the gap.
@@ -209,6 +231,8 @@ anim.play(salute, { fade: 0.15 });
 | `createRig({ rigType?, shape?, scale?, skeleton?, body?, face?, outline? })` | Builds the rig. `body: false` skips the blocky body; `face` is an image or canvas decal. |
 | `buildBody({ rigType, shape, scale })` · `R15_SHAPES` | The bind skeleton and part layout a rig is built from. |
 | `rig.setBodyPart(name, mesh, { map?, color?, scale? })` | Swap a blocky part (or `"Head"`) for a mesh. |
+| `keyframeSequenceToClip(roots, { name, rigType, cubicLegacy })` | Roblox `KeyframeSequence` → clip (Pose CFrame → Transform, Weight, easing, markers). |
+| `rig.setJointOffset(name, x, y, z)` | Translation part of a joint's Transform. |
 | `toR6(clip)` · `toR15(clip)` · `retargetAll(clips, fn)` | Retarget clips between rig types. |
 | `createFace({ expression, images, ink, eyeColor, glow, background, blink })` | A live face: `.set(name or params, { fade })`, `.lookAt(x, y)`, `.talk(on)`, `.update(dt)`, `.onChange(fn)` |
 | `rig.setExpression(...)` · `rig.addFaceDecal(face, o)` · `rig.face` | Drive the rig's face; markers named `face:<expression>` do it from a clip. |
@@ -247,7 +271,7 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 76 unit + regression tests (node:test, no browser needed)
+npm test             # 82 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
 npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html and faces.html)

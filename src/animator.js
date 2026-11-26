@@ -34,19 +34,25 @@ export function ease(style, dir, t) {
 
 const e2q = (r) => new THREE.Quaternion().setFromEuler(new THREE.Euler(r[0] || 0, r[1] || 0, r[2] || 0, "YXZ"));
 
+// A pose may give the joint rotation as Euler `r` (radians, YXZ, character axes) or quaternion `q` [x,y,z,w]
+// (what an imported Pose.CFrame becomes), a position `p` (studs; on HumanoidRootPart it moves the whole body,
+// on any other joint it is the translation part of the Motor6D Transform), and `weight` (Pose.Weight, default 1).
 function compile(clip) {
   if (clip._compiled) return clip._compiled;
-  const rot = {}, pos = [];
+  const rot = {}, pos = [], offs = {};
   const kfs = clip.keyframes.slice().sort((a, b) => a.t - b.t);
   kfs.forEach((kf) => {
     for (const j in kf.poses) {
-      const p = kf.poses[j], k = { t: kf.t, ease: p.ease || "Cubic", dir: p.dir || "InOut" };
-      if (p.r) (rot[j] = rot[j] || []).push(Object.assign({ q: e2q(p.r) }, k));
-      if (p.p) pos.push(Object.assign({ v: new THREE.Vector3().fromArray(p.p) }, k));
+      const p = kf.poses[j], k = { t: kf.t, ease: p.ease || "Cubic", dir: p.dir || "InOut", w: p.weight ?? 1 };
+      if (p.q || p.r) (rot[j] = rot[j] || []).push(Object.assign({ q: p.q ? new THREE.Quaternion().fromArray(p.q).normalize() : e2q(p.r) }, k));
+      if (p.p) {
+        const key = Object.assign({ v: new THREE.Vector3().fromArray(p.p) }, k);
+        if (j === "HumanoidRootPart") pos.push(key); else (offs[j] = offs[j] || []).push(key);
+      }
     }
   });
   const length = clip.length || (kfs.length ? kfs[kfs.length - 1].t : 0);
-  return (clip._compiled = { rot, pos, length, priority: PRIORITY[clip.priority || "Action"] ?? 2, loop: clip.loop !== false });
+  return (clip._compiled = { rot, pos, offs, length, priority: PRIORITY[clip.priority || "Action"] ?? 2, loop: clip.loop !== false });
 }
 
 // find the segment around time t in a key list and the eased blend factor
@@ -58,8 +64,9 @@ function seg(keys, t) {
   const a = keys[i], b = keys[i + 1], span = b.t - a.t;
   return [a, b, span > 0 ? ease(a.ease, a.dir, (t - a.t) / span) : 1];
 }
-const sampleQ = (keys, t, out) => { const [a, b, f] = seg(keys, t); return out.copy(a.q).slerp(b.q, f); };
-const sampleV = (keys, t, out) => { const [a, b, f] = seg(keys, t); return out.copy(a.v).lerp(b.v, f); };
+// sample a key list: returns the interpolated Pose.Weight and writes the value into out
+const sampleQ = (keys, t, out) => { const [a, b, f] = seg(keys, t); out.copy(a.q).slerp(b.q, f); return a.w + (b.w - a.w) * f; };
+const sampleV = (keys, t, out) => { const [a, b, f] = seg(keys, t); out.copy(a.v).lerp(b.v, f); return a.w + (b.w - a.w) * f; };
 
 export class Animator {
   constructor(rig) { this.rig = rig; this.tracks = []; this.listeners = []; this._q = new THREE.Quaternion(); this._v = new THREE.Vector3(); }
@@ -107,9 +114,10 @@ export class Animator {
         let wsum = 0;
         for (const tr of this.tracks) {
           if (tr.c.priority !== L || !tr.c.rot[j] || tr.weight <= 0) continue;
-          sampleQ(tr.c.rot[j], tr.time, this._q);
-          if (wsum === 0) lvlQ.copy(this._q); else lvlQ.slerp(this._q, tr.weight / (wsum + tr.weight));
-          wsum += tr.weight;
+          const w = tr.weight * sampleQ(tr.c.rot[j], tr.time, this._q); // track weight x Pose.Weight
+          if (w <= 0) continue;
+          if (wsum === 0) lvlQ.copy(this._q); else lvlQ.slerp(this._q, w / (wsum + w));
+          wsum += w;
         }
         if (wsum > 0) result.slerp(lvlQ, Math.min(1, wsum));
       }
@@ -121,11 +129,28 @@ export class Animator {
       let wsum = 0; lv.set(0, 0, 0);
       for (const tr of this.tracks) {
         if (tr.c.priority !== L || !tr.c.pos.length || tr.weight <= 0) continue;
-        sampleV(tr.c.pos, tr.time, this._v); lv.addScaledVector(this._v, tr.weight); wsum += tr.weight;
+        const w = tr.weight * sampleV(tr.c.pos, tr.time, this._v); lv.addScaledVector(this._v, w); wsum += w;
       }
       if (wsum > 0) off.lerp(lv.divideScalar(wsum), Math.min(1, wsum));
     }
     rig.setRootOffset(off.x, off.y, off.z);
+    // per-joint Transform translation (imported Pose.CFrame positions)
+    if (rig.setJointOffset) {
+      const offJoints = new Set(); this.tracks.forEach((tr) => Object.keys(tr.c.offs).forEach((j) => offJoints.add(j)));
+      for (const j of offJoints) {
+        off.set(0, 0, 0);
+        for (const L of levels) {
+          let wsum = 0; lv.set(0, 0, 0);
+          for (const tr of this.tracks) {
+            if (tr.c.priority !== L || !tr.c.offs[j] || tr.weight <= 0) continue;
+            const w = tr.weight * sampleV(tr.c.offs[j], tr.time, this._v); if (w <= 0) continue;
+            lv.addScaledVector(this._v, w); wsum += w;
+          }
+          if (wsum > 0) off.lerp(lv.divideScalar(wsum), Math.min(1, wsum));
+        }
+        rig.setJointOffset(j, off.x, off.y, off.z);
+      }
+    }
     if (rig.updateFace) rig.updateFace(dt);
   }
 }

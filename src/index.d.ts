@@ -51,6 +51,7 @@ export interface Rig {
   setJoint(name: string, x?: number, y?: number, z?: number): boolean;
   nudgeJoint(name: string, x?: number, y?: number, z?: number): boolean;
   setRootOffset(x?: number, y?: number, z?: number): void;
+  setJointOffset(name: string, x?: number, y?: number, z?: number): boolean;
   resetPose(): void;
   setPose(pose: Pose): void;
   jointPosition(name: string, target?: THREE.Vector3): THREE.Vector3;
@@ -95,8 +96,8 @@ export type EasingDirection = "In" | "Out" | "InOut";
 export type Priority = "Core" | "Idle" | "Movement" | "Action" | "Action2" | "Action3" | "Action4";
 export interface Clip {
   name: string; length?: number; loop?: boolean; priority?: Priority;
-  keyframes: { t: number; poses: Record<string, { r?: [number, number, number]; p?: [number, number, number]; ease?: EasingStyle; dir?: EasingDirection }> }[];
-  markers?: { t: number; name: string }[];
+  keyframes: { t: number; poses: Record<string, { r?: [number, number, number]; q?: [number, number, number, number]; p?: [number, number, number]; weight?: number; ease?: EasingStyle; dir?: EasingDirection }> }[];
+  markers?: { t: number; name: string; value?: string; fade?: number }[];
 }
 export interface Track { clip: Clip; time: number; weight: number; target: number; fade: number; speed: number }
 export class Animator {
@@ -140,4 +141,9 @@ export interface Face {
 }
 export function createFace(o?: FaceStyle & { canvas?: HTMLCanvasElement; blink?: boolean; expression?: ExpressionName | string | Partial<FaceParams>; seed?: number; images?: Record<string, CanvasImageSource>; imageOffset?: number }): Face;
 export function createFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
+export const POSE_EASING_STYLE: Record<number, string>;
+export const POSE_EASING_DIRECTION: Record<number, EasingDirection>;
+export const ANIMATION_PRIORITY: Record<number, Priority>;
+export const R6_C0_ROTATIONS: Record<string, number[]>;
+export function keyframeSequenceToClip(roots: RbxInstance[], o?: { name?: string; rigType?: RigType; cubicLegacy?: "runtime" | "named" }): Clip;
 export const VERSION: string;
