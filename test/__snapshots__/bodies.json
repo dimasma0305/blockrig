@@ -1,0 +1,568 @@
+{
+ "classic": {
+  "HumanoidRootPart": [
+   0,
+   3.048,
+   0
+  ],
+  "LowerTorso": [
+   0,
+   2.048,
+   0
+  ],
+  "UpperTorso": [
+   0,
+   2.448,
+   0
+  ],
+  "LeftUpperArm": [
+   1,
+   3.811,
+   0
+  ],
+  "LeftLowerArm": [
+   1.5,
+   3.083,
+   0
+  ],
+  "LeftHand": [
+   1.5,
+   2.323,
+   0
+  ],
+  "RightUpperArm": [
+   -1,
+   3.811,
+   0
+  ],
+  "RightLowerArm": [
+   -1.5,
+   3.083,
+   0
+  ],
+  "RightHand": [
+   -1.5,
+   2.323,
+   0
+  ],
+  "LeftUpperLeg": [
+   0.5,
+   2.048,
+   0
+  ],
+  "LeftLowerLeg": [
+   0.5,
+   1.226,
+   0
+  ],
+  "LeftFoot": [
+   0.5,
+   0.3,
+   0
+  ],
+  "RightUpperLeg": [
+   -0.5,
+   2.048,
+   0
+  ],
+  "RightLowerLeg": [
+   -0.5,
+   1.226,
+   0
+  ],
+  "RightFoot": [
+   -0.5,
+   0.3,
+   0
+  ],
+  "Neck": [
+   0,
+   4.048,
+   0
+  ]
+ },
+ "slender": {
+  "HumanoidRootPart": [
+   0,
+   3.048,
+   0
+  ],
+  "LowerTorso": [
+   0,
+   2.048,
+   0
+  ],
+  "UpperTorso": [
+   0,
+   2.448,
+   0
+  ],
+  "LeftUpperArm": [
+   0.81,
+   3.811,
+   0
+  ],
+  "LeftLowerArm": [
+   1.19,
+   3.083,
+   0
+  ],
+  "LeftHand": [
+   1.19,
+   2.323,
+   0
+  ],
+  "RightUpperArm": [
+   -0.81,
+   3.811,
+   0
+  ],
+  "RightLowerArm": [
+   -1.19,
+   3.083,
+   0
+  ],
+  "RightHand": [
+   -1.19,
+   2.323,
+   0
+  ],
+  "LeftUpperLeg": [
+   0.4,
+   2.048,
+   0
+  ],
+  "LeftLowerLeg": [
+   0.4,
+   1.226,
+   0
+  ],
+  "LeftFoot": [
+   0.4,
+   0.3,
+   0
+  ],
+  "RightUpperLeg": [
+   -0.4,
+   2.048,
+   0
+  ],
+  "RightLowerLeg": [
+   -0.4,
+   1.226,
+   0
+  ],
+  "RightFoot": [
+   -0.4,
+   0.3,
+   0
+  ],
+  "Neck": [
+   0,
+   4.048,
+   0
+  ]
+ },
+ "buff": {
+  "HumanoidRootPart": [
+   0,
+   3.108,
+   0
+  ],
+  "LowerTorso": [
+   0,
+   2.048,
+   0
+  ],
+  "UpperTorso": [
+   0,
+   2.472,
+   0
+  ],
+  "LeftUpperArm": [
+   1.3,
+   3.917,
+   0
+  ],
+  "LeftLowerArm": [
+   1.925,
+   3.189,
+   0
+  ],
+  "LeftHand": [
+   1.925,
+   2.429,
+   0
+  ],
+  "RightUpperArm": [
+   -1.3,
+   3.917,
+   0
+  ],
+  "RightLowerArm": [
+   -1.925,
+   3.189,
+   0
+  ],
+  "RightHand": [
+   -1.925,
+   2.429,
+   0
+  ],
+  "LeftUpperLeg": [
+   0.58,
+   2.048,
+   0
+  ],
+  "LeftLowerLeg": [
+   0.58,
+   1.226,
+   0
+  ],
+  "LeftFoot": [
+   0.58,
+   0.3,
+   0
+  ],
+  "RightUpperLeg": [
+   -0.58,
+   2.048,
+   0
+  ],
+  "RightLowerLeg": [
+   -0.58,
+   1.226,
+   0
+  ],
+  "RightFoot": [
+   -0.58,
+   0.3,
+   0
+  ],
+  "Neck": [
+   0,
+   4.168,
+   0
+  ]
+ },
+ "tall": {
+  "HumanoidRootPart": [
+   0,
+   3.863,
+   0
+  ],
+  "LowerTorso": [
+   0,
+   2.703,
+   0
+  ],
+  "UpperTorso": [
+   0,
+   3.167,
+   0
+  ],
+  "LeftUpperArm": [
+   0.9,
+   4.748,
+   0
+  ],
+  "LeftLowerArm": [
+   1.325,
+   3.787,
+   0
+  ],
+  "LeftHand": [
+   1.325,
+   2.784,
+   0
+  ],
+  "RightUpperArm": [
+   -0.9,
+   4.748,
+   0
+  ],
+  "RightLowerArm": [
+   -1.325,
+   3.787,
+   0
+  ],
+  "RightHand": [
+   -1.325,
+   2.784,
+   0
+  ],
+  "LeftUpperLeg": [
+   0.45,
+   2.703,
+   0
+  ],
+  "LeftLowerLeg": [
+   0.45,
+   1.618,
+   0
+  ],
+  "LeftFoot": [
+   0.45,
+   0.396,
+   0
+  ],
+  "RightUpperLeg": [
+   -0.45,
+   2.703,
+   0
+  ],
+  "RightLowerLeg": [
+   -0.45,
+   1.618,
+   0
+  ],
+  "RightFoot": [
+   -0.45,
+   0.396,
+   0
+  ],
+  "Neck": [
+   0,
+   5.023,
+   0
+  ]
+ },
+ "child": {
+  "HumanoidRootPart": [
+   0,
+   2.214,
+   0
+  ],
+  "LowerTorso": [
+   0,
+   1.434,
+   0
+  ],
+  "UpperTorso": [
+   0,
+   1.746,
+   0
+  ],
+  "LeftUpperArm": [
+   0.95,
+   2.809,
+   0
+  ],
+  "LeftLowerArm": [
+   1.4,
+   2.299,
+   0
+  ],
+  "LeftHand": [
+   1.4,
+   1.767,
+   0
+  ],
+  "RightUpperArm": [
+   -0.95,
+   2.809,
+   0
+  ],
+  "RightLowerArm": [
+   -1.4,
+   2.299,
+   0
+  ],
+  "RightHand": [
+   -1.4,
+   1.767,
+   0
+  ],
+  "LeftUpperLeg": [
+   0.48,
+   1.434,
+   0
+  ],
+  "LeftLowerLeg": [
+   0.48,
+   0.858,
+   0
+  ],
+  "LeftFoot": [
+   0.48,
+   0.21,
+   0
+  ],
+  "RightUpperLeg": [
+   -0.48,
+   1.434,
+   0
+  ],
+  "RightLowerLeg": [
+   -0.48,
+   0.858,
+   0
+  ],
+  "RightFoot": [
+   -0.48,
+   0.21,
+   0
+  ],
+  "Neck": [
+   0,
+   2.994,
+   0
+  ]
+ },
+ "classic x1.3 height, x0.8 width, x1.2 head": {
+  "HumanoidRootPart": [
+   0,
+   3.962,
+   0
+  ],
+  "LowerTorso": [
+   0,
+   2.662,
+   0
+  ],
+  "UpperTorso": [
+   0,
+   3.182,
+   0
+  ],
+  "LeftUpperArm": [
+   0.8,
+   4.954,
+   0
+  ],
+  "LeftLowerArm": [
+   1.2,
+   4.008,
+   0
+  ],
+  "LeftHand": [
+   1.2,
+   3.02,
+   0
+  ],
+  "RightUpperArm": [
+   -0.8,
+   4.954,
+   0
+  ],
+  "RightLowerArm": [
+   -1.2,
+   4.008,
+   0
+  ],
+  "RightHand": [
+   -1.2,
+   3.02,
+   0
+  ],
+  "LeftUpperLeg": [
+   0.4,
+   2.662,
+   0
+  ],
+  "LeftLowerLeg": [
+   0.4,
+   1.594,
+   0
+  ],
+  "LeftFoot": [
+   0.4,
+   0.39,
+   0
+  ],
+  "RightUpperLeg": [
+   -0.4,
+   2.662,
+   0
+  ],
+  "RightLowerLeg": [
+   -0.4,
+   1.594,
+   0
+  ],
+  "RightFoot": [
+   -0.4,
+   0.39,
+   0
+  ],
+  "Neck": [
+   0,
+   5.262,
+   0
+  ]
+ },
+ "R6": {
+  "HumanoidRootPart": [
+   0,
+   3,
+   0
+  ],
+  "Torso": [
+   0,
+   3,
+   0
+  ],
+  "Left Arm": [
+   1,
+   3.5,
+   0
+  ],
+  "Right Arm": [
+   -1,
+   3.5,
+   0
+  ],
+  "Left Leg": [
+   1,
+   2,
+   0
+  ],
+  "Right Leg": [
+   -1,
+   2,
+   0
+  ],
+  "Neck": [
+   0,
+   4,
+   0
+  ]
+ },
+ "R6 card @35%": {
+  "HumanoidRootPart": [
+   0,
+   3,
+   0
+  ],
+  "Torso": [
+   0,
+   3,
+   0
+  ],
+  "Left Arm": [
+   1,
+   3.5,
+   0
+  ],
+  "Right Arm": [
+   -1,
+   3.5,
+   0
+  ],
+  "Left Leg": [
+   1,
+   2,
+   0
+  ],
+  "Right Leg": [
+   -1,
+   2,
+   0
+  ],
+  "Neck": [
+   0,
+   4,
+   0
+  ]
+ }
+}

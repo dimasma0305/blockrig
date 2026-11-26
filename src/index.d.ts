@@ -40,12 +40,13 @@ export const HEAD_ATTACHMENTS: Record<string, number[]>;
 export type JointName =
   | "HumanoidRootPart" | "LowerTorso" | "UpperTorso" | "Neck"
   | "LeftUpperArm" | "LeftLowerArm" | "LeftHand" | "RightUpperArm" | "RightLowerArm" | "RightHand"
-  | "LeftUpperLeg" | "LeftLowerLeg" | "LeftFoot" | "RightUpperLeg" | "RightLowerLeg" | "RightFoot";
+  | "LeftUpperLeg" | "LeftLowerLeg" | "LeftFoot" | "RightUpperLeg" | "RightLowerLeg" | "RightFoot"
+  | "Torso" | "Left Arm" | "Right Arm" | "Left Leg" | "Right Leg" | "Head";
 export type Pose = Partial<Record<JointName, [number, number, number]>> & { rootOffset?: [number, number, number] };
 
 export interface Rig {
   object: THREE.Group; stage: THREE.Group; bones: Record<string, THREE.Bone>; neck: THREE.Bone; head: THREE.Group;
-  parts: Record<string, THREE.Mesh>; joints: string[]; garments: THREE.SkinnedMesh[]; accessories: THREE.Mesh[];
+  parts: Record<string, THREE.Mesh>; joints: string[]; rigType: RigType; body: Body; garments: THREE.SkinnedMesh[]; accessories: THREE.Mesh[];
   setJointQuat(name: string, q: THREE.Quaternion): boolean;
   setJoint(name: string, x?: number, y?: number, z?: number): boolean;
   nudgeJoint(name: string, x?: number, y?: number, z?: number): boolean;
@@ -56,8 +57,25 @@ export interface Rig {
   addLayeredClothing(mesh: ParsedMesh, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; lod?: number; side?: THREE.Side }): THREE.SkinnedMesh;
   addAccessory(mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o: { attachment: { name: string; cframe: CFrame }; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
   setFace(image: CanvasImageSource): void;
+  setBodyPart(partName: string, mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; scale?: number[] }): THREE.Mesh;
 }
+export type RigType = "R15" | "R6";
+export type ShapeName = "classic" | "slender" | "buff" | "tall" | "child";
+export interface ShapeSpec { top: number; waist: number; depth: number; arm: number; leg: number; legX: number; limbs: number; torso: number }
+export interface BodyScale { height?: number; width?: number; depth?: number; head?: number }
+export interface BodyPart { bone: string; size: number[]; center: number[]; kind: "shirt" | "pants" | "skin" | "shoes"; taper?: number; hand?: number; shoe?: number }
+export interface Body { rigType: RigType; bind: BindBone[]; parts: BodyPart[]; floor: number; neck: { parent: string; pos: number[] }; headScale: number; scale?: Required<BodyScale> }
+export const R15_SHAPES: Record<ShapeName, ShapeSpec>;
+export function buildBody(o?: { rigType?: RigType; shape?: ShapeName | Partial<ShapeSpec>; scale?: BodyScale }): Body;
+export function jointsOf(body: Body): string[];
+export function toR6(clip: Clip): Clip;
+export function toR15(clip: Clip): Clip;
+export function retargetAll<T extends Record<string, Clip>>(clips: T, fn: (c: Clip) => Clip): Record<keyof T, Clip>;
+
 export function createRig(o?: {
+  rigType?: RigType;
+  shape?: ShapeName | Partial<ShapeSpec>;
+  scale?: BodyScale;
   skeleton?: BindBone[];
   body?: { skin?: string; shirt?: string; pants?: string; shoes?: string } | false;
   face?: CanvasImageSource | null;

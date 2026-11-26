@@ -71,3 +71,17 @@ test("regression: every clip produces the same joint positions and coat shape ov
   }
   snapshot("clips", out);
 });
+
+test("regression: body shapes, scaling and R6 keep their joint layout", async () => {
+  const { R15_SHAPES } = await import("../src/body.js");
+  const { toR6 } = await import("../src/retarget.js");
+  const out = {};
+  const sample = (rig) => Object.fromEntries(rig.joints.map((j) => [j, r3(rig.jointPosition(j))]));
+  for (const shape of Object.keys(R15_SHAPES)) out[shape] = sample(createRig({ shape }));
+  out["classic x1.3 height, x0.8 width, x1.2 head"] = sample(createRig({ scale: { height: 1.3, width: 0.8, head: 1.2 } }));
+  out.R6 = sample(createRig({ rigType: "R6" }));
+  const r6 = createRig({ rigType: "R6" }), an = new Animator(r6);
+  an.play(toR6(clips.card), { fade: 0 }); an.update(clips.card.length * 0.35);
+  out["R6 card @35%"] = sample(r6);
+  snapshot("bodies", out);
+});

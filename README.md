@@ -31,13 +31,14 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 
 ## Features
 
+- 🧍 **Every classic body**: **R6** (six parts, classic pivots) and **R15** in five shapes (`classic`, `slender`, `buff`, `tall`, `child`) or your own proportions, with Roblox-style `height / width / depth / head` scaling, swappable body-part meshes, and R15 ⇄ R6 clip retargeting.
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
 - 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, with its bind pose retargeted onto your rig.
 - 🎩 **Rigid accessories** placed by attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`).
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion.
 - 📦 **File readers**: `.mesh` **v2.00 → v7.00** (LODs, bones, subsets, skinning, FACS; v7 Draco via a hook) and binary **`.rbxm`** (LZ4 / ZSTD chunks, 12 property types).
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
-- 🧪 **49 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **64 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -98,6 +99,34 @@ rig.addAccessory(parseMesh(hairBytes), { attachment: acc.attachment, map: loadRo
 </script>
 ```
 
+## Body types
+
+<img src="docs/bodies.png" alt="Six original blocky characters: an R6 rig and R15 rigs in classic, slender, buff, tall and child shapes" width="100%">
+
+```js
+createRig({ rigType: "R6" });                                    // Torso, Left Arm, Right Arm, Left Leg, Right Leg + Neck
+createRig({ shape: "slender" });                                 // classic | slender | buff | tall | child
+createRig({ shape: { top: 2.4, arm: 1.2, limbs: 1.1 } });        // your own proportions
+createRig({ scale: { height: 1.2, width: 0.9, depth: 1, head: 1.3 } }); // Roblox-style body scales
+```
+
+| Option | What it changes |
+|---|---|
+| `rigType: "R6"` | Six-part classic rig. Shoulders pivot at the top inner edge of each arm and hips at the top **outer** corner of each leg, as on the classic rig. Joints are `Torso`, `Left Arm`, `Right Arm`, `Left Leg`, `Right Leg`, `Neck` (`Head` is an alias). |
+| `shape` | R15 proportions: torso width at the shoulders (`top`) and waist, `depth`, `arm` and `leg` thickness, `legX` spacing, `limbs` and `torso` length. `classic` reproduces the standard blocky R15 skeleton exactly. |
+| `scale` | `height`, `width` and `depth` stretch the skeleton and parts about the feet; `head` grows the head and everything attached to it. |
+| `rig.setBodyPart(name, mesh, o)` | Replace one blocky part with your own mesh (given in the part's local space, as MeshPart meshes are), e.g. a body-bundle arm or a custom head. |
+
+R15 and R6 animations aren't interchangeable, because poses are matched by part name. BlockRig can retarget between them:
+
+```js
+import { toR6, toR15, retargetAll, clips } from "blockrig";
+new Animator(createRig({ rigType: "R6" })).play(toR6(clips.run)); // upper limbs + torso + neck + root motion
+const r6Clips = retargetAll(clips, toR6);
+```
+
+Layered clothing needs an R15 rig (garments are skinned to the 15 R15 bones). It follows every R15 shape, staying attached to its bones as they move apart.
+
 ## Write your own clips
 
 Clips are plain JSON, shaped like a Roblox `KeyframeSequence`. A pose's `ease`/`dir` shape the move **from** its keyframe to the joint's next keyframe. A joint can be left out of any keyframe and will interpolate across the gap.
@@ -130,7 +159,10 @@ anim.play(salute, { fade: 0.15 });
 
 | | |
 |---|---|
-| `createRig({ skeleton?, body?, face?, outline? })` | Builds the rig. `body: false` skips the blocky body; `face` is an image or canvas decal. |
+| `createRig({ rigType?, shape?, scale?, skeleton?, body?, face?, outline? })` | Builds the rig. `body: false` skips the blocky body; `face` is an image or canvas decal. |
+| `buildBody({ rigType, shape, scale })` · `R15_SHAPES` | The bind skeleton and part layout a rig is built from. |
+| `rig.setBodyPart(name, mesh, { map?, color?, scale? })` | Swap a blocky part (or `"Head"`) for a mesh. |
+| `toR6(clip)` · `toR15(clip)` · `retargetAll(clips, fn)` | Retarget clips between rig types. |
 | `rig.setPose(pose)` / `rig.resetPose()` | `{ Joint: [x, y, z], rootOffset: [x, y, z] }` in radians and studs. |
 | `rig.setJoint(name, x, y, z)` · `setJointQuat(name, q)` · `nudgeJoint(name, x, y, z)` | Set one joint, or add on top of the current pose (good for look-at). |
 | `rig.addLayeredClothing(mesh, { map?, color?, lod? })` | Skinned garment from `parseMesh` (v4+) or `makeCoat()`. |
@@ -165,14 +197,14 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 49 unit + regression tests (node:test, no browser needed)
+npm test             # 64 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
-npm run demo         # http://127.0.0.1:8787/examples/
+npm run demo         # http://127.0.0.1:8787/examples/ (and /examples/bodies.html)
 ```
 
-- **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion.
-- **Regression tests** pin the writer's output byte-for-byte (SHA-256), the parse of a committed fixture file, and the joint positions plus skinned coat vertices of every bundled clip at four points in time.
+- **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion.
+- **Regression tests** pin the writer's output byte-for-byte (SHA-256), the parse of a committed fixture file, the joint positions plus skinned coat vertices of every bundled clip at four points in time, and the joint layout of every body shape, a scaled body, R6 and an R6-retargeted clip.
 - **CI** runs everything on Node 20, 22 and 24 against three.js r128 and r184, builds the UMD bundle, smoke-tests it in a VM and checks the package contents. Pushing a `v*` tag publishes to npm with provenance and creates a GitHub release. `main` deploys the demo to GitHub Pages.
 
 ## Assets and trademarks

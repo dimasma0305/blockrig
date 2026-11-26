@@ -13,6 +13,7 @@ const SHOTS = [
   { file: "victory", clip: "victory", t: 0.4, yaw: 0.25 },
   { file: "showtime", clip: "showtime", t: 0.3, yaw: -0.35 },
   { file: "idle", clip: "idle", t: 1.0, yaw: 2.6 },
+  { file: "bodies", page: "bodies.html", w: 1400, h: 440 },
 ];
 
 const candidates = [process.env.CHROME_PATH,
@@ -29,9 +30,9 @@ try {
   for (const s of SHOTS) {
     const page = await browser.newPage({ viewport: { width: s.w || 520, height: s.h || 620 }, deviceScaleFactor: 2 });
     page.on("pageerror", (e) => console.error(`  ${s.file}: ${e.message}`));
-    await page.goto(`http://127.0.0.1:8799/examples/index.html?shot&clip=${s.clip}&t=${s.t}&yaw=${s.yaw}`);
+    await page.goto(s.page ? `http://127.0.0.1:8799/examples/${s.page}?shot` : `http://127.0.0.1:8799/examples/index.html?shot&clip=${s.clip}&t=${s.t}&yaw=${s.yaw}`);
     await page.waitForFunction(() => window.__ready === true, null, { timeout: 30000 });
-    await page.locator("canvas").screenshot({ path: `docs/${s.file}.png` });
+    await (s.page ? page.locator("#wrap") : page.locator("canvas")).screenshot({ path: `docs/${s.file}.png` });
     console.log(`  docs/${s.file}.png`);
     await page.close();
   }

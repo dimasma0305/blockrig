@@ -7,5 +7,7 @@ export { createRig, headGeometry, faceTexture, loadRobloxTexture, setSRGB } from
 export { Animator, ease, PRIORITY } from "./animator.js";
 export { clips } from "./clips.js";
 export { makeCoat } from "./garment.js";
+export { buildBody, R15_SHAPES, jointsOf } from "./body.js";
+export { toR6, toR15, retargetAll } from "./retarget.js";
 export { lz4Block } from "./binary.js";
 export const VERSION = "0.1.0";

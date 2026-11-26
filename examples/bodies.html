@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlockRig Body Types</title>
+<style>
+  :root{--ink:#141012;--paper:#f6efe9;--muted:#a3948e;--red:#e3172f;color-scheme:dark}
+  html,body{margin:0;height:100%;background:var(--ink);color:var(--paper);font:600 14px/1.3 system-ui,-apple-system,Segoe UI,sans-serif}
+  #wrap{position:relative;width:100%;height:100%}
+  canvas{display:block;width:100%;height:100%}
+  #labels{position:absolute;left:0;right:0;bottom:14px;display:grid;grid-template-columns:repeat(6,1fr);text-align:center;pointer-events:none}
+  #labels b{display:block;font-size:15px}
+  #labels span{color:var(--muted);font:500 12px ui-monospace,Consolas,monospace}
+</style>
+<script type="importmap">
+  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js", "blockrig": "../src/index.js" } }
+</script>
+</head>
+<body>
+<div id="wrap"><div id="labels"></div></div>
+<script type="module">
+import * as THREE from "three";
+import { createRig, Animator, clips, toR6, makeCoat } from "blockrig";
+
+const q = new URLSearchParams(location.search), SHOT = q.has("shot");
+const wrap = document.getElementById("wrap");
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: SHOT });
+renderer.setPixelRatio(SHOT ? 1 : Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
+wrap.prepend(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color("#141012");
+const cam = new THREE.PerspectiveCamera(22, 1, 0.1, 200);
+cam.position.set(0, 3.6, 40); cam.lookAt(0, 2.1, 0);
+scene.add(new THREE.HemisphereLight(0xfff2ea, 0x4a1a22, 3));
+const key = new THREE.DirectionalLight(0xffffff, 3.4); key.position.set(6, 10, 12); scene.add(key);
+const rim = new THREE.DirectionalLight(0xff2d45, 3); rim.position.set(-8, 6, -8); scene.add(rim);
+
+function face(kind) {
+  const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d");
+  g.fillStyle = "#111"; g.strokeStyle = "#111"; g.lineCap = "round"; g.lineWidth = 10;
+  for (const s of [-1, 1]) { g.beginPath(); g.ellipse(128 + s * 42, 106, 12, kind === 1 ? 6 : 18, 0, 0, Math.PI * 2); g.fill(); }
+  g.beginPath();
+  if (kind === 2) g.arc(128, 150, 26, 0, Math.PI * 2); else g.arc(128, 128, 56, 0.18 * Math.PI, 0.82 * Math.PI);
+  kind === 2 ? g.fill() : g.stroke();
+  return c;
+}
+
+// six original characters, one per body type
+const CAST = [
+  { label: "R6", note: 'rigType: "R6"', opts: { rigType: "R6" }, body: { skin: "#f2c94c", shirt: "#2f80ed", pants: "#27ae60", shoes: "#27ae60" }, clip: toR6(clips.wave), t: 0.25, face: 0 },
+  { label: "R15 classic", note: 'shape: "classic"', opts: {}, body: { skin: "#f3d2b9", shirt: "#241b1e", pants: "#2b2124" }, coat: true, clip: clips.showtime, t: 0.6, face: 0 },
+  { label: "R15 slender", note: 'shape: "slender"', opts: { shape: "slender" }, body: { skin: "#c68a5c", shirt: "#e3172f", pants: "#3a2a2c", shoes: "#f6efe9" }, clip: clips.card, t: 0.5, face: 1 },
+  { label: "R15 buff", note: 'shape: "buff"', opts: { shape: "buff" }, body: { skin: "#8d5a3b", shirt: "#f4c430", pants: "#1d3557", shoes: "#111" }, clip: clips.victory, t: 0.12, face: 0 },
+  { label: "R15 tall", note: 'shape: "tall"', opts: { shape: "tall" }, body: { skin: "#fbe6cf", shirt: "#6c5ce7", pants: "#222", shoes: "#111" }, clip: clips.idle, t: 1.2, face: 1 },
+  { label: "R15 child", note: 'shape: "child", head 1.15', opts: { shape: "child", scale: { head: 1.15 } }, body: { skin: "#eec39a", shirt: "#00b894", pants: "#0984e3", shoes: "#fdcb6e" }, clip: clips.run, t: 0.12, face: 2 },
+];
+const coatTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d"); g.fillStyle = "#c8182f"; g.fillRect(0, 0, 256, 256); g.fillStyle = "#f4c430"; g.fillRect(0, 0, 256, 10); g.fillRect(0, 246, 256, 10); g.fillRect(30, 0, 5, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+
+const labels = document.getElementById("labels"), anims = [];
+CAST.forEach((c, i) => {
+  const rig = createRig({ ...c.opts, body: c.body, face: face(c.face), outline: 0.03 });
+  if (c.coat) rig.addLayeredClothing(makeCoat(), { map: coatTex });
+  rig.object.position.x = (i - 2.5) * 6.2;
+  rig.object.rotation.y = c.clip.name.startsWith("run") ? 1.1 : 0.25;
+  scene.add(rig.object);
+  const an = new Animator(rig); an.play(c.clip, { fade: 0 });
+  anims.push([an, c]);
+  labels.insertAdjacentHTML("beforeend", `<div><b>${c.label}</b><span>${c.note}</span></div>`);
+});
+
+function resize() { const w = wrap.clientWidth, h = wrap.clientHeight; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+addEventListener("resize", resize); resize();
+if (SHOT) {
+  for (const [an, c] of anims) { const n = 60; for (let k = 0; k < n; k++) an.update(c.t / n); }
+  renderer.render(scene, cam); window.__ready = true;
+} else {
+  const clock = new THREE.Clock();
+  renderer.setAnimationLoop(() => { const dt = Math.min(clock.getDelta(), 0.05); anims.forEach(([an]) => an.update(dt)); renderer.render(scene, cam); });
+}
+</script>
+</body>
+</html>
