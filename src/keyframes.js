@@ -15,6 +15,7 @@
 // character axes BlockRig uses. R6 joints have rotated C0s, which are converted below.
 import * as THREE from "three";
 import { findInstance } from "./rbxm.js";
+import { curveAnimationToClip } from "./curves.js";
 
 /** Enum.PoseEasingStyle values -> BlockRig easing names. */
 export const POSE_EASING_STYLE = { 0: "Linear", 1: "Constant", 2: "Elastic", 3: "Cubic", 4: "Bounce", 5: "CubicV2" };
@@ -40,7 +41,7 @@ export const R6_C0_ROTATIONS = {
 const rotToQuat = (rot) => new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().set(rot[0], rot[1], rot[2], 0, rot[3], rot[4], rot[5], 0, rot[6], rot[7], rot[8], 0, 0, 0, 0, 1));
 
 /**
- * Convert a KeyframeSequence into a clip for BlockRig.Animator.
+ * Convert a KeyframeSequence (or, handed on to curveAnimationToClip, a CurveAnimation) into a clip for BlockRig.Animator.
  * @param {object[]} roots instances from parseRbxm()
  * @param {{ rigType?: "R15"|"R6", name?: string, cubicLegacy?: "runtime"|"named" }} [o]
  *   rigType: which rig the animation was made for (R6 poses are converted out of their rotated joint frames).
@@ -49,7 +50,10 @@ const rotToQuat = (rot) => new THREE.Quaternion().setFromRotationMatrix(new THRE
  */
 export function keyframeSequenceToClip(roots, o = {}) {
   const ks = findInstance(roots, (x) => x.className === "KeyframeSequence");
-  if (!ks) throw new Error("blockrig: no KeyframeSequence in this model (CurveAnimation is not supported yet)");
+  if (!ks) {
+    if (findInstance(roots, (x) => x.className === "CurveAnimation")) return curveAnimationToClip(roots, o);
+    throw new Error("blockrig: no KeyframeSequence or CurveAnimation in this model");
+  }
   const rigType = (o.rigType || "R15").toUpperCase(), legacy = o.cubicLegacy || "runtime";
   const keyframes = [], markers = [];
   const frames = ks.children.filter((c) => c.className === "Keyframe").sort((a, b) => (a.props.Time || 0) - (b.props.Time || 0));

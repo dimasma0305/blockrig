@@ -32,6 +32,10 @@ export class Reader {
 
 const td = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
 export const utf8 = (b) => (td ? td.decode(b) : String.fromCharCode(...b));
+// strict decoding: binary blobs stored as strings (BinaryString, e.g. curve ValuesAndTimes) aren't valid UTF-8,
+// so they come back as raw bytes instead of being mangled by replacement characters
+const tdStrict = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8", { fatal: true }) : null;
+export const utf8OrBytes = (b) => { if (!tdStrict) return utf8(b); try { return tdStrict.decode(b); } catch { return Uint8Array.from(b); } };
 export const latin1 = (b) => { let s = ""; for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return s; };
 
 /** Decompress a raw LZ4 *block* (no frame header) into a buffer of known size. */

@@ -1,6 +1,6 @@
 // Reader for the binary Roblox model format (.rbxm / .rbxl).
 // Format reference: https://dom.rojo.space/binary.html
-import { Reader, toBytes, latin1, utf8, lz4Block } from "./binary.js";
+import { Reader, toBytes, latin1, utf8, utf8OrBytes, lz4Block } from "./binary.js";
 import { parseRbxmx } from "./rbxmx.js";
 
 const MAGIC = "<roblox!";
@@ -93,7 +93,7 @@ export { ROT_IDS };
 
 function readValues(c, type, n, sstr) {
   switch (type) {
-    case 0x01: { const a = []; for (let i = 0; i < n; i++) a.push(utf8(c.slice(c.u32()))); return a; } // String (incl. legacy Content)
+    case 0x01: { const a = []; for (let i = 0; i < n; i++) a.push(utf8OrBytes(c.slice(c.u32()))); return a; } // String / BinaryString (raw bytes when not UTF-8)
     case 0x02: { const a = []; for (let i = 0; i < n; i++) a.push(c.u8() !== 0); return a; } // Bool
     case 0x03: return readI32s(c, n); // Int32
     case 0x04: return readF32s(c, n); // Float32

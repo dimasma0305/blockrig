@@ -10,7 +10,7 @@ const i32s = (vals) => interleave(vals.map((v) => be32(zz(v))), 4);
 const refs = (vals) => i32s(vals.map((v, i) => (i ? v - vals[i - 1] : v)));
 function rfloat(f) { const b = Buffer.alloc(4); b.writeFloatBE(f); const u = b.readUInt32BE(); return be32(((u << 1) | (u >>> 31)) >>> 0); }
 const f32s = (vals) => interleave(vals.map(rfloat), 4);
-const str = (s) => { const b = Buffer.from(s, "utf8"); return Buffer.concat([le32(b.length), b]); };
+const str = (s) => { const b = s instanceof Uint8Array ? Buffer.from(s) : Buffer.from(s, "utf8"); return Buffer.concat([le32(b.length), b]); }; // strings, or raw bytes (BinaryString)
 
 /** A literal-only LZ4 block (valid LZ4 that a real decoder must accept). */
 export function lz4Literal(data) {

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **CurveAnimation import**: `curveAnimationToClip()` (and `keyframeSequenceToClip()`, which hands CurveAnimations on) reads joint folders with `Vector3Curve` positions, `EulerRotationCurve` (RotationOrder) or `RotationCurve` rotations, `MarkerCurve`s and FaceControls `FloatCurve`s, and samples them into a clip. Key blobs (`ValuesAndTimes`) follow the community layout in rbx-dom#657 (not yet checked against a Studio export); `decodeFloatCurve` / `decodeRotationCurve` / `decodeMarkerCurve`, `evalFloatCurve` / `evalRotationCurve`.
+- Readers: string properties that aren't valid UTF-8 come back as raw bytes (BinaryString), and `.rbxmx` BinaryStrings are base64-decoded.
+
 - **Layered clothing fit (WrapLayer → WrapTarget)**: body parts take their `WrapTarget` cage (`bodyParts[name].cage`, read by `describeBodyParts`), and `rig.addLayeredClothing(mesh, { wrap })` fits a garment to the body by matching its inner cage to the body cages through their template UVs, then skins it on the rig's bind pose. Layers stack by `Order` (each fits to the outer cage of the one below). `fitLayer()`, `cageMap()`, `cageKey()`; `describeAccessory()` returns the WrapLayer origins and the SurfaceAppearance ColorMap. Checked with Roblox's Zip Hoodie, Knit Sweater and Casual Sweats on the ROBLOX Boy and Woman bodies.
 - Garment bones named `Root`, `HumanoidRootNode` and `Head` map to the rig's root and neck.
 
@@ -21,7 +24,7 @@
 - `examples/clothing.html` and `docs/clothing.png`; `ONLY=name npm run screenshots`.
 - The story example (`examples/story`): a 26-second short made with BlockRig, Remotion and three.js.
 - Bundlers: version-specific three.js colour-space constants are read at run time.
-- 113 tests.
+- 118 tests.
 
 ## 0.2.0
 

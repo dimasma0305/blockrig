@@ -32,7 +32,8 @@ const num = (el, tag, d = 0) => { const c = child(el, tag); return c ? parseFloa
 function propValue(p) {
   const t = p.tag, txt = p.text.trim();
   switch (t) {
-    case "string": case "ProtectedString": case "BinaryString": return p.text;
+    case "string": case "ProtectedString": return p.text;
+    case "BinaryString": { const s = (p.text || "").replace(/s+/g, ""); if (!s) return ""; const bin = atob(s), out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; } // base64
     case "bool": return txt === "true";
     case "int": case "int64": case "token": return parseInt(txt, 10);
     case "float": case "double": return parseFloat(txt);

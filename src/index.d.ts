@@ -258,4 +258,18 @@ export function facsBoneOffsets(facs: Facs, values: Partial<Record<string, numbe
 export function cageKey(u: number, v: number): string;
 export function cageMap(cage: CageMesh, o?: { origin?: number[]; at?: number[]; scale?: number[]; into?: Map<string, number[]> }): Map<string, number[]>;
 export function fitLayer(positions: ArrayLike<number>, layer: WrapLayerSpec, target: Map<string, number[]>, o?: { k?: number; normals?: ArrayLike<number> | null; inflate?: number }): { positions: Float32Array; target: Map<string, number[]>; matched: number };
+export type KeyInterpolation = "Constant" | "Linear" | "Cubic";
+export interface FloatCurveKey { t: number; value: number; interpolation: KeyInterpolation; tangentMode: number; leftTangent: number; rightTangent: number }
+export interface RotationCurveKey { t: number; q: [number, number, number, number]; interpolation: KeyInterpolation; leftTangent: number; rightTangent: number }
+export const TICKS_PER_SECOND: number;
+export const KEY_INTERPOLATION: Record<number, KeyInterpolation>;
+export const ROTATION_ORDER: Record<number, "XYZ" | "XZY" | "YZX" | "YXZ" | "ZXY" | "ZYX">;
+/** FloatCurve.ValuesAndTimes (bytes, or the string a reader gave) -> keys. */
+export function decodeFloatCurve(bytes: Uint8Array | string): FloatCurveKey[];
+export function decodeRotationCurve(bytes: Uint8Array | string): RotationCurveKey[];
+export function decodeMarkerCurve(bytes: Uint8Array | string): { t: number; value: string }[];
+export function evalFloatCurve(keys: FloatCurveKey[], t: number): number;
+export function evalRotationCurve(keys: RotationCurveKey[], t: number, out?: THREE.Quaternion): THREE.Quaternion;
+/** CurveAnimation -> clip (curves sampled at fps, default 60, plus every key time). */
+export function curveAnimationToClip(roots: RbxInstance[], o?: { name?: string; rigType?: RigType; fps?: number }): Clip;
 export const VERSION: string;
