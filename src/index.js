@@ -1,0 +1,11 @@
+export { parseMesh, lodIndices } from "./mesh.js";
+export { writeMesh } from "./writer.js";
+export { parseRbxm, findInstance, describeAccessory, assetId } from "./rbxm.js";
+export { cframeToMatrix, matrixToCFrame, motor6D, accessoryWeld } from "./cframe.js";
+export { R15_BIND, R15_JOINTS, R15_FLOOR, R15_NECK_Y, HEAD_ATTACHMENTS } from "./skeleton.js";
+export { createRig, headGeometry, faceTexture, loadRobloxTexture, setSRGB } from "./rig.js";
+export { Animator, ease, PRIORITY } from "./animator.js";
+export { clips } from "./clips.js";
+export { makeCoat } from "./garment.js";
+export { lz4Block } from "./binary.js";
+export const VERSION = "0.1.0";

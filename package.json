@@ -1,0 +1,65 @@
+{
+  "name": "blockrig",
+  "version": "0.1.0",
+  "description": "R15 block-character rig for three.js: reads Roblox-format .mesh (v2–v7) and .rbxm files, skins layered clothing with its own bone weights, attaches accessories by attachment point, and plays keyframe animations with Roblox-style easing, priorities and fades.",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./umd": "./dist/blockrig.umd.js",
+    "./package.json": "./package.json"
+  },
+  "unpkg": "dist/blockrig.umd.min.js",
+  "jsdelivr": "dist/blockrig.umd.min.js",
+  "types": "./src/index.d.ts",
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/test.mjs",
+    "test:update": "node scripts/test.mjs --update",
+    "screenshots": "node scripts/screenshots.mjs",
+    "demo": "node scripts/serve.mjs",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "three",
+    "threejs",
+    "r15",
+    "rig",
+    "skinning",
+    "animation",
+    "layered-clothing",
+    "mesh",
+    "rbxm",
+    "blocky",
+    "character"
+  ],
+  "author": "dimasma0305",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dimasma0305/blockrig.git"
+  },
+  "homepage": "https://github.com/dimasma0305/blockrig#readme",
+  "bugs": {
+    "url": "https://github.com/dimasma0305/blockrig/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "three": ">=0.128.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.27.0",
+    "playwright-core": "1.63.0",
+    "three": "0.184.0"
+  }
+}

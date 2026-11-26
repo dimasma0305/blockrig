@@ -1,0 +1,18 @@
+{
+ "2.00": {
+  "bytes": 16321,
+  "sha256": "e9bbc6b03ba194b7cf3651f8b28a6f664b4f2f9624b99ae58de7d2fb67aed2b6"
+ },
+ "3.00": {
+  "bytes": 16333,
+  "sha256": "eb40516f271eb98619e7edcc22d7098d5db274b81d473386a6a5abae6cfa1269"
+ },
+ "4.00": {
+  "bytes": 20090,
+  "sha256": "12396a324e262edaf49d9b373be144487246030fed336c7aaf858cefe63aae15"
+ },
+ "6.00": {
+  "bytes": 20145,
+  "sha256": "ba8556a7c9079b68b409c09dcc1de97f13b704992ff8546cc62984172bd7099e"
+ }
+}

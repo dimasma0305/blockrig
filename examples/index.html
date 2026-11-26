@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlockRig Playground</title>
+<style>
+  :root{--ink:#0d0a0b;--panel:#171214;--line:#2d2427;--paper:#f6efe9;--muted:#a3948e;--red:#e3172f;--gold:#f4c430;color-scheme:dark}
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--ink);color:var(--paper);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;display:grid;grid-template-rows:auto 1fr}
+  header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding:12px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:18px;letter-spacing:.02em}
+  h1 b{color:var(--red)}
+  .clips{display:flex;flex-wrap:wrap;gap:6px}
+  button{font:600 13px system-ui,sans-serif;background:var(--panel);color:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
+  button:hover{border-color:var(--muted)}
+  button[aria-pressed=true]{background:var(--red);border-color:var(--red)}
+  .hint{color:var(--muted);font-size:13px;margin-left:auto}
+  #stage{position:relative;min-height:0;touch-action:pan-y;cursor:grab}
+  #stage canvas{display:block;width:100%;height:100%}
+  body.shot header{display:none}
+</style>
+<script type="importmap">
+  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js", "blockrig": "../src/index.js" } }
+</script>
+</head>
+<body>
+<header>
+  <h1>Block<b>Rig</b> playground</h1>
+  <div class="clips" id="clips" role="group" aria-label="Animation clips"></div>
+  <span class="hint">Drag to turn · original character, procedural coat</span>
+</header>
+<div id="stage"></div>
+<script type="module">
+import * as THREE from "three";
+import { createRig, Animator, clips, makeCoat } from "blockrig";
+
+const q = new URLSearchParams(location.search);
+const SHOT = q.has("shot");
+if (SHOT) document.body.classList.add("shot");
+const stage = document.getElementById("stage");
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: SHOT });
+renderer.setPixelRatio(SHOT ? 1 : Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(q.get("bg") || "#1a1316");
+const cam = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
+cam.position.set(0, 3.4, 17); cam.lookAt(0, 2.8, 0);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.35;
+scene.add(new THREE.HemisphereLight(0xfff2ea, 0x4a1a22, 3.2));
+const key = new THREE.DirectionalLight(0xffffff, 3.6); key.position.set(4, 8, 10); scene.add(key);
+const fill = new THREE.DirectionalLight(0xffe6c8, 1.2); fill.position.set(-6, 3, 8); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xff2d45, 4); rim.position.set(-6, 5, -7); scene.add(rim);
+
+// floor: a red burst disc
+const disc = new THREE.Mesh(new THREE.CircleGeometry(3.2, 48), new THREE.MeshBasicMaterial({ color: 0x2a1a1e }));
+disc.rotation.x = -Math.PI / 2; disc.position.y = 0.001; scene.add(disc);
+
+// ---- an original face decal, drawn here ----
+function drawFace() {
+  const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d");
+  g.fillStyle = "#111"; g.lineCap = "round";
+  for (const s of [-1, 1]) { g.beginPath(); g.ellipse(128 + s * 44, 104, 13, 20, 0, 0, Math.PI * 2); g.fill(); }
+  g.lineWidth = 11; g.beginPath(); g.arc(128, 132, 58, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke();
+  g.lineWidth = 8; for (const s of [-1, 1]) { g.beginPath(); g.moveTo(128 + s * 20, 70); g.lineTo(128 + s * 68, 58); g.stroke(); }
+  return c;
+}
+
+// ---- coat texture: crimson with gold trim, drawn here ----
+function coatTexture() {
+  const c = document.createElement("canvas"); c.width = c.height = 512; const g = c.getContext("2d");
+  g.fillStyle = "#c8182f"; g.fillRect(0, 0, 512, 512);
+  g.fillStyle = "#a8122a"; for (let x = 0; x < 512; x += 32) g.fillRect(x, 0, 14, 512);
+  g.fillStyle = "#f4c430"; g.fillRect(0, 0, 512, 18); g.fillRect(0, 494, 512, 18);
+  for (let x = 0; x < 512; x += 128) g.fillRect(x + 60, 0, 8, 512);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+
+const rig = createRig({ face: drawFace(), outline: 0.025, body: { skin: "#f3d2b9", shirt: "#241b1e", pants: "#2b2124", shoes: "#0d0a0b" } });
+scene.add(rig.object);
+rig.addLayeredClothing(makeCoat({ length: 1.45 }), { map: coatTexture() });
+
+// a cap, attached by HatAttachment: built from a three.js geometry in the parseMesh() shape
+const capGeo = new THREE.CylinderGeometry(0.7, 0.66, 0.34, 32).toNonIndexed();
+capGeo.translate(0, 0.12, 0);
+const brim = new THREE.CylinderGeometry(0.9, 0.9, 0.06, 32).toNonIndexed(); brim.translate(0, -0.02, -0.18);
+const mergeAttr = (n) => { const a = capGeo.attributes[n].array, b = brim.attributes[n].array, o = new Float32Array(a.length + b.length); o.set(a); o.set(b, a.length); return o; };
+const pos = mergeAttr("position");
+const cap = { positions: pos, normals: mergeAttr("normal"), uvs: mergeAttr("uv"), indices: Uint32Array.from({ length: pos.length / 3 }, (_, i) => i), vertexCount: pos.length / 3, faceCount: pos.length / 9, lods: [0, pos.length / 9] };
+rig.addAccessory(cap, { attachment: { name: "HatAttachment", cframe: { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, -0.15, 0] } }, color: 0x1d1416 });
+
+// red scarf on the neck joint
+const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.16, 12, 32), new THREE.MeshStandardMaterial({ color: 0xf4c430, roughness: 0.6 }));
+scarf.rotation.x = Math.PI / 2; scarf.position.y = 0.05; rig.neck.add(scarf);
+
+// ---- animation ----
+const anim = new Animator(rig);
+anim.play(clips.idle, { fade: 0 });
+const names = Object.keys(clips);
+let current = "idle";
+const box = document.getElementById("clips");
+const btns = names.map((n) => { const b = document.createElement("button"); b.textContent = n; b.setAttribute("aria-pressed", n === "idle"); b.onclick = () => play(n); box.appendChild(b); return b; });
+function play(n, fade = 0.3) {
+  if (current !== "idle" && current !== n) anim.stop(clips[current], fade);
+  if (n !== "idle") anim.play(clips[n], { fade });
+  current = n; btns.forEach((b) => b.setAttribute("aria-pressed", b.textContent === n));
+}
+
+let yaw = +(q.get("yaw") || 0.35), drag = null;
+stage.addEventListener("pointerdown", (e) => { drag = e.clientX; stage.setPointerCapture(e.pointerId); });
+stage.addEventListener("pointermove", (e) => { if (drag != null) { yaw += (e.clientX - drag) * 0.01; drag = e.clientX; } });
+stage.addEventListener("pointerup", () => { drag = null; });
+
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+addEventListener("resize", resize); resize();
+
+if (SHOT) {
+  // deterministic frame for screenshots: ?shot&clip=run&t=0.3&yaw=1.2
+  const n = q.get("clip") || "idle", t = +(q.get("t") || 0);
+  play(n, 0); const steps = Math.max(1, Math.round(t * 120)); for (let i = 0; i < steps; i++) anim.update(t / steps || 1e-6);
+  rig.object.rotation.y = yaw;
+  renderer.render(scene, cam);
+  window.__ready = true;
+} else {
+  const clock = new THREE.Clock();
+  renderer.setAnimationLoop(() => {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    anim.update(dt);
+    if (drag == null) yaw += dt * 0.25;
+    rig.object.rotation.y = yaw;
+    renderer.render(scene, cam);
+  });
+}
+</script>
+</body>
+</html>
