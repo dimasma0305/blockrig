@@ -14,7 +14,7 @@ description: Check a video before and after rendering - docs and voice checks, s
    - every surface textured, every outdoor shot with its weather and time of day;
    - characters on the ground (not floating, not sunk), seated ones on the seat;
    - expressions match the line.
-3. Debug compositions when relevant: `--comp Lineup`, `PoseLab`, `MaterialBoard`, `WeatherLab`.
+3. Debug compositions when relevant: `--comp Lineup`, `PoseLab`, `MaterialBoard`, `WeatherLab`, and `MapLab` (with `ROBLOX=1`, several frames: `--comp MapLab 480 510 540 570`).
 
 ## After rendering
 

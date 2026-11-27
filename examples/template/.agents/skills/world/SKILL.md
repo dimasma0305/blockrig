@@ -20,6 +20,22 @@ scene.background = lib.sky("day");                                  // Poly Have
 const grass = lib.pbr("grass", { repeat: [w / 6, d / 6] });         // PBR set at real size
 ```
 
+**Local Roblox version (`--roblox`): free Toolbox maps.** A house, a room or a street someone built in Roblox looks
+more like the reference shorts than any kit. Add it to `assets/manifest.json` (`{ "mapHouseA": { "assetId": 317197851,
+"kind": "map" } }`), fetch it with the Roblox loop (`assets` skill), and draw it with `buildRobloxMap` (src/kit/robloxMap.ts):
+parts, wedges, corner wedges, balls, cylinders, mesh modifiers, MeshParts with their textures, decals, textures and
+lights, merged per material, with the CC0 PBR sets for surface detail. Then:
+
+1. `ROBLOX=1 npm run stills -- --comp MapLab <frames>`: each map gets a full orbit (quarter turns show which way a
+   house faces) and a look from inside. Read sizes and names off `assets/roblox/<map>/map.json`.
+2. Place it in `World.ts` the way `ROBLOX_ROOM` and `ROBLOX_HOUSE` do: anchor a known point (a room's floor centre;
+   the end of a house's driveway on the sidewalk edge), turn its front towards the camera or road, remove the kit
+   models inside its footprint, and find props with `map.find(/BigBed/)` (a Box3) to stand characters on them.
+3. Keep the kit version working: it is what the public render uses.
+
+Unions (CSG) are drawn as their bounding shape; prefer maps built from parts and MeshParts. A map whose front yard
+sits in the hero's spot pushes him into flower beds: anchor the lot edge, not the facade.
+
 Measure an unknown model first: `node scripts/asset-sizes.mjs assets/kenney/<kit>/<model>.glb` (size, animations).
 Keep cameras on the inside of fences and hedges, or leave the hero's own lot open.
 

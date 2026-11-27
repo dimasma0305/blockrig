@@ -15,6 +15,9 @@ undone later. One line per item: date, what they said, what we did, where.
 - Worlds need weather and structure, not empty boxes: houses with roofs, windows, fences, trees, lamps, power lines; rain/snow/fog/lightning per shot. → world skill, kit/weather.ts, kit/structures.ts.
 - Every surface needs a texture (road, sidewalk, bed, lamp, walls...). → materials skill, kit/textures.ts.
 - Body parts must not poke through layered clothing. → BlockRig HSR (on by default).
+- Use visually attractive, good-quality assets, like popular Roblox story channels (girl and boy with anime faces, real hair, detailed houses and rooms). → local Roblox mode: anime face accessories, free Toolbox maps for the house and the bedroom (`buildRobloxMap`).
+- Roads must run along the street, not sideways. → road tiles turned π/2 in World.ts.
+- Every word of the narration must be clear (e.g. "in this town"). → voice takes need per-word clarity ≥0.45 and stricter word match.
 - Captions or floating tags must not cover faces. → camera skill, debug overlay.
 
 ## This video

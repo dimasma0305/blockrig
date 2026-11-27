@@ -32,6 +32,9 @@ Every character needs: a body shape, drawn Shirt/Pants, hair or headwear, and on
 | sister | Woman Face (bundle 948) | Belle Of Belfast Long Red Hair | Pastel Starburst Top with Gray Jacket | Jean Shorts with White Shoes |
 | neighbours | Man / Woman Face | Brown Hair, Pal Hair, Blonde Spiked Hair, Straight Blonde Hair | Blue Plaid, I <3 Pizza, Green Jersey, ROBLOX Jacket | Black Jeans, Dark Green Jeans, Ripped Skater Pants, Jean Shorts |
 
+Hair, faces and clothes are listed in `assets/manifest.json` under `roblox` (anime face accessories per expression,
+dynamic heads for FaceControls). The table shows the roles; the manifest has the current ids.
+
 ## Locations
 
 | Id | What | Built from |
@@ -74,3 +77,10 @@ Times: day, golden, dusk, night, storm: each picks its HDRI sky (background + re
 - Hook shot: high and wide, moving. Reaction shots: close, still, after the line lands.
 - Aim a little below a head when something floats above it, or captions cover the face.
 - Never put the camera inside a model or behind a crowd that hides the hero; check with stills.
+
+**Local Roblox version** (`--roblox`): free Toolbox maps replace two kit locations (src/world/World.ts).
+
+| Id | Map | Placed |
+|---|---|---|
+| bedroom | "Random Bedroom" (9659331819): bed, gaming desk, chair, clothes rack, shelves | floor centre on the bedroom location; the hero sits on the `BigBed`'s long side; the wide shot looks from the door corner |
+| street, hero's house | "Suburban House" (317197851): two storeys, flower beds, front door, garage, back-yard pool | driveway end on the sidewalk edge of the hero's lot, front to the road; the kit models in its footprint are removed |

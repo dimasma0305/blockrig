@@ -194,6 +194,21 @@
     "faceHearts": {
       "assetId": 100152234940998,
       "kind": "face"
+    },
+    "mapHouseA": {
+      "assetId": 317197851,
+      "kind": "map",
+      "about": "Suburban House (Toolbox, free)"
+    },
+    "mapBedroomA": {
+      "assetId": 9659331819,
+      "kind": "map",
+      "about": "Random Bedroom (Toolbox, free)"
+    },
+    "mapBedroomB": {
+      "assetId": 17681009469,
+      "kind": "map",
+      "about": "Modern Bedroom (Toolbox, free)"
     }
   }
 }

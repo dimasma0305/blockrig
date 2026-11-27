@@ -46,7 +46,9 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
       const seat = world.bedSpot.seat;
       // the hero sits on the side of the bed, turned a little toward the camera; the sister faces him
       place(hero, seat.x, seat.z, PI / 2 - 0.45); act(hero, [{ clip: C.sit }, ...(shot.id === "s03" ? [{ clip: C.shrug, fade: 0.15 }] : [])], local, faceOf(shot, "hero"), world.bedSpot.top, ON_SEAT);
-      place(sister, seat.x + 7, seat.z + 2.5, -PI / 2 + 0.45);
+      // the sister stands between the bed and the wide camera, so both kids share the frame in any room
+      const toCam = world.bedView.from.clone().sub(seat).setY(0).normalize(), st = seat.clone().addScaledVector(toCam, 3.6).add(new THREE.Vector3(toCam.z, 0, -toCam.x).multiplyScalar(-1.3));
+      place(sister, st.x, st.z, facing(st, seat));
       act(sister, [{ clip: C.armsCrossed }], local, faceOf(shot, "sister", "angry"));
       break;
     }
@@ -63,7 +65,8 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
     case "s07": { // golden hour: the sister smiles under her own little rain cloud
       place(hero, lawn.x - 1.5, lawn.z + 2.5, -PI / 2 - 0.5); act(hero, [{ clip: C.smug }], local, faceOf(shot, "hero"), lawn.y);
       const at = new THREE.Vector3(lawn.x - 4, 0.3, lawn.z - 3.2);
-      place(sister, at.x, at.z, -PI / 2 + 0.35); // facing the road and the camera act(sister, [{ clip: C.idle }], local, faceOf(shot, "sister", "happy"), lawn.y);
+      place(sister, at.x, at.z, -PI / 2 + 0.35); // facing the road and the camera
+      act(sister, [{ clip: C.idle }], local, faceOf(shot, "sister", "happy"), lawn.y);
       out.cloudAt = new THREE.Vector3(at.x, 0.3, at.z);
       world.dog.visible = true; world.dog.position.set(lawn.x - 2, lawn.y, lawn.z + 6); world.dog.rotation.y = -PI / 2 - 0.6; world.lib.pose(world.dog, "Idle", local);
       break;

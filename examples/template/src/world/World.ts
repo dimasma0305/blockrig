@@ -6,6 +6,18 @@
 import * as THREE from "three";
 import { createLighting, createWeather, applyFog, rng, type AssetLibrary, type Weather, type Daylight } from "../kit";
 import { HOUSES } from "./assets";
+import { buildRobloxMap } from "../kit/robloxMap";
+import type { RobloxCast } from "../cast/roblox";
+
+// LOCAL --roblox only: a free Toolbox room replaces the Kenney bedroom. Numbers are in the map's own studs (read
+// them off `npm run stills -- --comp MapLab` and map.json): the room's floor centre, the bed model, and where the
+// wide shot stands and looks. Swap the map by changing these (see the world skill, "Roblox maps").
+// and a Toolbox house for the hero's lot (map studs): `edge` is where its lot meets the street (the end of its
+// driveway, level with the middle of the house), `door` the middle of its facade, `faces` the way its front looks
+// (+Z here), `span` its width along the street around `edge`, `depth` from the street edge to the back fence.
+const ROBLOX_HOUSE = { map: "mapHouseA", edge: new THREE.Vector3(-15.8, 0.1, 136), door: new THREE.Vector3(-15.8, 0.1, 92), faces: new THREE.Vector3(0, 0, 1), span: [-36, 70], depth: 140 };
+const ROBLOX_ROOM = { map: "mapBedroomA", floor: new THREE.Vector3(80.7, 1.25, 192.4), bed: /^BigBed$/, view: { from: new THREE.Vector3(88.5, 8.2, 184.5), to: new THREE.Vector3(75.5, 3.6, 196) },
+  inner: new THREE.Box3(new THREE.Vector3(69.1, 1.25, 181.3), new THREE.Vector3(92.4, 13.5, 203.6)) }; // the walls' inner faces: cameras stay inside
 
 export const LOCATIONS = { street: new THREE.Vector3(0, 0, 0), bedroom: new THREE.Vector3(600, 0, 0) };
 const CITY = 15;     // Kenney city kits: 1 unit = 15 studs (a road tile is 15 studs wide)
@@ -22,7 +34,7 @@ function strip(lib: Lib, tex: string, w: number, d: number, studs: number, y = 0
   m.position.y = y - h / 2; m.receiveShadow = true; return m;
 }
 
-export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib) {
+export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib, rb: RobloxCast | null = null) {
   const root = new THREE.Group(); root.name = "World";
   const r = rng(7), wet: { mat: THREE.MeshStandardMaterial; rough: number }[] = [];
   const wettable = (m: THREE.MeshStandardMaterial) => { wet.push({ mat: m, rough: m.roughness }); return m; };
@@ -63,6 +75,20 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   street.add(at(lib.model("stopSign", { scale: CITY }), roadHalf + 1.2, 0.35, 4, Math.PI));
   const heroHouse = houses.filter((h) => h.door.x > 0).sort((a, b) => a.door.z - b.door.z)[2];
   const lawn = heroHouse.door.clone().add(new THREE.Vector3(-8, 0, 0)); lawn.y = 0.2;
+  const houseMap = rb?.maps[ROBLOX_HOUSE.map];
+  if (houseMap) {
+    // the Toolbox house replaces the hero's Kenney house: turned so its front looks at the road, its facade on the
+    // setback line; every downloaded model inside its footprint (houses, trees, fences, planters) makes room
+    const m = buildRobloxMap(houseMap.data, { ...houseMap, pbr: (n) => lib.pbr(n) }, { maxLights: 2 });
+    const toRoad = new THREE.Vector3(-1, 0, 0), turn = Math.atan2(toRoad.x, toRoad.z) - Math.atan2(ROBLOX_HOUSE.faces.x, ROBLOX_HOUSE.faces.z);
+    m.group.rotation.y = turn;
+    const Y = new THREE.Vector3(0, 1, 0), z = heroHouse.door.z;
+    m.group.position.set(sidewalkHalf + 0.3, 0.1, z).sub(ROBLOX_HOUSE.edge.clone().applyAxisAngle(Y, turn));
+    const z0 = z + ROBLOX_HOUSE.span[0], z1 = z + ROBLOX_HOUSE.span[1], x0 = sidewalkHalf + 1, x1 = sidewalkHalf + ROBLOX_HOUSE.depth;
+    for (const c of [...street.children]) if (c.userData.asset && c.position.x > x0 && c.position.x < x1 && c.position.z > z0 && c.position.z < z1) street.remove(c);
+    street.add(m.group); heroHouse.object = m.group;
+    heroHouse.door.copy(ROBLOX_HOUSE.door).applyAxisAngle(Y, turn).add(m.group.position); // the camera looks up at the real door
+  }
 
   // clouds drifting high up, and birds gliding in loops
   const clouds = Array.from({ length: 14 }, (_, i) => { const c = lib.model("cloud", { scale: 10 + r() * 12, shadows: false }); c.userData.home = new THREE.Vector3((r() - 0.5) * 360, 70 + r() * 45, (r() - 0.5) * 360); root.add(c); return c; });
@@ -70,21 +96,39 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   const dog = lib.model("dog", { height: 2.6 }); root.add(dog);
 
   // ---------------------------------------------------------------- bedroom
-  const B = LOCATIONS.bedroom, room = new THREE.Group(); room.position.copy(B); root.add(room);
-  const half = WALL * 1.5; // a 3 x 3 wall room, 21 x 21 studs, open towards +Z for the camera
-  room.add(strip(lib, "planks", half * 2, half * 2, 6, 0.05));
-  ["wall", "wallWindow", "wall"].forEach((n, i) => room.add(at(lib.model(n, { width: WALL }), -WALL + i * WALL, 0, -half)));
-  for (const s of [-1, 1]) for (let i = 0; i < 3; i++) room.add(at(lib.model(i === 1 && s > 0 ? "wallWindow" : "wall", { width: WALL }), s * half, 0, -WALL + i * WALL, Math.PI / 2));
-  const bed = lib.model("bed", { scale: FURN }); room.add(at(bed, -half + 3.4, 0.05, -half + 5.4));
-  const bedSize = bed.userData.size.clone(); // already in studs
-  room.add(at(lib.model("pillow", { scale: FURN }), -half + 3.4, 2.0, -half + 1.6), at(lib.model("bear", { scale: FURN * 0.8 }), -half + 2.4, 2.0, -half + 7.4, 0.6));
-  room.add(at(lib.model("sideTable", { scale: FURN }), -half + 8.6, 0.05, -half + 1.3), at(lib.model("lamp", { scale: FURN }), -half + 8.6, 2.15, -half + 1.3));
-  room.add(at(lib.model("desk", { scale: FURN }), half - 4.6, 0.05, -half + 1.4), at(lib.model("monitor", { scale: FURN }), half - 4.6, 2.15, -half + 1.2), at(lib.model("chair", { scale: FURN }), half - 4.6, 0.05, -half + 4, Math.PI));
-  room.add(at(lib.model("bookcase", { scale: FURN }), half - 1.2, 0.05, 2, -Math.PI / 2), at(lib.model("books", { scale: FURN }), half - 1.3, 4.9, 2, -Math.PI / 2));
-  room.add(at(lib.model("rug", { scale: FURN }), 0.5, 0.06, 1.5), at(lib.model("plant", { scale: FURN }), half - 1.5, 0.05, half - 3));
-  const lampLight = new THREE.PointLight("#ffcf8a", 14, 22, 1.6); lampLight.position.set(-half + 8.6, 3.6, -half + 1.6); room.add(lampLight);
-  const ceiling = new THREE.PointLight("#fff3dc", 26, 40, 1.4); ceiling.position.set(0, 8.5, 0); room.add(ceiling);
-  const bedSpot = { seat: new THREE.Vector3(B.x - half + 3.4 + bedSize.x / 2 - 0.3, 0, B.z - half + 5.4), top: 0.05 + bedSize.y * 0.92 };
+  const B = LOCATIONS.bedroom, V3 = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+  let bedSpot: { seat: THREE.Vector3; top: number }, bedView: { from: THREE.Vector3; to: THREE.Vector3 }, roomBox: THREE.Box3 | null = null;
+  const roomMap = rb?.maps[ROBLOX_ROOM.map];
+  if (roomMap) {
+    // the Toolbox room, moved so its floor centre sits on the bedroom location; it brings its own lights too
+    const m = buildRobloxMap(roomMap.data, { ...roomMap, pbr: (n) => lib.pbr(n) }), shift = B.clone().sub(ROBLOX_ROOM.floor);
+    m.group.position.copy(shift); root.add(m.group);
+    const bed = m.find(ROBLOX_ROOM.bed).translate(shift), bc = bed.getCenter(new THREE.Vector3());
+    // sit on the long side that faces the room's centre, a little below the blanket top
+    const side = Math.sign(B.x - bc.x) || 1;
+    bedSpot = { seat: V3(side > 0 ? bed.max.x + 0.3 : bed.min.x - 0.3, 0, bc.z - 1), top: B.y + (bed.max.y - B.y) * 0.62 };
+    bedView = { from: ROBLOX_ROOM.view.from.clone().add(shift), to: ROBLOX_ROOM.view.to.clone().add(shift) };
+    roomBox = ROBLOX_ROOM.inner.clone().translate(shift).expandByScalar(-0.8);
+    const fill = new THREE.PointLight("#fff1dc", 22, 40, 1.3); fill.position.set(B.x, B.y + 9.5, B.z); root.add(fill);
+  } else {
+    const room = new THREE.Group(); room.position.copy(B); root.add(room);
+    const half = WALL * 1.5; // a 3 x 3 wall room, 21 x 21 studs, open towards +Z for the camera
+    room.add(strip(lib, "planks", half * 2, half * 2, 6, 0.05));
+    ["wall", "wallWindow", "wall"].forEach((n, i) => room.add(at(lib.model(n, { width: WALL }), -WALL + i * WALL, 0, -half)));
+    for (const s of [-1, 1]) for (let i = 0; i < 3; i++) room.add(at(lib.model(i === 1 && s > 0 ? "wallWindow" : "wall", { width: WALL }), s * half, 0, -WALL + i * WALL, Math.PI / 2));
+    const bed = lib.model("bed", { scale: FURN }); room.add(at(bed, -half + 3.4, 0.05, -half + 5.4));
+    const bedSize = bed.userData.size.clone(); // already in studs
+    room.add(at(lib.model("pillow", { scale: FURN }), -half + 3.4, 2.0, -half + 1.6), at(lib.model("bear", { scale: FURN * 0.8 }), -half + 2.4, 2.0, -half + 7.4, 0.6));
+    room.add(at(lib.model("sideTable", { scale: FURN }), -half + 8.6, 0.05, -half + 1.3), at(lib.model("lamp", { scale: FURN }), -half + 8.6, 2.15, -half + 1.3));
+    room.add(at(lib.model("desk", { scale: FURN }), half - 4.6, 0.05, -half + 1.4), at(lib.model("monitor", { scale: FURN }), half - 4.6, 2.15, -half + 1.2), at(lib.model("chair", { scale: FURN }), half - 4.6, 0.05, -half + 4, Math.PI));
+    room.add(at(lib.model("bookcase", { scale: FURN }), half - 1.2, 0.05, 2, -Math.PI / 2), at(lib.model("books", { scale: FURN }), half - 1.3, 4.9, 2, -Math.PI / 2));
+    room.add(at(lib.model("rug", { scale: FURN }), 0.5, 0.06, 1.5), at(lib.model("plant", { scale: FURN }), half - 1.5, 0.05, half - 3));
+    const lampLight = new THREE.PointLight("#ffcf8a", 14, 22, 1.6); lampLight.position.set(-half + 8.6, 3.6, -half + 1.6); room.add(lampLight);
+    const ceiling = new THREE.PointLight("#fff3dc", 26, 40, 1.4); ceiling.position.set(0, 8.5, 0); room.add(ceiling);
+    bedSpot = { seat: new THREE.Vector3(B.x - half + 3.4 + bedSize.x / 2 - 0.3, 0, B.z - half + 5.4), top: 0.05 + bedSize.y * 0.92 };
+    bedView = { from: V3(B.x - 4.2, 7.4, B.z + 14), to: V3(B.x - 3.2, 2.6, B.z - 4) };
+
+  }
 
   // ---------------------------------------------------------------- sky, sun, weather
   const lighting = createLighting({ shadowSize: 45, sky: false }); root.add(lighting.root);
@@ -97,7 +141,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   scene.add(root);
   const focus = new THREE.Vector3(), skyFor = (d: Daylight) => (d.stars > 0.6 ? "night" : d.sunIntensity < 1.2 ? "storm" : d.sunDir[1] < 0.5 ? "golden" : "day");
   return {
-    root, lib, lawn, heroHouse, houses, bedSpot, roadHalf, sidewalkHalf, dog, sidewalkY: 0.35,
+    root, lib, lawn, heroHouse, houses, bedSpot, bedView, roomBox, roadHalf, sidewalkHalf, dog, sidewalkY: 0.35,
     update(o: { location: string; weather: Weather; daylight: Daylight; time: number; local: number; camera: THREE.Camera; cloudAt?: THREE.Vector3 | null }) {
       const inside = o.location === "bedroom";
       focus.copy((LOCATIONS as any)[o.location] ?? LOCATIONS.street);

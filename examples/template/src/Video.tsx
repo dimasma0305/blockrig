@@ -20,7 +20,7 @@ function Scene({ lib, rb }: { lib: AssetLibrary; rb: RobloxCast | null }) {
   const frame = useCurrentFrame(), time = frame / T.FPS;
   const { camera, gl, scene } = useThree() as any;
   // straight to the canvas with AgX tone mapping and soft shadows (an EffectComposer blanks Remotion's frames)
-  const world = useMemo(() => { gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap; return buildWorld(gl, scene, lib); }, [gl, scene, lib]);
+  const world = useMemo(() => { gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap; return buildWorld(gl, scene, lib, rb); }, [gl, scene, lib, rb]);
   const cast = useMemo(() => buildCast(rb), [rb]);
   const { shot, local, p } = T.shotAt(time);
   const state = perform(shot, local, p, cast, world);

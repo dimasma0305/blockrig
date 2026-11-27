@@ -3,6 +3,7 @@
 //   PoseLab       the hero playing every clip in src/cast/clips.ts, 1.5 s each, with the clip's name
 //   MaterialBoard every texture in src/kit/textures.ts as a swatch with its name
 //   WeatherLab    the street cycling through every weather preset and time of day
+//   MapLab        each local Roblox map (assets/roblox, --roblox only): orbit outside, then a look inside
 // The Shot composition (Root.tsx) plays one shot of the real video with the debug overlay.
 import { useMemo } from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
@@ -14,6 +15,9 @@ import { buildCast } from "../cast/characters";
 import { ALL } from "../cast/clips";
 import { act, place } from "../direction/performance";
 import { useRobloxCast, type RobloxCast } from "../cast/roblox";
+import { useAssetLibrary, type AssetLibrary } from "../kit/assets";
+import { buildRobloxMap } from "../kit/robloxMap";
+import { ASSETS } from "../world/assets";
 
 const label: React.CSSProperties = { position: "absolute", color: "#fff", font: "800 44px sans-serif", WebkitTextStroke: "8px #000", paintOrder: "stroke fill" };
 // a component (not a plain function) so it can be mounted only once its scene's data has loaded
@@ -118,3 +122,41 @@ export const WeatherLab: React.FC = () => {
   return <AbsoluteFill>{canvas(<WeatherScene />)}<div style={{ ...label, top: 160, left: 60 }}>{PRESETS[i]} · {PRESET_TIME[PRESETS[i]]}</div></AbsoluteFill>;
 };
 export const WEATHER_PRESET_COUNT = PRESETS.length;
+
+// ---------------------------------------------------------------- MapLab (local Roblox maps: --roblox only)
+// Each map in assets/roblox/cast.json in turn, MAP_SECONDS each: a slow orbit outside, then a look from inside,
+// with the hero standing at the centre for scale. Use it to pick a map and find where to stand and point the camera.
+export const MAP_SECONDS = 4;
+function MapScene({ lib, rb }: { lib: AssetLibrary; rb: RobloxCast }) {
+  const frame = useCurrentFrame(), { fps } = useVideoConfig(), { camera, gl, scene } = useThree() as any;
+  const names = Object.keys(rb.maps).sort();
+  const built = useMemo(() => {
+    gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap;
+    const lighting = createLighting({ shadowSize: 70 }); scene.add(lighting.root); lighting.update({ time: TIMES.day });
+    scene.environment = lib.sky("day"); scene.environmentIntensity = 0.5;
+    const maps = names.map((n) => { const m = buildRobloxMap(rb.maps[n].data, { ...rb.maps[n], pbr: (s) => lib.pbr(s) }); m.group.visible = false; scene.add(m.group); return m; });
+    const cast = buildCast(rb); scene.add(cast.hero.rig.object);
+    return { maps, cast, lighting };
+  }, [gl, scene, lib, rb]);
+  const t = frame / fps, i = Math.min(names.length - 1, Math.floor(t / MAP_SECONDS)), local = t - i * MAP_SECONDS;
+  built.maps.forEach((m, k) => (m.group.visible = k === i));
+  const box = built.maps[i].box, c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+  const floor = box.min.y + 0.5, r = Math.max(size.x, size.z) * 0.75 + 8;
+  place(built.cast.hero, c.x, floor - 0.5 + 0.5, c.z); act(built.cast.hero, [], local, "happy");
+  built.cast.hero.rig.object.position.y = floor;
+  // outside: one full orbit (stills at quarter turns show every side, e.g. which way a house faces); inside: from one corner (15% in from the walls) across to the far one
+  const outside = local < MAP_SECONDS * 0.5, a = (local / (MAP_SECONDS * 0.5)) * Math.PI * 2, k = local < MAP_SECONDS * 0.75 ? 1 : -1;
+  const pos = outside ? V(c.x + Math.sin(a) * r, floor + size.y * 0.6 + 6, c.z + Math.cos(a) * r) : V(c.x + k * size.x * 0.35, floor + 5, c.z + k * size.z * 0.35);
+  applyCamera(camera, { pos, target: outside ? V(c.x, floor + size.y * 0.25, c.z) : V(c.x - k * size.x * 0.3, floor + 3, c.z - k * size.z * 0.3), fov: outside ? 45 : 75, shake: 0 }, frame);
+  return null;
+}
+export const MapLab: React.FC<{ roblox?: boolean }> = () => {
+  const lib = useAssetLibrary(ASSETS), rb = useRobloxCast(true), frame = useCurrentFrame(), { fps } = useVideoConfig();
+  const names = rb ? Object.keys(rb.maps).sort() : []; // sorted: maps load in any order
+  return (
+    <AbsoluteFill style={{ background: "#87a9d6" }}>
+      {lib && rb && <Canvas><MapScene lib={lib} rb={rb} /></Canvas>}
+      <div style={{ ...label, top: 160, left: 60 }}>{names[Math.min(names.length - 1, Math.floor(frame / fps / MAP_SECONDS))] ?? ""}</div>
+    </AbsoluteFill>
+  );
+};

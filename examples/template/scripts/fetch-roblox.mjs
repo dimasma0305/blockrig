@@ -9,7 +9,10 @@
 //   3. repeat 1-2 until it says "roblox items ready" (items reference meshes and textures, fetched in a later round)
 // assets/manifest.json "roblox":
 //   { "heroHair": { "assetId": 376548738, "kind": "hair" }, "heroShirt": { "assetId": 382537702, "kind": "shirt" },
-//     "heroPants": { "assetId": 382538503, "kind": "pants" }, "boyHead": { "bundle": 949, "kind": "head" } }
+//     "heroPants": { "assetId": 382538503, "kind": "pants" }, "boyHead": { "bundle": 949, "kind": "head" },
+//     "mapHouseA": { "assetId": 317197851, "kind": "map" } }       (a free Toolbox model: house, bedroom, street...)
+// A map is ready as soon as its parts are: meshes, mesh textures and decal images it references come in later
+// rounds and appear when they land (src/kit/robloxMap.ts draws whatever is there).
 // Output: assets/roblox/<name>/... and assets/roblox/cast.json (what src/cast/roblox.ts loads).
 import fs from "node:fs";
 import path from "node:path";
@@ -17,6 +20,7 @@ import zlib from "node:zlib";
 import http from "node:http";
 import { parseRbxm, describeAccessory, describeClothing, findInstance, assetId, parseMesh, writeMesh } from "blockrig";
 import { decodeDraco } from "./draco.mjs";
+import { describeMap } from "./roblox-map.mjs";
 
 // `node scripts/fetch-roblox.mjs receive` listens on 127.0.0.1:8799 (this machine only) so the browser step can POST
 // the resolved links straight into assets/roblox/locations.json instead of copying them by hand.
@@ -35,6 +39,18 @@ if (process.argv[2] === "receive") {
 const DIR = "assets/roblox", manifest = JSON.parse(fs.readFileSync("assets/manifest.json", "utf8"));
 const items = Object.entries(manifest.roblox ?? {}).filter(([k, v]) => !k.startsWith("$") && (v.assetId || v.bundle)).map(([name, v]) => ({ name, ...v }));
 const locFile = path.join(DIR, "locations.json"), locations = fs.existsSync(locFile) ? JSON.parse(fs.readFileSync(locFile, "utf8")) : {};
+// locations.txt: the browser script's compact output, one link per line ("key c|f sc hash exp hmac", or "key u url"),
+// which is a third of the size of the full links: it is expanded into locations.json and removed
+const txt = path.join(DIR, "locations.txt");
+if (fs.existsSync(txt)) {
+  for (const line of fs.readFileSync(txt, "utf8").split(/\r?\n/)) {
+    const [key, kind, a, b, c, d] = line.trim().split(/\s+/);
+    if (!key || !kind) continue;
+    locations[key] = kind === "c" ? `https://contentdelivery.roblox.com/v1/bytes/${a}/${b}?__token__=exp=${c}~acl=/v1/bytes/${a}/${b}*~hmac=${d}`
+      : kind === "f" ? `https://fts.rbxcdn.com/v2/${a}/${b}?encoding=zstd&version=1&__token__=key-id=1~exp=${c}~acl=/${a}/${b}*~hmac=${d}&Expires=${c}` : a;
+  }
+  fs.unlinkSync(txt);
+}
 const file = (key) => path.join(DIR, key);
 const have = (key) => fs.existsSync(file(key));
 fs.mkdirSync(DIR, { recursive: true });
@@ -79,6 +95,24 @@ for (const it of items) {
     if (okMesh && okTex) cast[base] = { kind: "head", mesh: `roblox/${base}/mesh`, texture: texId ? `roblox/${base}/texture` : null, size: mp.props.size ?? mp.props.Size, attachments, mood: mood ? `roblox/${mood}` : null };
     continue;
   }
+  if (it.kind === "map") {
+    if (!want(`${base}/item`, it.assetId)) continue;
+    const roots = parseRbxm(fs.readFileSync(file(`${base}/item`)), { zstd: (b) => zlib.zstdDecompressSync(b) });
+    const d = describeMap(roots), meshes = {}, images = {};
+    for (const id of d.refs.meshes) if (want(`${base}/mesh-${id}`, id)) meshes[id] = `roblox/${base}/mesh-${id}`;
+    for (const id of d.refs.images) {
+      const k = `${base}/img-${id}`;
+      if (!want(k, id)) continue;
+      const b = fs.readFileSync(file(k));
+      if (isImage(b)) { images[id] = `roblox/${k}`; continue; }
+      // an old decal id: the asset is a Decal model whose Texture is the image
+      try { const t = assetId(findInstance(parseRbxm(b), (x) => x.props.Texture)?.props.Texture); if (t && want(`${base}/img-${t}`, t)) { fs.copyFileSync(file(`${base}/img-${t}`), file(k)); images[id] = `roblox/${k}`; } } catch { /* not a model either */ }
+    }
+    fs.writeFileSync(file(`${base}/map.json`), JSON.stringify({ parts: d.parts, lights: d.lights }));
+    cast[base] = { kind: "map", data: `roblox/${base}/map.json`, meshes, images };
+    console.log(`${base}: ${d.parts.length} parts, ${Object.keys(meshes).length}/${d.refs.meshes.size} meshes, ${Object.keys(images).length}/${d.refs.images.size} images`);
+    continue;
+  }
   const itemKey = `${base}/item`;
   if (!want(itemKey, it.assetId, it.format)) continue;
   const roots = parseRbxm(fs.readFileSync(file(itemKey)));
@@ -93,9 +127,10 @@ for (const it of items) {
   }
 }
 // mesh v7 is Draco-compressed: decode it here and save it as v4, so the video needs no Draco decoder
-for (const [n, c] of Object.entries(cast)) {
-  const f = c.mesh && path.join("assets", c.mesh);
-  if (!f || !fs.existsSync(f)) continue;
+const meshFiles = Object.entries(cast).flatMap(([n, c]) => (c.kind === "map" ? Object.values(c.meshes).map((m) => [n, m]) : c.mesh ? [[n, c.mesh]] : []));
+for (const [n, m] of meshFiles) {
+  const f = path.join("assets", m);
+  if (!fs.existsSync(f)) continue;
   const b = fs.readFileSync(f);
   if (b.subarray(0, 12).toString("latin1") !== "version 7.00") continue;
   try { fs.writeFileSync(f, Buffer.from(writeMesh(parseMesh(b, { decodeDraco }), "4.00"))); console.log(`decoded ${n} mesh (v7 Draco -> v4)`); }
@@ -109,19 +144,24 @@ fs.writeFileSync(path.join(DIR, "cast.json"), JSON.stringify(cast, null, 1));
 if (!needs.length) console.log(`roblox items ready: ${Object.keys(cast).length} in assets/roblox/cast.json (local only: never commit or publish them)`);
 else {
 fs.writeFileSync(path.join(DIR, "needs.json"), JSON.stringify(needs, null, 1));
-console.log(`${needs.length} item(s) need a signed-in browser. Run this in the browser pane on a roblox.com page, save the result as ${locFile} (merge with the existing keys), then run this script again:\n`);
-console.log(`(async () => {
-  const needs = ${JSON.stringify(needs)};
-  const loc = async (id, format) => { const r = await fetch("https://assetdelivery.roblox.com/v2/assetId/" + id, { credentials: "include", headers: format ? { "Roblox-AssetFormat": format } : {} }); const j = await r.json(); return (j.locations || [])[0]?.location || null; };
-  const out = {};
-  for (const n of needs) {
-    if (n.bundle) {
-      const b = await (await fetch("https://catalog.roblox.com/v1/bundles/" + n.bundle + "/details", { credentials: "include" })).json();
-      for (const it of (b.items || []).filter((i) => i.type === "Asset")) out[n.key + "-" + it.id] = await loc(it.id, n.format);
-    } else out[n.key] = await loc(n.id, n.format);
-  }
-  const sent = await fetch("http://127.0.0.1:8799/locations", { method: "POST", body: JSON.stringify(out) }).then(() => true).catch(() => false);
-  return sent ? "sent " + Object.keys(out).length + " link(s) to the receiver" : JSON.stringify(out);
+console.log(`${needs.length} item(s) need a signed-in browser. Run this in the browser pane on an https://assetdelivery.roblox.com page
+(same origin, so the request carries the sign-in), save the text it returns as ${txt}, then run this script again:
+`);
+console.log(String.raw`(async () => {
+  const needs = ${JSON.stringify(needs.map((n) => (n.bundle ? [n.key, 0, n.format, n.bundle] : n.format ? [n.key, n.id, n.format] : [n.key, n.id])))};
+  const loc = async (id, format) => { const r = await fetch("/v2/assetId/" + id, { credentials: "include", headers: format ? { "Roblox-AssetFormat": format } : {} }); const j = await r.json(); return (j.locations || [])[0]?.location || null; };
+  const out = [], fails = [];
+  const short = (k, u) => { let m = /^https:\/\/contentdelivery\.roblox\.com\/v1\/bytes\/(sc\d)\/([0-9a-f]+)\?__token__=exp=(\d+)~acl=[^~]+~hmac=([0-9a-f]+)$/.exec(u); if (m) return k + " c " + m.slice(1).join(" ");
+    m = /^https:\/\/fts\.rbxcdn\.com\/v2\/(sc\d)\/([0-9a-f]+)\?encoding=zstd&version=1&__token__=key-id=1~exp=(\d+)~acl=[^~]+~hmac=([0-9a-f]+)&Expires=\d+$/.exec(u); return m ? k + " f " + m.slice(1).join(" ") : k + " u " + u; };
+  await Promise.all(needs.map(async ([key, id, format, bundle]) => {
+    try {
+      if (bundle) { // bundle details live on catalog.roblox.com: run the script on a roblox.com page for bundles
+        const b = await (await fetch("https://catalog.roblox.com/v1/bundles/" + bundle + "/details", { credentials: "include" })).json();
+        for (const it of (b.items || []).filter((i) => i.type === "Asset")) { const u = await loc(it.id, format); if (u) out.push(short(key + "-" + it.id, u)); }
+      } else { const u = await loc(id, format); if (u) out.push(short(key, u)); else fails.push(key); }
+    } catch (e) { fails.push(key + " " + e.message); }
+  }));
+  return out.join("\n") + (fails.length ? "\n# not available: " + fails.join(", ") : "");
 })()`);
 }
 }

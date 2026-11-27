@@ -21,7 +21,8 @@ npm run stills    # out/contact-sheet.jpg
 npm run render    # out/<slug>.mp4
 ```
 
-For a **local** version with real Roblox items (free official dynamic heads with expressions, hair, shirts, pants;
+For a **local** version with real Roblox items (free official dynamic heads with expressions, anime face
+accessories, hair, shirts, pants, and free Toolbox maps for the house and bedroom;
 signed in to Roblox in the browser pane): `npm run roblox` (see the assets skill), then `node scripts/render.mjs --roblox`
 → `out/<slug>-roblox.mp4`. Never post or commit that one.
 
