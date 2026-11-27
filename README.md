@@ -54,12 +54,12 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 😃 **Live facial expressions**: 17 built-in expressions drawn from 21 blendable parameters (brows, eye shape, look direction, wink, `><` and `x` eyes, mouth curve/open/skew, teeth, tongue, blush, tears, sweat), with automatic blinking, talking, smooth fades and `face:` markers inside clips. Works on BlockRig heads or as a decal on any head.
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
 - 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, **fitted to the body through its WrapLayer/WrapTarget cages** (matched by template UV, like Roblox) and stacked by `Order`.
-- 🎩 **Rigid accessories** placed by attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`).
+- 🎩 **Rigid accessories, welds and tools**: attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`), `Weld`-style C0/C1 welds, and `Humanoid:EquipTool`'s RightGrip with `Tool.Grip`.
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion, and Roblox-style `AnimationTrack`s (seek, speed, weight, looped, priority, marker and keyframe signals, Stopped/Ended/DidLoop).
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` and `CurveAnimation` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **118 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **123 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -216,6 +216,18 @@ const rig = createRig({ bodyParts, bodyColors, clothing });  // parts you leave 
 ```
 
 Meshes are fitted to their part's `Size`, as MeshParts are. R15 body meshes are UV-mapped to Roblox's per-limb composite textures, whose layout isn't published, so BlockRig projects the classic clothing onto each mesh from its shape, the same way it maps onto the blocky parts. Tested on the official ROBLOX Boy and Woman packages with Roblox-made shirts and pants. Pass `uvs: "mesh"` on a part to keep the mesh's own UVs (for example with its own `map`). The example page [`examples/clothing.html`](examples/clothing.html) draws its shirt, pants and T-shirt in code, so it needs no downloads.
+
+## Props: welds and tools
+
+```js
+rig.weld(sign, "UpperTorso", { c0: { rot, pos: [0, 0, -0.6] } });       // Weld: Object = Part * C0 * C1^-1
+rig.attachTo(backpack, "BodyBackAttachment", { rot, pos: [0, 0, -0.35] }); // RigidConstraint: attachment to attachment
+const t = describeTool(parseRbxm(gearBytes));                            // Tool.Grip + Handle mesh
+rig.equipTool(handleMesh, { grip: t.grip });                             // Humanoid:EquipTool: the RightGrip weld
+rig.unequipTool();
+```
+
+Welded objects follow their part. `equipTool` builds Roblox's RightGrip weld: Part0 is the right hand (R6: Right Arm), C0 the RightGripAttachment (turned -90° about X, as on the standard bodies) and C1 the tool's `Grip`. Roblox's own Linked Sword stands upright in the arm-forward tool hold, the way it does in-game. `rig.partCFrame(name)` gives a part's bind-pose CFrame (like `Part.CFrame`) to measure C0 from.
 
 ## Dynamic heads (FACS)
 

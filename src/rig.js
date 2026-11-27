@@ -1,6 +1,6 @@
 // BlockRig: an R15 character rig for three.js that wears Roblox-format layered clothing and accessories.
 import * as THREE from "three";
-import { cframeToMatrix } from "./cframe.js";
+import { cframeToMatrix, matrixToCFrame } from "./cframe.js";
 import { HEAD_ATTACHMENTS } from "./skeleton.js";
 import { buildBody } from "./body.js";
 import { lodIndices } from "./mesh.js";
@@ -347,6 +347,32 @@ export function createRig(o = {}) {
     cageMap(src.cage.mesh, { origin: src.cage.origin || [0, 0, 0], at: p.center, scale: sc, into: bodyCage });
   }
 
+  // ---- welds and tools: objects placed in the bind pose, parented to the bone of their part ----
+  const welds = new Map(); let equipped = null, headCentre = [0, HEAD_H / 2, 0];
+  const partFrame = (name) => {
+    if (name === "Head") return new THREE.Matrix4().makeTranslation(...headPoint(headCentre));
+    const p = spec.parts.find((x) => x.bone === name);
+    if (!p) throw new Error(`blockrig: no body part "${name}" on this ${rigType} rig`);
+    return new THREE.Matrix4().makeTranslation(p.center[0], p.center[1], p.center[2]);
+  };
+  // a head-space point (origin at the neck, scaled by the head scale) in bind-pose character space
+  const headPoint = (v) => [0, 1, 2].map((k) => spec.neck.pos[k] + v[k] * spec.headScale);
+  // the head group's frame in bind-pose character space (neck position, character axes, head scale)
+  const headFrameOrigin = () => new THREE.Matrix4().compose(new THREE.Vector3().fromArray(spec.neck.pos), new THREE.Quaternion(), new THREE.Vector3().setScalar(spec.headScale));
+  const attachmentFrame = (a) => { const M = new THREE.Matrix4().makeTranslation(a.pos[0], a.pos[1], a.pos[2]); if (a.rot) M.multiply(cframeToMatrix({ rot: a.rot, pos: [0, 0, 0] })); return M; };
+  // put an object at a bind-pose character-space frame M, following the part's bone (or the head)
+  function mount(object, partName, M) {
+    if (partName === "Head") { // the head group carries the neck joint and head scale
+      new THREE.Matrix4().copy(headFrameOrigin()).invert().multiply(M).decompose(object.position, object.quaternion, object.scale); head.add(object);
+    } else {
+      const i = index.get(partName); if (i === undefined) throw new Error(`blockrig: no joint "${partName}" on this rig`);
+      new THREE.Matrix4().copy(bindWorld[i]).invert().multiply(M).decompose(object.position, object.quaternion, object.scale);
+      bones[partName].add(object);
+    }
+    welds.set(object, partName);
+    return object;
+  }
+
   // ---- dynamic head (FACS) state ----
   const faceControls = Object.fromEntries(FACE_CONTROLS.map((n) => [n, 0]));
   let dyn = null;
@@ -434,6 +460,50 @@ export function createRig(o = {}) {
      * @param {object} mesh parsed mesh
      * @param {{ attachment: { name: string, cframe: {rot:number[], pos:number[]} }, map?: THREE.Texture, color?: number }} o
      */
+    /**
+     * Weld an object to a body part, like a Weld: Object = Part0 * C0 * C1^-1, with Part0 the part's centre in
+     * the bind pose (character axes) and C0 / C1 CFrames ({ rot, pos } or matrices). The object follows the part.
+     * "Head" welds to the head. Returns the object.
+     */
+    weld(object, partName, { c0 = null, c1 = null } = {}) {
+      const M = partFrame(partName);
+      if (c0) M.multiply(cframeToMatrix(c0));
+      if (c1) M.multiply(cframeToMatrix(c1).invert());
+      return mount(object, partName, M);
+    },
+    /**
+     * Weld an object by attachments, like a RigidConstraint (or an accessory weld): the object's own attachment
+     * `objectAttachment` (a CFrame in the object's space) is put on the body or head attachment `name`.
+     */
+    attachTo(object, name, objectAttachment = null) {
+      const inv = objectAttachment ? cframeToMatrix(objectAttachment).invert() : new THREE.Matrix4();
+      if (headAtt[name]) return mount(object, "Head", new THREE.Matrix4().makeTranslation(...headPoint(headAtt[name])).multiply(inv));
+      const a = bodyAtt[name]; if (!a) throw new Error(`blockrig: no attachment "${name}" on this rig`);
+      return mount(object, a.part, attachmentFrame(a).multiply(inv));
+    },
+    /**
+     * Equip a tool, like Humanoid:EquipTool: a RightGrip weld with Part0 = the right hand (R6: Right Arm),
+     * C0 = RightGripAttachment and C1 = Tool.Grip. `object` is the tool's Handle (in handle space). One tool at a
+     * time: equipping another unequips the first. Returns the object.
+     */
+    equipTool(object, { grip = null } = {}) {
+      rig.unequipTool();
+      const a = bodyAtt.RightGripAttachment; if (!a) throw new Error("blockrig: this rig has no RightGripAttachment");
+      const M = attachmentFrame(a); if (grip) M.multiply(cframeToMatrix(grip).invert());
+      mount(object, a.part, M); equipped = object; object.userData.blockrigTool = true;
+      return object;
+    },
+    /** Take the equipped tool off (it is removed from the rig and returned). */
+    unequipTool() { const t = equipped; if (t) { rig.unweld(t); equipped = null; } return t; },
+    /** The equipped tool's object, or null. */
+    get tool() { return equipped; },
+    /** A body part's bind-pose CFrame in character space (its centre, character axes), like Part.CFrame. */
+    partCFrame(name) { return matrixToCFrame(partFrame(name)); },
+    /** Remove a welded object from the rig. */
+    unweld(object) { if (object.parent) object.parent.remove(object); welds.delete(object); return object; },
+    /** Objects welded to the rig: Map(object -> part name). */
+    get welds() { return welds; },
+
     addAccessory(mesh, { attachment, map = null, color = 0xffffff } = {}) {
       if (!attachment) throw new Error("blockrig: addAccessory needs the handle attachment");
       const body = headAtt[attachment.name], onBody = !body && bodyAtt[attachment.name];
@@ -525,6 +595,7 @@ export function createRig(o = {}) {
     setHead(mesh, { scale = [1, 1, 1], offset = [0, 0, 0], attachments = {}, map = null, color } = {}) {
       const neckAtt = attachments.NeckRigAttachment;
       const centre = neckAtt ? [-neckAtt[0], -neckAtt[1], -neckAtt[2]] : [0, HEAD_H / 2, 0];
+      headCentre = centre.slice();
       const g = geometryFromMesh(mesh);
       g.scale(scale[0], scale[1], scale[2]);
       g.translate(centre[0] + offset[0], centre[1] + offset[1], centre[2] + offset[2]);

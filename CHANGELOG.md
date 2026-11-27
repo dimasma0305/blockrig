@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Welds and tools**: `rig.weld(object, part, { c0, c1 })` (Weld: Object = Part * C0 * C1^-1), `rig.attachTo(object, attachment, objectAttachment)` (RigidConstraint), `rig.equipTool(handle, { grip })` / `unequipTool()` (Humanoid:EquipTool's RightGrip weld with `Tool.Grip`), `rig.partCFrame(name)`, `rig.welds`, `rig.unweld()`, and `describeTool()` for gear `.rbxm` files. Body attachments carry orientations; grip attachments default to the standard -90° about X. Checked with Roblox's Linked Sword on the ROBLOX Boy, R6 and R15 bodies.
+- The story example welds its props with `rig.weld` (frames unchanged).
+
 - **CurveAnimation import**: `curveAnimationToClip()` (and `keyframeSequenceToClip()`, which hands CurveAnimations on) reads joint folders with `Vector3Curve` positions, `EulerRotationCurve` (RotationOrder) or `RotationCurve` rotations, `MarkerCurve`s and FaceControls `FloatCurve`s, and samples them into a clip. Key blobs (`ValuesAndTimes`) follow the community layout in rbx-dom#657 (not yet checked against a Studio export); `decodeFloatCurve` / `decodeRotationCurve` / `decodeMarkerCurve`, `evalFloatCurve` / `evalRotationCurve`.
 - Readers: string properties that aren't valid UTF-8 come back as raw bytes (BinaryString), and `.rbxmx` BinaryStrings are base64-decoded.
 
@@ -24,7 +27,7 @@
 - `examples/clothing.html` and `docs/clothing.png`; `ONLY=name npm run screenshots`.
 - The story example (`examples/story`): a 26-second short made with BlockRig, Remotion and three.js.
 - Bundlers: version-specific three.js colour-space constants are read at run time.
-- 118 tests.
+- 123 tests.
 
 ## 0.2.0
 

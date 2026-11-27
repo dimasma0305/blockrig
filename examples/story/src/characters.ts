@@ -8,13 +8,11 @@ import { rng } from "./lib/rng";
 export type Cast = { kid: any; statue: any; folks: any[]; faces: Record<string, any>; props: Record<string, THREE.Object3D> };
 
 // ---- helpers ----
-// put an object (modelled in character axes: Y up, facing -Z) on a joint at a character-space point
+// weld an object (modelled in character axes: Y up, facing -Z) to a body part at a bind-pose character-space
+// point, with BlockRig's Weld (Object = Part * C0); "Neck" means the head
 function attach(rig: any, joint: string, obj: THREE.Object3D, at: [number, number, number]) {
-  rig.object.updateMatrixWorld(true);
-  const bone = joint === "Neck" ? rig.neck : rig.bones[joint];
-  const M = bone.matrixWorld.clone().invert().multiply(rig.stage.matrixWorld).multiply(new THREE.Matrix4().makeTranslation(...at));
-  M.decompose(obj.position, obj.quaternion, obj.scale);
-  bone.add(obj);
+  const part = joint === "Neck" ? "Head" : joint, p = rig.partCFrame(part).pos;
+  rig.weld(obj, part, { c0: { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [at[0] - p[0], at[1] - p[1], at[2] - p[2]] } });
   obj.traverse((o: any) => { if (o.isMesh) { o.castShadow = true; } });
   return obj;
 }
@@ -81,14 +79,14 @@ export function buildCast(): Cast {
   for (const side of [-1, 1]) {
     const sh = jointAt(statue, side < 0 ? "LeftUpperArm" : "RightUpperArm");
     for (let i = 0; i < 3; i++) {
-      const c = crystal(1.6 - i * 0.35, 0.38 - i * 0.07); c.rotation.z = -side * (0.35 + i * 0.25); c.rotation.x = 0.15 * (i - 1);
+      const c = crystal(1.6 - i * 0.35, 0.38 - i * 0.07);
       attach(statue, side < 0 ? "LeftUpperArm" : "RightUpperArm", c, [sh[0] + side * (0.6 + i * 0.35), sh[1] + 0.9 - i * 0.2, (i - 1) * 0.5]);
     }
   }
   const nk = statue.body.neck.pos as number[], hs = statue.body.headScale;
   for (let i = 0; i < 5; i++) {
     const a = (i - 2) * 0.42, c = crystal(1.0 + (i === 2 ? 0.6 : 0.2), 0.24);
-    c.rotation.z = -a; attach(statue, "Neck", c, [nk[0] + Math.sin(a) * 0.55 * hs, nk[1] + 1.2 * hs + Math.cos(a) * 0.2, nk[2] + 0.1]);
+    attach(statue, "Neck", c, [nk[0] + Math.sin(a) * 0.55 * hs, nk[1] + 1.2 * hs + Math.cos(a) * 0.2, nk[2] + 0.1]);
   }
   const bundle = scarfBundle();
   const rh = jointAt(statue, "RightHand");

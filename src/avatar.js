@@ -63,9 +63,9 @@ export function buildBodyFromParts(parts = {}, { scale } = {}) {
   const def = defaultR15Parts(), P = {};
   for (const name of R15_PARTS) {
     const d = def[name], c = parts[name] || {};
-    const att = { ...d.attachments };
-    for (const [k, v] of Object.entries(c.attachments || {})) { const p = posOf(v); if (p) att[k] = p.slice(); }
-    P[name] = { size: (c.size || d.size).slice(), attachments: att, kind: d.kind, taper: c.size ? undefined : d.taper };
+    const att = { ...d.attachments }, rot = {};
+    for (const [k, v] of Object.entries(c.attachments || {})) { const p = posOf(v); if (p) att[k] = p.slice(); if (v && v.rot) rot[k] = v.rot.slice(); }
+    P[name] = { size: (c.size || d.size).slice(), attachments: att, rot, kind: d.kind, taper: c.size ? undefined : d.taper };
   }
   const base = buildBody({ shape: "classic" });
   const centre = { HumanoidRootPart: base.bind[0].pos.slice() }, joints = { HumanoidRootPart: centre.HumanoidRootPart.slice() };
@@ -81,7 +81,7 @@ export function buildBodyFromParts(parts = {}, { scale } = {}) {
   const partList = R15_PARTS.slice(1).map((name) => ({ bone: name, size: P[name].size, center: centre[name], kind: P[name].kind, ...(P[name].taper ? { taper: P[name].taper } : {}) }));
   const floor = Math.min(...["LeftFoot", "RightFoot"].map((f) => centre[f][1] - P[f].size[1] / 2));
   const attachments = {}; // every attachment in bind-pose character space, by name (rig attachments excluded)
-  for (const [name, p] of Object.entries(P)) for (const [k, v] of Object.entries(p.attachments)) if (!/RigAttachment$/.test(k)) attachments[k] = { part: name, pos: centre[name].map((c, i) => c + v[i]) };
+  for (const [name, p] of Object.entries(P)) for (const [k, v] of Object.entries(p.attachments)) if (!/RigAttachment$/.test(k)) attachments[k] = { part: name, pos: centre[name].map((c, i) => c + v[i]), rot: p.rot[k] || ATTACHMENT_ROT[k] || null };
   const body = { rigType: "R15", bind, parts: partList, floor, neck, headScale: 1, attachments };
   return scale ? scaleBody(body, scale) : body;
 }
@@ -240,6 +240,13 @@ export function paintRegion(ctx, region, color, clothing = {}, partImage = null)
 }
 
 /**
+ * Orientation of body attachments that aren't axis-aligned on the standard bodies (row-major 3x3): the grip
+ * attachments are turned -90 degrees about X (R15 Left/RightGripAttachment; R6's RightGrip C0 is the same turn),
+ * which is the frame a Tool's Grip is measured from.
+ */
+export const ATTACHMENT_ROT = { RightGripAttachment: [1, 0, 0, 0, 0, 1, 0, -1, 0], LeftGripAttachment: [1, 0, 0, 0, 0, 1, 0, -1, 0] };
+
+/**
  * Body attachments for rigid accessories (BodyFront/Back, Neck, Left/RightCollar, Waist*, Left/RightShoulder,
  * Left/RightGrip, Left/RightFoot), in bind-pose character space, keyed by name: `{ part, pos }`.
  * On BlockRig's blocky bodies they sit on the part faces where the standard body has them; a body package's
@@ -249,7 +256,7 @@ export function defaultBodyAttachments(body) {
   const part = Object.fromEntries(body.parts.map((p) => [p.bone, p])), out = {};
   const at = (name, bone, fx, fy, fz) => {
     const p = part[bone]; if (!p) return;
-    out[name] = { part: bone, pos: [p.center[0] + (fx * p.size[0]) / 2, p.center[1] + (fy * p.size[1]) / 2, p.center[2] + (fz * p.size[2]) / 2] };
+    out[name] = { part: bone, pos: [p.center[0] + (fx * p.size[0]) / 2, p.center[1] + (fy * p.size[1]) / 2, p.center[2] + (fz * p.size[2]) / 2], rot: ATTACHMENT_ROT[name] || null };
   };
   const r6 = body.rigType === "R6", T = r6 ? "Torso" : "UpperTorso", W = r6 ? "Torso" : "LowerTorso";
   at("BodyFrontAttachment", T, 0, 0, -1); at("BodyBackAttachment", T, 0, 0, 1);

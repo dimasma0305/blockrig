@@ -182,3 +182,25 @@ export function describeAccessory(roots) {
     colorMapId: (() => { const sa = handle && handle.children.find((x) => x.className === "SurfaceAppearance"); return sa ? assetId(sa.props.ColorMap) : null; })(),
   };
 }
+
+/**
+ * Read a Tool (gear): its Grip (the CFrame Humanoid:EquipTool uses as the RightGrip weld's C1) and its Handle
+ * part, with the Handle's mesh (a SpecialMesh FileMesh or a MeshPart), texture, size and mesh scale/offset.
+ */
+export function describeTool(roots) {
+  const tool = findInstance(roots, (x) => x.className === "Tool");
+  if (!tool) throw new Error("blockrig: no Tool in model");
+  const handle = tool.children.find((x) => x.props.Name === "Handle");
+  const special = handle && handle.children.find((x) => x.className === "SpecialMesh");
+  const src = special || handle;
+  return {
+    name: tool.props.Name,
+    grip: tool.props.Grip || { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, 0, 0] },
+    requiresHandle: tool.props.RequiresHandle ?? true,
+    handle: handle ? {
+      className: handle.className, size: (handle.props.size || handle.props.Size || null)?.slice() ?? null,
+      meshId: src ? assetId(src.props.MeshId) : null, textureId: src ? assetId(special ? special.props.TextureId : handle.props.TextureID) : null,
+      scale: special && special.props.Scale ? special.props.Scale.slice() : [1, 1, 1], offset: special && special.props.Offset ? special.props.Offset.slice() : [0, 0, 0],
+    } : null,
+  };
+}

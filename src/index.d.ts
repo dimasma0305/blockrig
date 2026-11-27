@@ -76,6 +76,18 @@ export interface Rig {
   updateFace(dt: number): void;
   addFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
   readonly bodyAttachments: Record<string, BodyAttachment>;
+  /** Weld an object to a body part (or "Head"): Object = Part * C0 * C1^-1, like a Weld. */
+  weld<T extends THREE.Object3D>(object: T, partName: string, o?: { c0?: CFrame | THREE.Matrix4 | null; c1?: CFrame | THREE.Matrix4 | null }): T;
+  /** Put the object's attachment on a body or head attachment, like a RigidConstraint. */
+  attachTo<T extends THREE.Object3D>(object: T, attachmentName: string, objectAttachment?: CFrame | THREE.Matrix4 | null): T;
+  /** Humanoid:EquipTool: RightGrip weld, C0 = RightGripAttachment, C1 = Tool.Grip. `object` is the Handle. */
+  equipTool<T extends THREE.Object3D>(object: T, o?: { grip?: CFrame | THREE.Matrix4 | null }): T;
+  unequipTool(): THREE.Object3D | null;
+  readonly tool: THREE.Object3D | null;
+  unweld<T extends THREE.Object3D>(object: T): T;
+  readonly welds: Map<THREE.Object3D, string>;
+  /** A body part's bind-pose CFrame in character space (its centre), like Part.CFrame. */
+  partCFrame(name: string): CFrame;
   /** Roblox FaceControls (50 values, 0..1) driving a dynamic head. */
   faceControls: Record<FaceControlName, number>;
   /** True once setHead() was given a dynamic (FACS) head mesh. */
@@ -133,7 +145,8 @@ export interface BodyPartSpec {
   uvs?: "template" | "mesh";
 }
 export type BodyRegion = "Head" | "Torso" | "LeftArm" | "RightArm" | "LeftLeg" | "RightLeg";
-export interface BodyAttachment { part: string; pos: number[] }
+export interface BodyAttachment { part: string; pos: number[]; rot?: number[] | null }
+export const ATTACHMENT_ROT: Record<string, number[]>;
 
 export function createRig(o?: {
   rigType?: RigType;
@@ -272,4 +285,8 @@ export function evalFloatCurve(keys: FloatCurveKey[], t: number): number;
 export function evalRotationCurve(keys: RotationCurveKey[], t: number, out?: THREE.Quaternion): THREE.Quaternion;
 /** CurveAnimation -> clip (curves sampled at fps, default 60, plus every key time). */
 export function curveAnimationToClip(roots: RbxInstance[], o?: { name?: string; rigType?: RigType; fps?: number }): Clip;
+export function describeTool(roots: RbxInstance[]): {
+  name: string; grip: CFrame; requiresHandle: boolean;
+  handle: { className: string; size: number[] | null; meshId: number | null; textureId: number | null; scale: number[]; offset: number[] } | null;
+};
 export const VERSION: string;
