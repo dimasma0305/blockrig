@@ -1,6 +1,6 @@
 # CTF example: "Everybody Plays CTF"
 
-A 20-second vertical short (1080×1920, 60 fps) set in a world where everyone, from bakers to schoolkids, plays capture-the-flag hacking competitions. Everything on screen is made in code: the cast with **BlockRig**, a neon city with custom shaders and particle effects in **three.js**, all rendered by **Remotion**. Nothing is downloaded.
+A 26-second vertical short (1080×1920, 60 fps) set in a world where everyone, from bakers to schoolkids, plays capture-the-flag hacking competitions. Everything on screen is made in code: the cast with **BlockRig**, a neon city with custom shaders and particle effects in **three.js**, all rendered by **Remotion**. Nothing is downloaded.
 
 [![Everybody Plays CTF, preview](../../docs/ctf-preview.gif)](../../docs/ctf.mp4)
 
@@ -22,7 +22,7 @@ npm run studio       # Remotion Studio, to scrub the timeline
 
 **Voice.** The published video uses the Microsoft neural voice: `VOICE_ENGINE=edge npm run voice` (needs `pip install edge-tts`). That sends the narration text to Microsoft's online service.
 
-**Pace.** Each clip is trimmed to the speech, and clips are joined with a 0.04 s gap, so the narration runs at the fast pace of viral shorts.
+**Pace.** Each clip is trimmed to the speech, and clips are joined with a 0.1 s gap. The edge voice runs at +12% (about 205 words a minute), the brisk end of what short-form narration uses.
 
 ## What it shows off
 

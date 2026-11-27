@@ -49,7 +49,7 @@ for (const s of story.shots) {
   if (!s.narration) continue;
   const out = `${outDir}/${s.id}.wav`;
   if (engine === "edge") {
-    execFileSync(py, ["scripts/make_voice_neural.py", "--text", s.narration, "--out", out, "--style", story.voice?.style || "boy", "--fps", String(story.fps)], { stdio: "inherit" });
+    execFileSync(py, ["scripts/make_voice_neural.py", "--text", s.narration, "--out", out, "--style", story.voice?.style || "boy", ...(story.voice?.rate ? [`--rate=${story.voice.rate}`] : []), "--fps", String(story.fps)], { stdio: "inherit" });
     const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
     timings.clips[s.id] = { duration: info.duration, words: (info.words || []).map((w) => ({ word: w.word ?? w.text, start: w.start, end: w.end })) };
   } else {

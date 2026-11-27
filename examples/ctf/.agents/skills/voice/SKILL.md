@@ -22,7 +22,7 @@ The style of these shorts is a fast, high-pitched young narrator.
 | `edge` (default when allowed) | Natural Microsoft neural voice through the `edge-tts` Python package; returns exact word times | **Ask the user first**: it needs `pip install edge-tts` and sends the narration text to Microsoft's online service. Style `boy` = Brian, +70% rate, pitched up 1.6×. |
 | `sapi` (fallback) | Windows' built-in offline speech, sped up and pitched with ffmpeg | No network or install, but plainly robotic. Word times are estimated from syllables, so treat it as a placeholder. |
 
-**Pace:** these shorts never leave dead air. `story.json` sets `voice.gapSeconds` (0.04 here) between clips, and only silent reaction shots hold longer, through `minSeconds`. If the voice feels slow, raise the rate before adding gaps.
+**Pace:** these shorts never leave dead air. `story.json` sets `voice.rate` (edge-tts, "+12%" here, about 3.4 words a second) and `voice.gapSeconds` (0.1) between clips. Aim for 3.2-3.6 words a second; at 5 it sounds rushed, and only silent reaction shots hold longer, through `minSeconds`. If the voice feels slow, raise the rate before adding gaps.
 
 Choose with `VOICE_ENGINE=edge` or `VOICE_ENGINE=sapi` (default `sapi` until the user agrees to edge).
 

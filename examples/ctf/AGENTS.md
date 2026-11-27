@@ -26,7 +26,7 @@ npm run preview    # ../../docs/ctf.mp4 and ctf-preview.gif
 ## Rules
 
 1. **Story first, voice second.** Shot lengths come from the measured narration (`public/audio/timings.json`), never from guesses.
-2. **Keep the pace fast.** The narrator never pauses for long: clips are trimmed to the speech and joined with a 0.04 s gap. Only silent reaction shots (`minSeconds`) hold.
+2. **Keep the pace fast.** The narrator never pauses for long: clips are trimmed to the speech and joined with a 0.1 s gap, at about 3.4 words a second (205 wpm). Faster than about 4 words a second reads as rushed. Only silent reaction shots (`minSeconds`) hold.
 3. **Keep every frame pure.** Every pose, particle and shader uniform is a function of the frame number:
    - Play BlockRig clips with `poseAt` (`src/lib/pose.ts`). It seeks an `AnimationTrack` by `timePosition`.
    - Use the seeded `rng()`, never `Math.random()`.

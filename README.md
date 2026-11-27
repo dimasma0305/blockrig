@@ -40,7 +40,7 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 <td width="300"><a href="docs/ctf.mp4"><img src="docs/ctf-preview.gif" width="300" alt="Everybody Plays CTF: in a neon city where everyone hacks, the last-ranked player finds the flag in the page source"></a></td>
 <td>
 
-**"Everybody Plays CTF"**: a 20-second, fast-paced short. It's set in a world where everyone, from the baker to the schoolkids, plays capture-the-flag hacking contests. Every character is dressed in code:
+**"Everybody Plays CTF"**: a 26-second, fast-paced short. It's set in a world where everyone, from the baker to the schoolkids, plays capture-the-flag hacking contests. Every character is dressed in code:
 
 - drawn Shirt/Pants templates;
 - layered hair, headphones and visors on Roblox attachments;
