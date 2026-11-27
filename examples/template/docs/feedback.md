@@ -25,7 +25,7 @@ undone later. One line per item: date, what they said, what we did, where.
 - Music must be easy to remember and to echo, brainrot; a full piano tune was "too complex" → `brainrot` earworm: 4-note chant hook, sung, repeated, loudest in the mix.
 - "Memory" record music was "not good"; wanted piano, brainrot music → original `goofy-piano` / `sneaky-piano` themes (default from now on).
 - Background music like "Everywhere at the End of Time" (copyrighted, so not used) → original `memory` / `memory-faded` themes: a worn 1930s ballroom record far away.
-- Premium, good Roblox assets: most-favourited hair and outfits (premium UGC included), not plain free basics → new cast items; face plates made transparent so faces read like decals.
+- Premium, good Roblox assets: most-favourited hair and outfits (premium UGC included), not plain free basics → new cast items; faces Roblox-accurate: textures untouched, skin set to the face plate colour (as players do).
 - Use Roblox assets freely: Roblox allows avatars and catalog items in (monetized) videos → the Roblox version is the default render; files stay git-ignored (`npm run roblox`).
 - Faces, hair and bodies like https://www.youtube.com/shorts/Xd_yEnAdiGo; shade, texture, lighting and sky like https://www.youtube.com/shorts/wVjP5B-94MM. → kit look: ACES Filmic, strong warm low sun, little fill, crisp clear-day fog, grain on map surfaces, pale skin, `avatarAmbient` on characters; low cameras show the sky (look, world, camera skills).
 - Town layout must be realistic: objects placed by rules, not overlapping. → 2D plan with Turf (kit/plan.ts): zones, lots, footprints, scatter/along; PlanLab shows it.

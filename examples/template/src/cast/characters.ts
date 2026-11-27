@@ -67,8 +67,11 @@ export function buildCast(rb: RobloxCast | null = null): Cast {
     embarrassed: F("faceAnime"), determined: F("faceRanker"), angry: F("faceRanker"), furious: F("faceRanker"), shocked: F("facePotato"), scared: F("facePotato"), sad: F("faceCrying"), hurt: F("faceCrying") });
   const girlFaces = () => ({ neutral: F("faceSparkle"), happy: F("faceSmile"), grin: F("faceSmile"), laugh: F("faceSmile"), smug: F("faceHearts"), wink: F("faceHearts"),
     embarrassed: F("faceHearts"), determined: F("faceSharpEyes"), angry: F("faceSharpEyes", "faceAngerVein"), furious: F("faceSharpEyes", "faceAngerVein"), shocked: F("faceChibi"), scared: F("faceChibi"), sad: F("faceCrying"), hurt: F("faceCrying") });
+  // Roblox-accurate: a face accessory painted with a skin plate is worn on the skin it was made for (as players do),
+  // so the plate blends into the head; faces without a plate keep the default skin
+  const skinFor = (faces: Record<string, RobloxHair[]>, who: "boy" | "girl") => faces.neutral?.find((f) => f.plate)?.plate ?? (who === "boy" ? "#f0cdb0" : "#fcf3f0");
   const look = (who: "boy" | "girl", hair: string, shirt: string, pants: string): RobloxLook | undefined =>
-    rb ? { hair: rb.hair[hair], shirt: rb.clothing[shirt], pants: rb.clothing[pants], faces: who === "boy" ? boyFaces() : girlFaces(), skin: who === "boy" ? "#f0cdb0" : "#fcf3f0" } : undefined;
+    rb ? (() => { const faces = who === "boy" ? boyFaces() : girlFaces(); return { hair: rb.hair[hair], shirt: rb.clothing[shirt], pants: rb.clothing[pants], faces, skin: skinFor(faces, who) }; })() : undefined;
   const kid = { shape: "child", scale: { head: 1.15 } };
   const hero = person("hero", { ...kid, skin: "#f1c27d", shirt: hoodie("#1fa392", "#ffffff", "{ }"), pants: jeans("#2f4f7f", "#f2f2f2", "#19e3c4"), hair: hair("messy", "#5a3a22", { seed: 4 }), expression: "happy", seed: 2, roblox: look("boy", "heroHair", "heroShirt", "heroPants") });
   const sister = person("sister", { ...kid, shape: "child", skin: "#f5d0b5", shirt: tee("#ff7eb6", "★"), pants: shorts("#6a4c93"), hair: hair("pigtails", "#3b2414", { tie: "#ffd166", seed: 7 }), expression: "angry", seed: 8, roblox: look("girl", "sisterHair", "sisterShirt", "sisterPants") });

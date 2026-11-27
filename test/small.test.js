@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { createRig, createFace, describeBodyColors, parseRbxm, BRICK_COLORS, brickColorHex, meshFromGeometry } from "../src/index.js";
+import { createRig, createFace, describeBodyColors, parseRbxm, BRICK_COLORS, brickColorHex, meshFromGeometry, headGeometry, HEAD_CORNER } from "../src/index.js";
 import { writeRbxm } from "./helpers/rbxm-writer.js";
 import { mockCanvas } from "./helpers/mock-canvas.js";
 
@@ -103,4 +103,28 @@ test("meshes without normals (all zero) get computed normals, so they don't rend
   const m = rig.addAccessory(tri, { attachment: { name: "FaceCenterAttachment", cframe: { rot: I3, pos: [0, 0, 0] } } });
   const nz = m.geometry.attributes.normal.getZ(0);
   assert.ok(Math.abs(nz) > 0.99, `normal z ${nz}`);
+});
+
+test("headGeometry matches the Roblox classic head that face-accessory shells wrap", () => {
+  // the profile measured from catalog face shells (scaled to the 1.2-stud head): radius at heights 0, 0.45, 0.55
+  const g = headGeometry(), p = g.attributes.position;
+  // the lathe profile (height -> radius), interpolated between its points
+  const prof = new Map(); for (let i = 0; i < p.count; i++) { const y = +p.getY(i).toFixed(5); prof.set(y, Math.max(prof.get(y) ?? 0, Math.hypot(p.getX(i), p.getZ(i)))); }
+  const pts = [...prof].sort((a, b) => a[0] - b[0]);
+  const radiusAt = (y) => { for (let i = 1; i < pts.length; i++) if (pts[i][0] >= y) { const [y0, r0] = pts[i - 1], [y1, r1] = pts[i]; return r0 + (r1 - r0) * (y - y0) / (y1 - y0 || 1); } return 0; };
+  assert.ok(Math.abs(radiusAt(0) - 0.6) < 0.01, `middle ${radiusAt(0)}`);
+  assert.ok(radiusAt(0.45) <= 0.575 && radiusAt(0.45) >= 0.54, `|y|=0.45: ${radiusAt(0.45)}`);
+  assert.ok(radiusAt(0.55) <= 0.5 && radiusAt(0.55) >= 0.44, `|y|=0.55: ${radiusAt(0.55)}`);
+  assert.equal(HEAD_CORNER, 0.29);
+});
+
+test("meshes with non-finite vertices: their triangles are dropped, bounds stay finite", () => {
+  const rig = createRig({});
+  const m = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, NaN, 0, 0]), normals: new Float32Array(12), uvs: new Float32Array(8),
+    indices: new Uint32Array([0, 1, 2, 1, 3, 2]), vertexCount: 4, faceCount: 2, lods: [0, 2] };
+  const acc = rig.addAccessory(m, { attachment: { name: "HatAttachment", cframe: { rot: I3, pos: [0, 0, 0] } } });
+  const geo = acc.geometry;
+  assert.equal(geo.index.count, 3); // only the good triangle
+  geo.computeBoundingSphere();
+  assert.ok(Number.isFinite(geo.boundingSphere.radius));
 });

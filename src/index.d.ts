@@ -180,7 +180,9 @@ export function createRig(o?: {
   face?: CanvasImageSource | Face | null;
   outline?: number;
 }): Rig;
-export function headGeometry(height?: number, radius?: number): THREE.LatheGeometry;
+/** Roblox classic head edge rounding (studs). */
+export const HEAD_CORNER: number;
+export function headGeometry(height?: number, radius?: number, corner?: number): THREE.BufferGeometry;
 export function faceTexture(image: CanvasImageSource | null, skin?: string): THREE.CanvasTexture | null;
 export function loadRobloxTexture(url: string, loader?: THREE.TextureLoader): THREE.Texture;
 export function setSRGB<T extends THREE.Texture>(tex: T): T;

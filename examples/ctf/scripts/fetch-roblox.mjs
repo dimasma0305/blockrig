@@ -1,5 +1,5 @@
 // Roblox catalog items (hair, clothing, dynamic heads) for LOCAL videos only. They belong to Roblox and their
-// creators: everything lands in assets/roblox/ (git-ignored), is never committed, and never appears in a published
+// creators. Roblox allows them in videos (monetized too); the files land in assets/roblox/ (git-ignored) and are never
 // or README video. The user signs in to Roblox in the browser pane themselves; nothing here reads cookies.
 //
 // Asset delivery needs the signed-in browser, so this runs as a loop (the agent drives it; see the assets skill):
@@ -141,7 +141,7 @@ for (const [n, c] of Object.entries(cast)) if (c.template && !isImage(fs.readFil
 fs.writeFileSync(path.join(DIR, "cast.json"), JSON.stringify(cast, null, 1));
 
 // ---- 2. what is still missing: write needs.json and print the browser script
-if (!needs.length) console.log(`roblox items ready: ${Object.keys(cast).length} in assets/roblox/cast.json (local only: never commit or publish them)`);
+if (!needs.length) console.log(`roblox items ready: ${Object.keys(cast).length} in assets/roblox/cast.json (used in renders by default; never commit the files)`);
 else {
 fs.writeFileSync(path.join(DIR, "needs.json"), JSON.stringify(needs, null, 1));
 console.log(`${needs.length} item(s) need a signed-in browser. Run this in the browser pane on an https://assetdelivery.roblox.com page

@@ -39,7 +39,7 @@ npm run voice            # narration clips, word timings, music
 # compare the narration with reference shorts (tempo, pauses, pitch, expression): docs/references.md, voice skill
 ~/.venvs/chatterbox/Scripts/python scripts/voice/analyze_ref.py out/ref/*.m4a   # then: ... --ours
 npm run check            # voice says the right words, pace, captions, types
-npm run collide          # Rapier: cameras in walls, hidden faces, characters in props / floating / sunk / stiff on soft seats (-- --roblox)
+npm run collide          # Rapier: cameras in walls, hidden faces, characters in props / floating / sunk / stiff on soft seats (-- --no-roblox for the all-original cut)
 npm run studio           # live preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, PlanLab
 npm run stills           # one still per shot -> out/contact-sheet.jpg (DEBUG=1 for the overlay)
 npm run render           # out/<slug>.mp4
@@ -56,7 +56,7 @@ npm run preview          # small MP4 + GIF for sharing
 6. **Assets first: don't reinvent.** Before building anything in code (a model, texture, sky, cloud, animal, prop, face, clothing, hair, animation), look for a downloadable asset: the source list in the `assets` skill, listed in `assets/manifest.json`, fetched by `npm run assets` / `npm run roblox`. Code-built kit pieces (`src/kit/structures.ts`, `textures.ts`, procedural hair/clothes) are only a fallback when no asset fits, and the reason goes in `docs/visuals.md`. Every visual item in `docs/visuals.md` names its source.
 7. **Nothing plain.** Every character has clothes, hair or headwear and an accent; every location has structure (buildings with roofs, windows, fences, props), every surface a texture, every outdoor shot a weather and time of day.
 8. **Check stills before a full render**, with the debug overlay for framing (faces clear of captions and app buttons).
-9. **Licences.** Commit only original or CC0 content. Roblox catalog items are for local use only (`assets/roblox/`, git-ignored) and never appear in a published or committed video. Posting is the user's job.
+9. **Licences.** Roblox allows Roblox avatars and catalog items in videos, monetized too (Developer Relations, devforum.roblox.com/t/1843674, 2022): use them freely in the shorts. The downloaded FILES stay out of git (assets/roblox, fetched per machine by `npm run roblox`): videos yes, redistributing asset files no. Commit only original or CC0 content otherwise. Posting is the user's job.
 10. **You cannot hear audio.** Use `npm run check` (speech recognition of every take), measure pace, and ask the user to listen.
 11. **Plan, place, check.** Lay every location out on a 2D plan first (`src/kit/plan.ts`, Turf: zones, lots, a stage for each shot, footprints that may not overlap; `world` skill), put characters on surfaces by how those behave (`restOn`: a bed gives way, a floor does not; `materials` skill), and run `npm run collide` before rendering (cameras in walls, hidden faces, characters in props, floating, sunk or stiff; `review` skill).
 12. **The quality bar is the standard for every video.** Match the user's reference shorts (docs/references.md:

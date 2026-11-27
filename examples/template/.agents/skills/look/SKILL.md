@@ -41,7 +41,13 @@ Characters, from https://www.youtube.com/shorts/Xd_yEnAdiGo:
 - classic blocky bodies, very pale slightly pink skin (girls `#fcf3f0`, boys `#f0cdb0`), detailed layered outfits;
 - big fluffy anime hair with bangs and volume, never hiding the eyes;
 - 2D anime faces (big highlighted eyes, small mouth, blush) that change every line; shocked = blank white eyes and
-  an open mouth. Roblox face accessories per emotion (`faceSets`, first choice); drawn faces only when none are downloaded;
+  an open mouth. Roblox face accessories per emotion (`faceSets`, first choice); drawn faces only when none are downloaded.
+  Roblox-accurate: face textures are drawn untouched; many paint a face plate in the skin tone they were made for
+  (catalog items come in "White" / "Light" versions), so the character's skin is set to that plate colour (measured
+  on load, `plate`), as a player wears the face that matches their skin. Most anime "faces" are whole head
+  shells (1.2 studs, FaceCenterAttachment) built around the classic head; BlockRig's head has the same shape
+  (`HEAD_CORNER`), so separately bought hair and faces fit like a set. A face that floats or shows a second skin tone
+  means a shape mismatch: measure the mesh (size, attachment) before blaming the texture;
 - evenly lit, like Roblox's strong avatar ambient: `avatarAmbient()` (kit/lighting.ts) on every character, so faces
   stay readable in shade.
 Light, sky and surfaces: see the world skill ("The look").

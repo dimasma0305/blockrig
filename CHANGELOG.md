@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Head shape matches Roblox's classic head**: the top and bottom edges are rounded with a 0.29-stud radius (`HEAD_CORNER`), measured from catalog face accessories built as shells around that head. With the old, tighter rounding the head poked through those shells near the edges and showed as a two-tone "mask". `headGeometry(height, radius, corner)`.
+- Meshes with non-finite vertices load safely: the triangles using them are dropped (one old v3 hair carried a NaN vertex).
+
 - Removed the "Ice Statue" story example (`examples/story`, `docs/story.mp4`); "Everybody Plays CTF" and the video template remain.
 
 - **CurveAnimation checked against Roblox Studio**: a CurveAnimation built and saved in Studio 0.748 decodes key for key, and evaluates to Studio's own values (float curves within 1e-6, rotations within 0.0003°). The blobs and Studio's values are a test fixture (`test/fixtures/studio-curves.json`, with the script that made them).

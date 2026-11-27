@@ -13,6 +13,10 @@ import { buildBodyFromParts, defaultBodyAttachments, templateUVs, regionSlices, 
 const REV = parseInt(THREE.REVISION, 10);
 const LEGACY_SKINNING_FLAG = REV < 129; // r128 and older need material.skinning = true
 const HEAD_H = 1.2, HEAD_R = 0.6; // Roblox classic head: 1.2 studs across (face accessories are made to sit just outside it)
+// The classic head's top and bottom edges are rounded with a radius of about 0.29 studs: measured from catalog face
+// accessories made as shells around it (three creators agree: r = 0.60 at the middle, 0.56 at |y| = 0.45, 0.49 at
+// |y| = 0.55). A tighter rounding makes the head poke through those shells near the edges.
+export const HEAD_CORNER = 0.29;
 // textures BlockRig made itself (dispose() frees only these); a WeakSet because old three.js textures have no userData
 const OWN_TEXTURES = new WeakSet();
 
@@ -49,8 +53,8 @@ function outlineMaterial(width, skinned) {
 }
 
 /** Classic block head: a barrel with rounded rims. UV u = 0.5 is on -Z, the face side. */
-export function headGeometry(height = HEAD_H, radius = HEAD_R) {
-  const c = 0.22, hh = height / 2, pts = [new THREE.Vector2(0.001, -hh)];
+export function headGeometry(height = HEAD_H, radius = HEAD_R, corner = HEAD_CORNER) {
+  const c = Math.min(corner, radius, height / 2), hh = height / 2, pts = [new THREE.Vector2(0.001, -hh)];
   for (let i = 0; i <= 6; i++) { const a = -Math.PI / 2 + (i / 6) * (Math.PI / 2); pts.push(new THREE.Vector2(radius - c + Math.cos(a) * c, -hh + c + Math.sin(a) * c)); }
   for (let i = 0; i <= 6; i++) { const a = (i / 6) * (Math.PI / 2); pts.push(new THREE.Vector2(radius - c + Math.cos(a) * c, hh - c + Math.sin(a) * c)); }
   pts.push(new THREE.Vector2(0.001, hh));
@@ -113,7 +117,17 @@ function geometryFromMesh(mesh, { lod = 0, skinned = false } = {}) {
     g.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(mesh.skinIndex, 4));
     g.setAttribute("skinWeight", new THREE.BufferAttribute(mesh.skinWeight, 4));
   }
-  g.setIndex(new THREE.BufferAttribute(lodIndices(mesh, lod), 1));
+  // a few real meshes carry non-finite vertices (an old v3 hair had one NaN): drop the triangles that use them and
+  // park the vertices at the origin, so bounds, normals and shading stay finite (Roblox simply does not draw them)
+  let idx = lodIndices(mesh, lod);
+  const pa = g.attributes.position.array, bad = new Set();
+  for (let i = 0; i < pa.length; i += 3) if (!Number.isFinite(pa[i]) || !Number.isFinite(pa[i + 1]) || !Number.isFinite(pa[i + 2])) { bad.add(i / 3); pa[i] = pa[i + 1] = pa[i + 2] = 0; }
+  if (bad.size) {
+    const keep = [];
+    for (let t = 0; t < idx.length; t += 3) if (!bad.has(idx[t]) && !bad.has(idx[t + 1]) && !bad.has(idx[t + 2])) keep.push(idx[t], idx[t + 1], idx[t + 2]);
+    idx = Uint32Array.from(keep);
+  }
+  g.setIndex(new THREE.BufferAttribute(idx, 1));
   // some meshes carry no normals (all zero, e.g. Draco-compressed v7 files without a NORMAL attribute): compute
   // them, as Roblox does, or the surface renders black
   const n = mesh.normals;

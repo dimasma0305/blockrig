@@ -52,8 +52,8 @@ cookies.
 sorted by favourites (`SortType=1&SortAggregation=5`, from a roblox.com page; `Category=1` for accessories, `Category=3`
 + `Subcategory=56/57` for shirts/pants) and take the most-favourited items that fit the character: premium UGC hair
 (Rush_X, genkroco, bunnexh...) and trendy y2k / emo / aesthetic outfits over plain free basics. Asset delivery serves
-paid items too. Check the new cast in `Lineup` before rendering. Face accessories' white face plates are made
-transparent on load (src/cast/roblox.ts), so their features sit on the head like decals.
+paid items too. Check the new cast in `Lineup` before rendering. A face accessory's plate colour is measured on load
+and the character's skin follows it, as in Roblox (look skill).
 
 **Find free official items** (creator Roblox, price 0) from a roblox.com page in the browser pane:
 `https://catalog.roblox.com/v1/search/items/details?CreatorName=Roblox&MaxPrice=0&SalesTypeFilter=1&Limit=30&Category=<c>&Keyword=<k>`

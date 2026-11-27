@@ -16,10 +16,78 @@
     }
   },
   "roblox": {
-    "$example": {
-      "name": "classic-hair",
-      "assetId": 0,
-      "format": "avatar_meshpart_accessory"
+    "$about": "Roblox catalog items (premium hair, anime face accessories): used in the video (Roblox allows its items in videos, monetized too); the files are git-ignored, fetched by npm run roblox.",
+    "heroHair": {
+      "assetId": 101109395111164,
+      "kind": "hair"
+    },
+    "sisterHair": {
+      "assetId": 89707605927173,
+      "kind": "hair"
+    },
+    "n0Hair": {
+      "assetId": 6823338112,
+      "kind": "hair",
+      "about": "Messy Boy Hair in Black (Rush_X)"
+    },
+    "n1Hair": {
+      "assetId": 7284206648,
+      "kind": "hair",
+      "about": "Aesthetic Split Bangs Hair in Blonde (Lukacors)"
+    },
+    "n2Hair": {
+      "assetId": 5644883846,
+      "kind": "hair",
+      "about": "Cool Boy Hair (genkroco)"
+    },
+    "n3Hair": {
+      "assetId": 6501746646,
+      "kind": "hair",
+      "about": "Popular Girl Blonde & Brown Hair (bunnexh)"
+    },
+    "faceAnime": {
+      "assetId": 131886627952212,
+      "kind": "face"
+    },
+    "faceFang": {
+      "assetId": 106459314796536,
+      "kind": "face"
+    },
+    "faceRanker": {
+      "assetId": 114738498874820,
+      "kind": "face"
+    },
+    "facePotato": {
+      "assetId": 71083397812129,
+      "kind": "face"
+    },
+    "faceCrying": {
+      "assetId": 140335885709847,
+      "kind": "face"
+    },
+    "faceSparkle": {
+      "assetId": 117530109834139,
+      "kind": "face"
+    },
+    "faceSmile": {
+      "assetId": 73803306079949,
+      "kind": "face"
+    },
+    "faceSharpEyes": {
+      "assetId": 87283810049324,
+      "kind": "face"
+    },
+    "faceAngerVein": {
+      "assetId": 96729799003786,
+      "kind": "face"
+    },
+    "faceChibi": {
+      "assetId": 96980015396127,
+      "kind": "face"
+    },
+    "faceHearts": {
+      "assetId": 100152234940998,
+      "kind": "face"
     }
   }
 }

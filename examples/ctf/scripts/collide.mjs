@@ -1,7 +1,7 @@
 // Collision check (Rapier): renders every Nth frame small and fast with { collide: true }; the scene logs what it
 // finds (src/kit/collide.ts) and this prints one line per problem with the shot and frames it spans.
 //   node scripts/collide.mjs              every 6th frame, the public version
-//   node scripts/collide.mjs --roblox     with the local Roblox items and maps
+//   node scripts/collide.mjs --no-roblox  without the Roblox items and maps (used by default once downloaded)
 //   node scripts/collide.mjs --every 2    denser sampling
 // Writes out/collide.json. Exit code 1 when something is found, so it can gate a render.
 import fs from "node:fs";
@@ -10,7 +10,7 @@ import path from "node:path";
 import { bundle } from "@remotion/bundler";
 import { renderFrames, selectComposition, ensureBrowser } from "@remotion/renderer";
 
-const args = process.argv.slice(2), roblox = args.includes("--roblox"), ei = args.indexOf("--every"), every = ei >= 0 ? Number(args[ei + 1]) : 6;
+const args = process.argv.slice(2), roblox = !args.includes("--no-roblox") && fs.existsSync("assets/roblox/cast.json"), ei = args.indexOf("--every"), every = ei >= 0 ? Number(args[ei + 1]) : 6;
 const inputProps = { collide: true, roblox, debug: false };
 const browserExecutable = fs.existsSync(".browser-path") ? fs.readFileSync(".browser-path", "utf8").trim() : null;
 await ensureBrowser({ browserExecutable });
@@ -26,7 +26,7 @@ let errors = 0;
 await renderFrames({
   composition, serveUrl, inputProps, outputDir, browserExecutable, chromiumOptions, everyNthFrame: every, imageFormat: "jpeg", jpegQuality: 30, scale: 0.15, muted: true, // no audio: only the logs matter
   concurrency: Math.max(1, Math.min(4, os.cpus().length >> 1)), timeoutInMilliseconds: 180000,
-  onStart: ({ frameCount }) => console.log(`checking ${frameCount} frames (every ${every}th)${roblox ? " with the local Roblox items" : ""}...`),
+  onStart: ({ frameCount }) => console.log(`checking ${frameCount} frames (every ${every}th)${roblox ? " with the Roblox items" : ""}...`),
   onFrameUpdate: () => {},
   onBrowserLog: (l) => {
     if (l.text.startsWith("COLLIDE ")) { const r = JSON.parse(l.text.slice(8)); frames.set(r.frame, r); }

@@ -22,8 +22,8 @@ hair before building anything in code; the code-built kit is only a fallback. Do
 | birds | no verified CC0 animated bird: poly.pizza static birds (Bird `8Ph79kHbt9s`, Flying gull `eMNhHDZakYp`, Sparrow `3rTjKefT184`) and flap them in code | Khronos Fox for an animated reference | CC-BY 3.0 (credit "Poly by Google") |
 | sky, sun, clouds, light | Poly Haven HDRI: `kloofendal_48d_partly_cloudy_puresky` (day), `venice_sunset`, `qwantani_dusk_2_puresky`, `rogland_clear_night`, `satara_night`, `overcast_soil_puresky`, `kiara_1_dawn` | ambientCG `EveningSkyHDRI049A`, `NightEnvironmentHDRI011` | CC0 |
 | road, grass, wood, brick, fabric, concrete, tile textures | Poly Haven: `asphalt_02`, `road_damaged`, `grass_ground`, `brown_planks_04`, `brick_4`, `denim_fabric`, `brushed_concrete`, `brown_floor_tiles` | ambientCG: `Asphalt033`, `Road012A`, `Grass004`, `Bricks105`, `Planks040`, `Fabric087`, `Concrete049`, `Tiles141` | CC0 |
-| faces / expressions | Roblox catalog faces (local only, see below) | BlockRig's drawn expressions (`createFace`) for published videos: no CC0 Roblox-style faces exist | — |
-| clothes, hair, accessories | Roblox catalog (local only) | the drawn wardrobe and procedural hair (published videos) | — |
+| faces / expressions | Roblox catalog faces and face accessories (see below), first choice | BlockRig's drawn expressions (`createFace`) when no Roblox items are downloaded | Roblox (videos allowed) |
+| clothes, hair, accessories | Roblox catalog, first choice | the drawn wardrobe and procedural hair | Roblox (videos allowed) |
 
 ### How to download each (for scripts/fetch-assets.mjs)
 
@@ -42,11 +42,18 @@ List packs under `cc0` (base URL + files), textures under `textures`, skies unde
 pack keeps its licence file next to it. Prefer GLB; low-poly matches blocky characters, photoreal doesn't. Load
 models with GLTFLoader inside `delayRender` / `continueRender` so they never appear late in some frames.
 
-## Roblox catalog items (local only)
+## Roblox catalog items and Toolbox maps (first choice for every video)
 
-They belong to Roblox and their creators: `assets/roblox/` is git-ignored; never commit them or use them in a
-published or README video. The user signs in to Roblox in the browser pane themselves; never type passwords or read
+Roblox allows Roblox avatars and catalog items in videos, monetized too (Developer Relations, devforum.roblox.com/t/1843674, 2022): use them freely in the shorts. The downloaded FILES stay out of git (assets/roblox, fetched per machine by `npm run roblox`): videos yes, redistributing asset files no. Two rules from those guidelines: a TV show or film with classic R6/R15 avatars needs Roblox's OK;
+a channel whose name uses "Roblox" or "Blox" says it is not affiliated with Roblox. The user signs in to Roblox in the browser pane themselves; never type passwords or read
 cookies.
+
+**Pick by quality, not price.** The user wants premium, good-looking avatars like popular story channels. Search
+sorted by favourites (`SortType=1&SortAggregation=5`, from a roblox.com page; `Category=1` for accessories, `Category=3`
++ `Subcategory=56/57` for shirts/pants) and take the most-favourited items that fit the character: premium UGC hair
+(Rush_X, genkroco, bunnexh...) and trendy y2k / emo / aesthetic outfits over plain free basics. Asset delivery serves
+paid items too. Check the new cast in `Lineup` before rendering. A face accessory's plate colour is measured on load
+and the character's skin follows it, as in Roblox (look skill).
 
 **Find free official items** (creator Roblox, price 0) from a roblox.com page in the browser pane:
 `https://catalog.roblox.com/v1/search/items/details?CreatorName=Roblox&MaxPrice=0&SalesTypeFilter=1&Limit=30&Category=<c>&Keyword=<k>`
@@ -64,8 +71,8 @@ There are no free classic face decals: expressions come from dynamic heads (Face
 
 It writes `assets/roblox/cast.json`; `src/cast/roblox.ts` loads it, `buildCast(rb)` dresses each character (dynamic head,
 hair, shirt, pants), and `act()` turns story faces into FaceControls with BlockRig's `facsExpression`.
-Render with `--roblox` (`node scripts/render.mjs --roblox`, `ROBLOX=1 npm run stills`): the output is
-`out/<slug>-roblox.mp4`, for the user only.
+Renders use them by default once downloaded (`npm run render`, `npm run stills`); `--no-roblox` / `ROBLOX=0`
+make an all-original cut (`out/<slug>-cc0.mp4`).
 
 **Free maps** (houses, rooms, streets) come from the Toolbox, not the catalog. Search from a roblox.com page:
 `https://apis.roblox.com/toolbox-service/v1/marketplace/10?keyword=<house|bedroom|street>&includeOnlyVerifiedCreators=true`

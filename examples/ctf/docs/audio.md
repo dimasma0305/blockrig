@@ -17,11 +17,11 @@ Expressive narrator: every line has the emotion of its meaning (`emotion:` in st
 
 ## Music
 
-- s01: cyber
+- s01: quirky-arp
 - s05: suspense
-- s12: triumph
+- s12: quirky-arp
 
-Themes are synthesized in scripts/music.mjs. Mixed at 0.2 under the voice.
+Themes are synthesized in scripts/music.mjs: quirky-arp (the default background: bouncy awkward arpeggio, 94 bpm, A=451) for the town and the payoff, suspense for the attack on the Vault. Mixed at 0.2 under the voice.
 
 ## Sound effects (planned)
 
