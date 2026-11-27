@@ -95,8 +95,12 @@ rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).
 
 ## Music
 
-Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default: `brainrot`**
-(scripts/music-brainrot.mjs), one earworm loop under the whole video. What makes it stick (the user asked for music
+Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default: `story`**
+(scripts/music-story.mjs) under the whole video: a singable 8-bar tune that is neither happy nor sad (D Dorian,
+curious and thoughtful, ends open so it keeps moving), marimba and piano over a laid-back beat. The user asked for
+"more of melody, that isn't happy or sad": a real tune beats a 4-note loop, but keep it singable (steps and small
+leaps, one motif developed, the tune the loudest band). For a jokey short: `brainrot`
+(scripts/music-brainrot.mjs), an earworm loop. What makes it stick (the user asked for music
 "easy to remember, easy to echo", and found a full tune "too complex"):
 - a hook of 3-4 notes only, on intervals everyone can already sing (the playground chant sol-mi-la-sol), in a chant
   rhythm ("da-da DUM"), repeated A A A B;

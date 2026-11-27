@@ -39,7 +39,7 @@ const STYLES = {
 };
 
 // one piano note added into `out` (two strings, stretched partials, per-partial decay, hammer, damper)
-function pianoNote(out, t0, f, held, vel, r) {
+export function pianoNote(out, t0, f, held, vel, r) {
   const i0 = Math.floor(t0 * SR), ring = held + 0.12, len = Math.floor(Math.min(held + 1.4, 3) * SR), B = 0.00035;
   const parts = []; for (let k = 1; k <= 9; k++) {
     const fk = f * k * Math.sqrt(1 + B * k * k); if (fk > 9000) break;

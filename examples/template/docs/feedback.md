@@ -18,7 +18,8 @@ undone later. One line per item: date, what they said, what we did, where.
 - Use visually attractive, good-quality assets, like popular Roblox story channels (girl and boy with anime faces, real hair, detailed houses and rooms). → local Roblox mode: anime face accessories, free Toolbox maps for the house and the bedroom (`buildRobloxMap`).
 - Roads must run along the street, not sideways. → road tiles turned π/2 in World.ts.
 - Every word of the narration must be clear (e.g. "in this town"). → voice takes need per-word clarity ≥0.45 and stricter word match.
-- Music must be easy to remember and to echo, brainrot; a full piano tune was "too complex" → `brainrot` earworm: 4-note chant hook, sung, repeated, loudest in the mix (default).
+- Wanted more melody, neither happy nor sad → `story` theme (D Dorian, singable 8-bar tune), the default background.
+- Music must be easy to remember and to echo, brainrot; a full piano tune was "too complex" → `brainrot` earworm: 4-note chant hook, sung, repeated, loudest in the mix.
 - "Memory" record music was "not good"; wanted piano, brainrot music → original `goofy-piano` / `sneaky-piano` themes (default from now on).
 - Background music like "Everywhere at the End of Time" (copyrighted, so not used) → original `memory` / `memory-faded` themes: a worn 1930s ballroom record far away.
 - Faces, hair and bodies like https://www.youtube.com/shorts/Xd_yEnAdiGo; shade, texture, lighting and sky like https://www.youtube.com/shorts/wVjP5B-94MM. → kit look: ACES Filmic, strong warm low sun, little fill, crisp clear-day fog, grain on map surfaces, pale skin, `avatarAmbient` on characters; low cameras show the sky (look, world, camera skills).
