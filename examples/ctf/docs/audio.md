@@ -1,6 +1,6 @@
 # Audio
 
-Expressive narrator: every line has the emotion of its meaning (`emotion:` in story.md, see the voice skill). Measured target: ~160 wpm overall.
+Expressive narrator: every line has the emotion of its meaning (`emotion:` in story.md, see the voice skill). Measured target: ~160 wpm overall, one narrator on every line, every word clear first (voice skill).
 
 ## Voice
 
@@ -9,8 +9,10 @@ Expressive narrator: every line has the emotion of its meaning (`emotion:` in st
 - pitch: 1.35
 - exaggeration: 0.9
 - cfg: 0.35
-- tempo: 1.12
-- gap: 0.2
+- tempo: 1.05
+- gap: 0.35
+- commaPause: 0.22
+- stopPause: 0.4
 - panic: exaggeration 1.4, cfg 0.3, gain 2
 
 ## Music

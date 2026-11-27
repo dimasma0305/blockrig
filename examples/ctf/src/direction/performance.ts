@@ -7,7 +7,7 @@ import type { WorldState } from "../world/World";
 import { poseAt, groundRig, FEET, type Layer } from "../kit/pose";
 import * as C from "../cast/clips";
 import { clamp01, easeInOut, easeOut, lerp } from "../kit/rng";
-import { BAKERY, SCHOOL, HERO_STREET, PX, VAULT, TERMINAL, BARRIER_Z } from "../world/layout";
+import { BAKERY, SCHOOL, HERO_STREET, PX, VAULT, TERMINAL, BARRIER_Z, LANES } from "../world/layout";
 import { SHOTS } from "../story";
 
 const PI = Math.PI;
@@ -31,7 +31,7 @@ function domePoint(az: number, el: number) { return new THREE.Vector3(PX + Math.
 const HITS = [0.15, 0.32, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9].map((t, i) => ({ t, p: domePoint(-0.7 + (i % 5) * 0.35, 0.35 + (i % 3) * 0.18) }));
 
 export function perform(shot: Shot, local: number, p: number, time: number, cast: Cast): { state: WorldState; focus: THREE.Vector3 } {
-  const s = emptyState(), { hero, baker, kids, pros, crowd, all } = cast;
+  const s = emptyState(), { hero, baker, kids, pros, crowd, all } = cast, walkers = new Set<Person>();
   for (const q of all) { q.rig.object.visible = false; if (q.laptop) q.laptop.visible = !!q.laptop.userData.always; }
   for (const c of hero.rig.ikControls) c.enabled = false;
   tag(hero, "#8,000,000,000", "#ff4d5e");
@@ -39,12 +39,14 @@ export function perform(shot: Shot, local: number, p: number, time: number, cast
   let focus = new THREE.Vector3();
 
   if (street) {
-    // townsfolk walking both ways along the pavements
+    // townsfolk walking both ways along the pavements: one lane per direction (layout.ts LANES) and one speed per
+    // lane, so nobody walks through anybody (npm run collide checks it)
     crowd.forEach((c, i) => {
-      const dir = i % 2 ? 1 : -1, side = i % 4 < 2 ? 1 : -1, speed = 3.2 + (i % 3) * 0.4;
+      const dir = i % 2 ? 1 : -1, side = i % 4 < 2 ? 1 : -1, speed = 3.2 + (i % 4) * 0.25;
       const z = ((((time * speed * -dir + i * 9.3) % 84) + 84) % 84) - 60;
-      place(c, side * (7.6 + (i % 3) * 1.1), z, dir > 0 ? 0 : PI);
+      place(c, side * (dir > 0 ? LANES.outer : LANES.inner), z, dir > 0 ? 0 : PI);
       act(c, [{ clip: C.walk, at: -i * 0.37 }], time);
+      walkers.add(c);
     });
     place(baker, BAKERY.x + 0.9, BAKERY.z, -PI / 2); act(baker, [{ clip: C.idle, at: -0.4 }], time, "happy");
     kids.forEach((k, i) => { place(k, SCHOOL.x + 2.2, SCHOOL.z - 1.4 + i * 2.8, PI / 2 + (i ? -0.3 : 0.3)); act(k, [{ clip: C.idle, at: -i }], time, "grin"); });
@@ -79,7 +81,7 @@ export function perform(shot: Shot, local: number, p: number, time: number, cast
   if (!street) {
     // the plaza: the crowd behind the barrier, the pros in front, the hero among the crowd until s09
     crowd.forEach((c, i) => {
-      const x = PX - 22 + (i % 6) * 8.2 + (i > 5 ? 3 : 0), z = BARRIER_Z + 2.2 + (i > 5 ? 3 : 0);
+      const x = PX - 22 + (i % 6) * 8.2 + (i > 5 ? 3 : 0), z = BARRIER_Z + 2.7 + (i > 5 ? 3 : 0); // an open strip in front of the barrier
       place(c, x, z, PI + (x - PX) * -0.012);
       const react = id === "s12" || id === "s13";
       act(c, react ? [{ clip: id === "s12" ? C.gasp : C.cheer, at: -i * 0.07 }] : [{ clip: C.crowdIdle, at: -i * 0.6 }, { clip: C.lookUp, weight: 0.6 }], time, react ? (id === "s12" ? "shocked" : "laugh") : id === "s08" ? "sad" : "neutral");
@@ -115,9 +117,13 @@ export function perform(shot: Shot, local: number, p: number, time: number, cast
   }
   if (id === "s09") {
     // through the gap in the barrier, to the terminal at the vault door
-    const a = { x: PX + 9, z: BARRIER_Z + 3 }, gap = { x: PX + 0.5, z: BARRIER_Z + 1 }, b = { x: TERMINAL.x, z: TERMINAL.z + 1.4 };
-    const k = easeInOut(clamp01(local / shot.dur)), first = k < 0.4, kk = first ? k / 0.4 : (k - 0.4) / 0.6;
-    const from = first ? a : gap, to = first ? gap : b;
+    // out of the crowd onto the open strip in front of the barrier, along it to the gap, then to the terminal
+    // (a straight line cut through the front row: npm run collide)
+    const path = [{ x: PX + 9, z: BARRIER_Z + 3 }, { x: PX + 8.2, z: BARRIER_Z + 0.9 }, { x: PX + 0.5, z: BARRIER_Z + 0.9 }, { x: TERMINAL.x, z: TERMINAL.z + 1.4 }];
+    const legs = path.slice(1).map((q, i) => Math.hypot(q.x - path[i].x, q.z - path[i].z)), total = legs.reduce((u, v) => u + v, 0);
+    let d = easeInOut(clamp01(local / shot.dur)) * total, leg = 0;
+    while (leg < legs.length - 1 && d > legs[leg]) { d -= legs[leg]; leg++; }
+    const from = path[leg], to = path[leg + 1], kk = clamp01(d / legs[leg]);
     place(hero, lerp(from.x, to.x, kk), lerp(from.z, to.z, kk), facing(from, to)); act(hero, [{ clip: C.walk }], local, "determined");
     s.flicker = 0.4; focus.set(hero.rig.object.position.x, 2.5, hero.rig.object.position.z);
   }
@@ -147,5 +153,17 @@ export function perform(shot: Shot, local: number, p: number, time: number, cast
   }
   for (const q of all) if (q.rig.object.visible) q.rig.updateFace(0);
   void domeTop;
+  // a walker who would walk through someone standing still (the kids, the hero, the baker's customer) steps out of
+  // the shot instead
+  if (street && id !== "s14") {
+    if (id === "s02") walkers.delete(crowd[0]); // the baker's customer stands at the counter
+    const still = all.filter((q) => q.rig.object.visible && !walkers.has(q));
+    for (const c of walkers) {
+      if (!c.rig.object.visible) continue;
+      const a = c.rig.object.position;
+      if (a.x > BAKERY.x - 2 && Math.abs(a.z - BAKERY.z) < 4) { c.rig.object.visible = false; continue; } // the bakery counter
+      if (still.some((q) => q !== c && Math.hypot(q.rig.object.position.x - a.x, q.rig.object.position.z - a.z) < 2.4)) c.rig.object.visible = false;
+    }
+  }
   return { state: s, focus };
 }

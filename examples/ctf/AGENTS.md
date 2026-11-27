@@ -10,11 +10,11 @@ Reels) with **BlockRig** characters (`../..`), a 3D world in **three.js** (React
 |---|---|---|
 | `docs/` | **Source of truth.** `story.md` (shots), `visuals.md` (look bible), `audio.md` (voice, music), `feedback.md` (what the user asked for), `references.md` | you, first, for any change |
 | `src/generated/story.json` | compiled from docs by `npm run docs` | never by hand |
-| `src/kit/` | generic building blocks: timeline, captions, soundtrack, posing, camera recipes, weather, lighting, textures, structures, overlays, debug overlay | improve when a fix helps every video |
+| `src/kit/` | generic building blocks: timeline, captions, soundtrack, posing, camera recipes, weather, lighting, textures, structures, Roblox map renderer, 2D layout plan (Turf), collision probe (Rapier), surface softness, overlays, debug overlay | improve when a fix helps every video |
 | `src/cast/` | characters, wardrobe (Shirt/Pants drawn in code), hair and props, pose clips | per video |
 | `src/world/` | locations, their props, and how weather and daylight apply | per video |
 | `src/direction/` | `performance.ts` (who does what per shot), `camera.ts` (one recipe per shot) | per video |
-| `src/debug/` | Lineup, PoseLab, MaterialBoard, WeatherLab compositions | when adding cast, clips, textures, weather |
+| `src/debug/` | Lineup, PoseLab, MaterialBoard, WeatherLab, PlanLab (layout from above) compositions | when adding cast, clips, textures, weather, layout |
 | `assets/` | Remotion's public folder: `audio/` (generated), `cc0/`, `textures/`, `roblox/` (downloaded, git-ignored), `manifest.json` | via scripts |
 | `scripts/` | docs compiler, voice, setup, asset fetchers, stills, render, preview, checks, new-video | |
 | `.agents/skills/` | how to do each stage well | read the one for the stage you are in |
@@ -36,8 +36,11 @@ npm install
 npm run setup-voice      # once per machine: offline voices (Kokoro, Chatterbox on an NVIDIA GPU)
 npm run docs             # compile + check docs/ (every other command runs it first)
 npm run voice            # narration clips, word timings, music
+# compare the narration with reference shorts (tempo, pauses, pitch, expression): docs/references.md, voice skill
+~/.venvs/chatterbox/Scripts/python scripts/voice/analyze_ref.py out/ref/*.m4a   # then: ... --ours
 npm run check            # voice says the right words, pace, captions, types
-npm run studio           # live preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab
+npm run collide          # Rapier: cameras in walls, hidden faces, characters in props / floating / sunk / stiff on soft seats (-- --roblox)
+npm run studio           # live preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, PlanLab
 npm run stills           # one still per shot -> out/contact-sheet.jpg (DEBUG=1 for the overlay)
 npm run render           # out/<slug>.mp4
 npm run preview          # small MP4 + GIF for sharing
@@ -55,10 +58,12 @@ npm run preview          # small MP4 + GIF for sharing
 8. **Check stills before a full render**, with the debug overlay for framing (faces clear of captions and app buttons).
 9. **Licences.** Commit only original or CC0 content. Roblox catalog items are for local use only (`assets/roblox/`, git-ignored) and never appear in a published or committed video. Posting is the user's job.
 10. **You cannot hear audio.** Use `npm run check` (speech recognition of every take), measure pace, and ask the user to listen.
+11. **Plan, place, check.** Lay every location out on a 2D plan first (`src/kit/plan.ts`, Turf: zones, lots, a stage for each shot, footprints that may not overlap; `world` skill), put characters on surfaces by how those behave (`restOn`: a bed gives way, a floor does not; `materials` skill), and run `npm run collide` before rendering (cameras in walls, hidden faces, characters in props, floating, sunk or stiff; `review` skill).
+
 ## This video
 
 "In this world, everybody plays CTF": the last-ranked player beats the World Final by viewing the page source.
 Neon city at night with rain and a lightning storm; a Vault plaza with a hex force-field dome (`src/world/vfx.ts`:
 tower windows, dome, holograms, glyph rain, beams, particle bursts). Places are in `src/world/layout.ts` (street on
-Z, the plaza far away at x = 400). Characters carry floating rank tags welded above their heads, so close-ups aim
+Z, the plaza far away at x = 400), and the street is laid out on a 2D plan in `src/world/World.ts` (PlanLab shows it). Characters carry floating rank tags welded above their heads, so close-ups aim
 below the head (camera skill). The hero types on the terminal by IK (s10). Read `docs/feedback.md` first.

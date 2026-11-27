@@ -3,7 +3,7 @@
 import { Composition, Folder, Sequence } from "remotion";
 import { Video, type VideoProps } from "./Video";
 import { T, FPS, WIDTH, HEIGHT, TOTAL_FRAMES } from "./story";
-import { Lineup, PoseLab, MaterialBoard, WeatherLab, POSE_SECONDS, WEATHER_SECONDS, WEATHER_PRESET_COUNT } from "./debug/Labs";
+import { Lineup, PoseLab, MaterialBoard, WeatherLab, POSE_SECONDS, WEATHER_SECONDS, WEATHER_PRESET_COUNT, PlanLab } from "./debug/Labs";
 import { ALL } from "./cast/clips";
 
 type ShotProps = { shot: string; debug: boolean };
@@ -23,6 +23,7 @@ export const RemotionRoot: React.FC = () => (
       <Composition id="PoseLab" component={PoseLab} durationInFrames={Math.round(FPS * POSE_SECONDS * Object.keys(ALL).length)} fps={FPS} width={WIDTH} height={HEIGHT} />
       <Composition id="MaterialBoard" component={MaterialBoard} durationInFrames={1} fps={FPS} width={WIDTH} height={HEIGHT} />
       <Composition id="WeatherLab" component={WeatherLab} durationInFrames={Math.round(FPS * WEATHER_SECONDS * WEATHER_PRESET_COUNT)} fps={FPS} width={WIDTH} height={HEIGHT} />
+      <Composition id="PlanLab" component={PlanLab} durationInFrames={2} fps={FPS} width={WIDTH} height={HEIGHT} />
     </Folder>
   </>
 );

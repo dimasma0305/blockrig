@@ -33,31 +33,31 @@ cfg = {"voice": "am_adam", "pitch": 1.35, "exaggeration": 0.9, "cfg": 0.35, "tem
 # ex = Chatterbox exaggeration (emotion strength), cfg = cfg_weight (lower = faster, looser),
 # tempo = time-stretch, gain = loudness in dB vs neutral, fx = extra ffmpeg filters, prompt = which voice sample
 EMOTIONS = {
-    # The narrator stays ONE voice: no pitch shifting or filters per emotion (they made sad lines sound like
-    # another person). Emotion comes from the delivery Chatterbox copies (the mood's voice sample), its
-    # exaggeration and pacing, and tempo and loudness.
-    "neutral": {"ex": cfg["exaggeration"], "cfg": cfg["cfg"], "tempo": 1.0, "gain": 0, "prompt": "neutral"},
-    "happy":   {"ex": 1.0, "cfg": 0.4, "tempo": 1.0, "gain": 0.5, "prompt": "excited"},
-    "excited": {"ex": 1.0, "cfg": 0.38, "tempo": 1.04, "gain": 1.5, "prompt": "excited"},
-    "panic":   {"ex": 1.2, "cfg": 0.32, "tempo": 1.06, "gain": 2.0, "prompt": "excited"},
-    "shocked": {"ex": 0.95, "cfg": 0.4, "tempo": 1.0, "gain": 1.5, "prompt": "neutral"},  # the excited sample pushed shocked lines up to +40% pitch
-    "scared":  {"ex": 1.0, "cfg": 0.3, "tempo": 1.04, "gain": -1, "prompt": "sad"},
-    "sad":     {"ex": 0.45, "cfg": 0.6, "tempo": 0.92, "gain": -2.5, "prompt": "sad"},
-    "serious": {"ex": 0.5, "cfg": 0.55, "tempo": 0.96, "gain": -1, "prompt": "serious"},
-    "smug":    {"ex": 0.75, "cfg": 0.5, "tempo": 0.95, "gain": 0, "prompt": "neutral"},
-    "angry":   {"ex": 1.15, "cfg": 0.4, "tempo": 1.02, "gain": 2.5, "prompt": "excited"},
-    "whisper": {"ex": 0.4, "cfg": 0.55, "tempo": 0.93, "gain": -5, "prompt": "serious"},
+    # The narrator stays ONE person. Every mood clones the SAME voice sample ("neutral"): separate excited / sad /
+    # serious samples made each line sound like a different speaker, and the user could not follow the story.
+    # Emotion comes only from how strongly the line is performed (exaggeration, cfg) plus a little tempo (+-5%)
+    # and loudness. No pitch shifting, no filters, no fast "deadpan" tempo (it made the hook hard to catch).
+    "neutral": {"ex": cfg["exaggeration"], "cfg": cfg["cfg"], "tempo": 1.0, "gain": 0},
+    "flat":    {"ex": 0.45, "cfg": 0.5, "tempo": 1.0, "gain": 0},     # calm, matter-of-fact: a strange rule stated plainly
+    "happy":   {"ex": 1.0, "cfg": 0.4, "tempo": 1.0, "gain": 0.5},
+    "excited": {"ex": 1.05, "cfg": 0.38, "tempo": 1.03, "gain": 1.5},
+    "panic":   {"ex": 1.2, "cfg": 0.32, "tempo": 1.04, "gain": 2.0},
+    "shocked": {"ex": 0.95, "cfg": 0.4, "tempo": 1.0, "gain": 1.5},
+    "scared":  {"ex": 0.9, "cfg": 0.35, "tempo": 1.0, "gain": -1},
+    "sad":     {"ex": 0.5, "cfg": 0.55, "tempo": 0.95, "gain": -2},
+    "serious": {"ex": 0.55, "cfg": 0.5, "tempo": 0.97, "gain": -1},
+    "smug":    {"ex": 0.75, "cfg": 0.5, "tempo": 0.97, "gain": 0},
+    "angry":   {"ex": 1.1, "cfg": 0.4, "tempo": 1.02, "gain": 2.5},
+    "whisper": {"ex": 0.45, "cfg": 0.55, "tempo": 0.95, "gain": -5},
 }
+for e in EMOTIONS.values(): e["prompt"] = "neutral"
 # legacy "panic" block from docs/audio.md tunes the panic emotion
 if cfg.get("panic"):
     pz = cfg["panic"]; EMOTIONS["panic"].update({k2: pz[k1] for k1, k2 in [("exaggeration", "ex"), ("cfg", "cfg"), ("gain", "gain")] if k1 in pz})
 for name, over in (cfg.get("emotions") or {}).items(): EMOTIONS.setdefault(name, dict(EMOTIONS["neutral"])).update(over)
 # the voice samples: our own lines read by Kokoro in each mood (speed and level shape the delivery Chatterbox copies)
-PROMPTS = {  # (text, Kokoro speed): same voice and pitch for every mood; only the reading differs
+PROMPTS = {  # (text, Kokoro speed): the ONE voice sample every line clones (see EMOTIONS)
     "neutral": (cfg["prompt"], 0.95),
-    "excited": ("No way! This is the best day ever! Everybody look, I actually did it! Let's go!", 1.12),
-    "sad": ("I tried my best... and it still wasn't enough. Nobody even noticed. I just sat there... alone.", 0.8),
-    "serious": ("Listen carefully. Tonight, everything changes. There is one chance. And no second try.", 0.87),
 }
 lines = json.load(open(a.lines, encoding="utf8"))
 
@@ -96,9 +96,12 @@ def clarity():
     still gets transcribed (the recogniser guesses from context) but with low probability, so this catches it."""
     if not last_probs: return (0.0, 0.0)
     return (min(last_probs), sum(last_probs) / len(last_probs))
-CLEAR_MIN, CLEAR_MEAN = float(cfg.get("clearMin", 0.45)), float(cfg.get("clearMean", 0.8))
+CLEAR_MIN, CLEAR_MEAN = float(cfg.get("clearMin", 0.6)), float(cfg.get("clearMean", 0.85))  # every word easy to catch
 
-def score(text, heard): return difflib.SequenceMatcher(None, norm(text), norm(" ".join(w for w, _, _ in heard))).ratio()
+def score(text, heard):
+    """How well the take says the script: compared letter by letter with spaces removed, so a word heard split or
+    joined ("bot net" / "botnet", "zero days" / "zero-days") still counts as right."""
+    return difflib.SequenceMatcher(None, "".join(norm(text)), "".join(norm(" ".join(w for w, _, _ in heard)))).ratio()
 
 # the voice samples: Kokoro reading our own text in each mood, pitched like the rest of the narration
 prompts = {}
@@ -147,36 +150,83 @@ def finish(wav, emo, out):
     final, _ = ta.load(out)
     return ta.functional.resample(final, 48000, SR), final.shape[1] / 48000
 
+# punctuation is a promise to the listener: a comma is a short breath, "..." or a full stop inside a line a beat.
+# Takes (especially fast, flat ones) often run straight through them, so the shipped file gets the missing silence.
+COMMA_PAUSE, STOP_PAUSE = float(cfg.get("commaPause", 0.22)), float(cfg.get("stopPause", 0.4))
+def breathe(text, heard, out):
+    """Make every comma / inner stop at least COMMA_PAUSE / STOP_PAUSE long, cutting at the quietest point between
+    the two words. Returns how many pauses were stretched."""
+    wav, sr = ta.load(out)
+    words = words_for(text, heard, wav.shape[1] / sr)
+    cuts = []  # (time, seconds of silence to add)
+    hop = int(0.01 * sr)
+    rms = lambda s: float(wav[:, max(0, s):s + hop].pow(2).mean().sqrt())
+    quiet = 0.03 * float(wav.abs().max())  # what counts as silence (Whisper's word gaps do not: they overlap breaths)
+    for i, w in enumerate(words[:-1]):
+        tok = w["word"]
+        need = STOP_PAUSE if re.search(r"(\.\.\.|…|[.!?])[\"')]*$", tok) else COMMA_PAUSE if re.search(r"[,;:—-][\"')]*$", tok) else 0
+        if not need: continue
+        # the quietest 10 ms around the boundary (word timings are approximate: never cut into a word)
+        a, b = max(0, int((w["end"] - 0.1) * sr)), min(wav.shape[1], int((words[i + 1]["start"] + 0.1) * sr))
+        best, at = None, int(((w["end"] + words[i + 1]["start"]) / 2) * sr)
+        for s in range(a, max(a + 1, b - hop), hop):
+            e = rms(s)
+            if best is None or e < best: best, at = e, s + hop // 2
+        # how much real silence is already there, measured from the audio around that point
+        l = r = at
+        while l - hop > 0 and rms(l - hop) < quiet: l -= hop
+        while r + hop < wav.shape[1] and rms(r) < quiet: r += hop
+        have = (r - l) / sr
+        if have < need: cuts.append((at, need - have))
+    if not cuts: return 0
+    parts, prev = [], 0
+    for at, add in sorted(cuts):
+        parts += [wav[:, prev:at], torch.zeros(wav.shape[0], int(add * sr))]; prev = at
+    parts.append(wav[:, prev:])
+    ta.save(out, torch.cat(parts, 1), sr)
+    return len(cuts)
+
 # the narrator's own pitch, from the neutral sample: a take far from it sounds like another voice (a "spike")
 REF_PITCH = mean_pitch(ta.load(prompt_for("neutral"))[0])
 PITCH_TOL = float(cfg.get("pitchTolerance", 0.18))
 print(f"narrator pitch {REF_PITCH:.0f} Hz (takes within +-{PITCH_TOL * 100:.0f}%)", flush=True)
 
-for L in lines:
-    text = L["text"]
-    mood = L.get("emotion") or ("panic" if text.rstrip().endswith("!") else "neutral")
+def voice_part(text, mood, out):
+    """The best take of `text` in one mood, processed as it ships, written to `out`: ((score, final, seconds,
+    heard words, key), engine). Falls back to Kokoro when no Chatterbox take says every word right."""
     emo = EMOTIONS.get(mood, EMOTIONS["neutral"]); ex, cw = emo["ex"], emo["cfg"]
     need = 0.9 if len(text.split()) >= 12 else 0.95  # every word right (homophones are normalised); only very long lines may miss one
     best, cand = None, f"{tmp}/cand.wav"
-    # every take is processed exactly as it will ship, then checked; keep the best (ties: the longer, less hurried)
-    if len(text.split()) > 2:
-        for take in range(int(cfg.get("takes", 10))):
-            torch.manual_seed(int(hashlib.md5(f"{text}/{take}".encode()).hexdigest()[:8], 16))
-            wav = model.generate(text, audio_prompt_path=prompt_for(emo["prompt"]), exaggeration=ex, cfg_weight=cw)
-            final, dur = finish(wav, emo, cand)
-            heard = transcribe(final); sc = score(text, heard); cmin, cmean = clarity()
-            clear = cmin >= CLEAR_MIN and cmean >= CLEAR_MEAN
-            off = abs(mean_pitch(final) / REF_PITCH - 1) if REF_PITCH else 0
-            # rank: right words first, then on-pitch, then the longer (less hurried) take
-            key = (sc >= need, clear, off <= PITCH_TOL, round(cmean, 2), -off, sc, dur)
-            if best is None or key > best[4]: best = (sc, final, dur, heard, key); shutil.copyfile(cand, L["out"])
-            if sc >= need and clear and off <= PITCH_TOL: break
-    used = "chatterbox"
-    if best is None or best[0] < need:
-        final, dur = finish(kokoro(text, PROMPTS.get(emo["prompt"], PROMPTS["neutral"])[1]), emo, L["out"])
-        heard = transcribe(final); best, used = (score(text, heard), final, dur, heard, None), "kokoro"
+    # every take is processed exactly as it will ship, then checked; keep the best (ties: the longer, less hurried).
+    # Short lines too: Kokoro is a slightly different speaker, so it is only the last resort.
+    short = len(text.split()) <= 2
+    for take in range(int(cfg.get("takes", 16))):
+        torch.manual_seed(int(hashlib.md5(f"{text}/{take}".encode()).hexdigest()[:8], 16))
+        wav = model.generate(text, audio_prompt_path=prompt_for(emo["prompt"]), exaggeration=ex, cfg_weight=cw)
+        final, dur = finish(wav, emo, cand)
+        heard = transcribe(final); sc = score(text, heard); cmin, cmean = clarity()
+        clear = cmin >= CLEAR_MIN and cmean >= CLEAR_MEAN
+        off = abs(mean_pitch(final) / REF_PITCH - 1) if REF_PITCH else 0
+        # rank: right words first, then on-pitch, then the longer (less hurried) take
+        key = (sc >= need, clear, off <= PITCH_TOL, round(cmean, 2), -off, sc, dur)
+        if best is None or key > best[4]: best = (sc, final, dur, heard, key); shutil.copyfile(cand, out)
+        if sc >= need and clear and off <= PITCH_TOL: break
+    # Kokoro only when no take says every word (or, for 1-2 word lines that Chatterbox may garble, says it clearly)
+    if best is None or best[0] < need or (short and not best[4][1]):
+        final, dur = finish(kokoro(text, PROMPTS.get(emo["prompt"], PROMPTS["neutral"])[1]), emo, out)
+        heard = transcribe(final); return (score(text, heard), final, dur, heard, None), "kokoro"
+    return best, "chatterbox"
+
+for L in lines:
+    text = L["text"]
+    mood = L.get("emotion") or ("panic" if text.rstrip().endswith("!") else "neutral")
+    best, used = voice_part(text, mood, L["out"])
     sc, final, duration, heard, _ = best
+    stretched = breathe(text, heard, L["out"])
+    if stretched:  # re-measure what ships: new length and word times (captions follow them)
+        shipped, ssr = ta.load(L["out"]); final = ta.functional.resample(shipped, ssr, SR); duration = shipped.shape[1] / ssr
+        heard = transcribe(final)
     transcribe(final); cmin, cmean = clarity()
     with open(L["out"] + ".json", "w") as f:
         json.dump({"duration": round(duration, 3), "engine": used, "emotion": mood, "match": round(sc, 3), "clarity": [round(cmin, 2), round(cmean, 2)], "pitch": mean_pitch(final), "words": words_for(text, heard, duration)}, f)
-    print(f"{L['id']}  {used:10s} {mood:8s} clear {cmin:.2f}/{cmean:.2f} match {sc:.2f}  {mean_pitch(final):5.0f} Hz  {duration:.2f}s  {text}", flush=True)
+    print(f"{L['id']}  {used:10s} {mood:8s} clear {cmin:.2f}/{cmean:.2f} match {sc:.2f}  {mean_pitch(final):5.0f} Hz  {duration:.2f}s  {'+%d pause ' % stretched if stretched else ''}{text}", flush=True)

@@ -98,7 +98,10 @@ def clarity():
     return (min(last_probs), sum(last_probs) / len(last_probs))
 CLEAR_MIN, CLEAR_MEAN = float(cfg.get("clearMin", 0.6)), float(cfg.get("clearMean", 0.85))  # every word easy to catch
 
-def score(text, heard): return difflib.SequenceMatcher(None, norm(text), norm(" ".join(w for w, _, _ in heard))).ratio()
+def score(text, heard):
+    """How well the take says the script: compared letter by letter with spaces removed, so a word heard split or
+    joined ("bot net" / "botnet", "zero days" / "zero-days") still counts as right."""
+    return difflib.SequenceMatcher(None, "".join(norm(text)), "".join(norm(" ".join(w for w, _, _ in heard)))).ratio()
 
 # the voice samples: Kokoro reading our own text in each mood, pitched like the rest of the narration
 prompts = {}
@@ -194,20 +197,22 @@ def voice_part(text, mood, out):
     emo = EMOTIONS.get(mood, EMOTIONS["neutral"]); ex, cw = emo["ex"], emo["cfg"]
     need = 0.9 if len(text.split()) >= 12 else 0.95  # every word right (homophones are normalised); only very long lines may miss one
     best, cand = None, f"{tmp}/cand.wav"
-    # every take is processed exactly as it will ship, then checked; keep the best (ties: the longer, less hurried)
-    if len(text.split()) > 2:
-        for take in range(int(cfg.get("takes", 10))):
-            torch.manual_seed(int(hashlib.md5(f"{text}/{take}".encode()).hexdigest()[:8], 16))
-            wav = model.generate(text, audio_prompt_path=prompt_for(emo["prompt"]), exaggeration=ex, cfg_weight=cw)
-            final, dur = finish(wav, emo, cand)
-            heard = transcribe(final); sc = score(text, heard); cmin, cmean = clarity()
-            clear = cmin >= CLEAR_MIN and cmean >= CLEAR_MEAN
-            off = abs(mean_pitch(final) / REF_PITCH - 1) if REF_PITCH else 0
-            # rank: right words first, then on-pitch, then the longer (less hurried) take
-            key = (sc >= need, clear, off <= PITCH_TOL, round(cmean, 2), -off, sc, dur)
-            if best is None or key > best[4]: best = (sc, final, dur, heard, key); shutil.copyfile(cand, out)
-            if sc >= need and clear and off <= PITCH_TOL: break
-    if best is None or best[0] < need:
+    # every take is processed exactly as it will ship, then checked; keep the best (ties: the longer, less hurried).
+    # Short lines too: Kokoro is a slightly different speaker, so it is only the last resort.
+    short = len(text.split()) <= 2
+    for take in range(int(cfg.get("takes", 16))):
+        torch.manual_seed(int(hashlib.md5(f"{text}/{take}".encode()).hexdigest()[:8], 16))
+        wav = model.generate(text, audio_prompt_path=prompt_for(emo["prompt"]), exaggeration=ex, cfg_weight=cw)
+        final, dur = finish(wav, emo, cand)
+        heard = transcribe(final); sc = score(text, heard); cmin, cmean = clarity()
+        clear = cmin >= CLEAR_MIN and cmean >= CLEAR_MEAN
+        off = abs(mean_pitch(final) / REF_PITCH - 1) if REF_PITCH else 0
+        # rank: right words first, then on-pitch, then the longer (less hurried) take
+        key = (sc >= need, clear, off <= PITCH_TOL, round(cmean, 2), -off, sc, dur)
+        if best is None or key > best[4]: best = (sc, final, dur, heard, key); shutil.copyfile(cand, out)
+        if sc >= need and clear and off <= PITCH_TOL: break
+    # Kokoro only when no take says every word (or, for 1-2 word lines that Chatterbox may garble, says it clearly)
+    if best is None or best[0] < need or (short and not best[4][1]):
         final, dur = finish(kokoro(text, PROMPTS.get(emo["prompt"], PROMPTS["neutral"])[1]), emo, out)
         heard = transcribe(final); return (score(text, heard), final, dur, heard, None), "kokoro"
     return best, "chatterbox"

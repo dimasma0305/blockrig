@@ -29,14 +29,18 @@ Default (docs/audio.md): `engine: chatterbox`, `voice: am_adam`, `pitch: 1.35`, 
 ## Emotion: say each line the way it means
 
 Every narrated shot has `emotion:` in docs/story.md. The narrator must sound like the line: "Rank... last." is
-**sad** (it was once marked "!" and came out cheerful: never use "!" to mean "emotional"). Each emotion picks a voice
-sample read in that mood (Chatterbox copies its delivery), the exaggeration and pacing, and tempo and volume. **Never
-shift pitch or add filters per emotion**: that made sad lines sound like a different person. `npm run check` flags any
+**sad** (it was once marked "!" and came out cheerful: never use "!" to mean "emotional").
+
+**One narrator, always.** Every line clones the same voice sample; an emotion only changes how strongly the line is
+performed (exaggeration, cfg), its tempo by at most 5%, and its loudness. Separate voice samples per mood (an excited
+reading, a sad reading...) made each line sound like a different speaker and the user could not follow the story;
+a fast "deadpan" tempo made the hook hard to catch. **Never shift pitch, add filters, or use a per-mood sample.** `npm run check` flags any
 clip whose pitch drifts more than 20% from the narrator's median.
 
 | Emotion | Use for | Delivery |
 |---|---|---|
 | neutral | plain set-up lines | base settings |
+| flat | a strange rule or a matter-of-fact line, stated calmly ("In this town, it rains every time someone lies.") | exaggeration 0.45, cfg 0.5, normal tempo (the 1.2x "viral" tempo was too fast to follow) |
 | happy | good news, warm lines | brighter |
 | excited | hype, the hook, wins, lists building up | energetic, a bit faster, louder |
 | panic | lies, chaos, "oh no" | most intense, fast, loud |
@@ -70,3 +74,21 @@ the reference's length.
 Synthesized in `scripts/music.mjs` (no downloads, nothing to credit): mystery, suspense, happy, comedy, sad, action,
 chill, cyber, triumph (add a mood by adding a line to `THEMES`). Set sections in docs/audio.md (`- s04: suspense`). Mixed at 0.2. Never
 chart songs; the user adds trending sounds when posting.
+
+## Measure, don't guess (scripts/voice/analyze_ref.py)
+
+Compare our lines with the user's reference shorts by numbers: words per minute per sentence, pause between
+sentences, median pitch and pitch movement in semitones (docs/references.md has the method and the measured
+viral numbers). Viral narrators: fast inside sentences (200-330 wpm), a 0.35-0.65 s beat between them (`gap`),
+flat lines 2-3 st, lively lines 5-15 st, excited lines up to +50% pitch. Numbers guide, the listener decides: copying
+their speed made our hook too fast, so being understood comes first (clarity bar: every word >= 0.6, mean >= 0.85). `npm run check` allows high-energy lines
+(panic, shocked, excited, angry, happy) 35% above the median; anything else, and anything lower, stays within 20%.
+
+## Punctuation is timing
+
+A comma is a short breath, "..." or a full stop inside a line a beat. Fast and flat takes often run straight
+through them, so after choosing a take the voice script makes every comma at least `commaPause` (0.22 s) and every
+inner "..."/"."/"!"/"?" at least `stopPause` (0.4 s) of real silence (measured from loudness, not Whisper's word
+gaps), cut at the quietest point between the words, and re-times the words for captions. The voice log shows
+"+N pause". Write the pause you want into the line: "In this town, it rains..." gets its breath; "In this town it
+rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).

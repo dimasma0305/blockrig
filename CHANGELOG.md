@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Removed the "Ice Statue" story example (`examples/story`, `docs/story.mp4`); "Everybody Plays CTF" and the video template remain.
+
 - **CurveAnimation checked against Roblox Studio**: a CurveAnimation built and saved in Studio 0.748 decodes key for key, and evaluates to Studio's own values (float curves within 1e-6, rotations within 0.0003°). The blobs and Studio's values are a test fixture (`test/fixtures/studio-curves.json`, with the script that made them).
 
 - **Smaller things**: `createRig({ shadows })` / `rig.setShadows(cast, receive)` (outlines never cast; later parts follow); `rig.clone(over)` rebuilds a rig the same way (welded objects cloned, live face shared unless given); `rig.dispose()` frees what the rig made and leaves your textures and welded props; `rig.update(dt)` runs faces and IK without an Animator; three.js `BufferGeometry` is accepted wherever a parsed mesh is (`meshFromGeometry`); legacy BrickColor BodyColors are read (`BRICK_COLORS`, `brickColorHex`, palette from rbx-dom, MIT).

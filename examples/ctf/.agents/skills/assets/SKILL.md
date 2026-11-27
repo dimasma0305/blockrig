@@ -55,15 +55,23 @@ assetType 41), dynamic heads `Category=1&Keyword=face` (bundles with bundleType 
 There are no free classic face decals: expressions come from dynamic heads (FaceControls), see `facsExpression`.
 
 **Fetch them** (`scripts/fetch-roblox.mjs`, a loop because each item references meshes and textures):
-1. List items in `assets/manifest.json` under `roblox`: `{ "heroHair": { "assetId": 376548738, "kind": "hair" }, "heroShirt": { "assetId": 382537702, "kind": "shirt" }, "boyHead": { "bundle": 949, "kind": "head" } }`.
+1. List items in `assets/manifest.json` under `roblox`: `{ "heroHair": { "assetId": 376548738, "kind": "hair" }, "heroShirt": { "assetId": 382537702, "kind": "shirt" }, "boyHead": { "bundle": 949, "kind": "head" }, "mapHouseA": { "assetId": 317197851, "kind": "map" } }`. Kinds: head, hair, face (face accessories), shirt, pants, map.
 2. `npm run roblox` downloads what it can and writes `assets/roblox/needs.json` for the rest.
 3. Resolve the needs in the browser pane **on an `https://assetdelivery.roblox.com/...` page** (same origin; from roblox.com the request is blocked): `fetch("/v2/assetId/<id>", { credentials: "include", headers: format ? { "Roblox-AssetFormat": format } : {} })` → `locations[0].location`. Bundle contents come from `https://catalog.roblox.com/v1/bundles/<id>/details`, which only works from a roblox.com page. Heads need format `avatar_meshpart_head`.
-4. Merge the `{ key: url }` results into `assets/roblox/locations.json` and run `npm run roblox` again. Repeat until it says "roblox items ready" (three rounds: items, then their meshes/textures/templates, then head meshes).
+4. The script it prints returns one compact line per link (`key c|f sc hash exp hmac`, a third of the full URL's
+   size); save that text as `assets/roblox/locations.txt` (or merge full `{ key: url }` links into
+   `assets/roblox/locations.json`) and run `npm run roblox` again. Repeat until it says "roblox items ready" (three rounds: items, then their meshes/textures/templates, then head meshes).
 
 It writes `assets/roblox/cast.json`; `src/cast/roblox.ts` loads it, `buildCast(rb)` dresses each character (dynamic head,
 hair, shirt, pants), and `act()` turns story faces into FaceControls with BlockRig's `facsExpression`.
 Render with `--roblox` (`node scripts/render.mjs --roblox`, `ROBLOX=1 npm run stills`): the output is
 `out/<slug>-roblox.mp4`, for the user only.
+
+**Free maps** (houses, rooms, streets) come from the Toolbox, not the catalog. Search from a roblox.com page:
+`https://apis.roblox.com/toolbox-service/v1/marketplace/10?keyword=<house|bedroom|street>&includeOnlyVerifiedCreators=true`
+then pick models that are mostly Parts and MeshParts (few unions). Some return 403 until the user takes them into
+their inventory; skip those. A map is ready as soon as its parts are: its meshes and images arrive in later rounds,
+and a few images may be "not approved" by Roblox (harmless). See the `world` skill for placing it.
 
 **Pitfalls:** layered hair (a MeshPart Handle with a WrapLayer, e.g. "Braided Hair") is placed by wrapping around the
 head's cage, not by its attachment: pick classic hair (SpecialMesh or MeshPart without WrapLayer) unless you wire up

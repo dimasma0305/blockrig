@@ -19,6 +19,7 @@ npm run assets         # Kenney kits and Poly Haven textures (CC0) listed in ass
 npm run setup-voice    # once per machine: Kokoro + Chatterbox voices (needs an NVIDIA GPU for Chatterbox)
 npm run voice          # narration from docs/story.md + docs/audio.md, timings, music
 npm run check          # every take says its line, pace, captions
+npm run collide        # Rapier staging check: cameras in walls, hidden faces, people in props or in each other
 npm run stills         # one still per shot + out/contact-sheet.jpg
 npm run render         # out/ctf.mp4
 npm run preview -- --to ../../docs   # docs/ctf.mp4 + docs/ctf-preview.gif
@@ -33,6 +34,12 @@ flag is found. Towers have ledges, rooftop tanks, AC units, antennas, fire escap
 vending machines, benches, hydrants, parked cars, cables overhead and wet, textured asphalt.
 
 ## What it shows off
+
+- **Planned, then checked.** The street is laid out on a 2D plan first (Turf: road, sidewalks, two walking lanes
+  per sidewalk, a stage in front of the bakery and the school), so buildings, props, lamps and cars go only where
+  they fit (`npm run stills -- --comp PlanLab 0 1`). `npm run collide` then checks every 6th frame with Rapier.
+  It found 45 staging mistakes, all now fixed: walkers passing through each other and through props, a dumpster in
+  a walking lane, the hero cutting through the crowd.
 
 | BlockRig feature | Where in the video |
 |---|---|

@@ -2,7 +2,8 @@
 // Built once; update(state, time, focus) poses everything for one frame from the story state.
 import * as THREE from "three";
 import { towerMaterial, domeMaterial, hologramMaterial, glyphAtlas, glyphRainMaterial, beam, burst, glow, searchlight, tick, setFog } from "./vfx";
-import { STREET, BAKERY, SCHOOL, PX, VAULT, TERMINAL, BARRIER_Z } from "./layout";
+import { STREET, LANES, BAKERY, SCHOOL, HERO_STREET, PX, VAULT, TERMINAL, BARRIER_Z } from "./layout";
+import { Plan, rect, circle } from "../kit/plan";
 import { rng } from "../kit/rng";
 import { wires, createWeather, type Weather, type AssetLibrary } from "../kit";
 import { SHOPS, SKYSCRAPERS } from "./assets";
@@ -49,18 +50,39 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
   const asphalt = lib.pbr("asphalt", { repeat: [STREET.roadHalf * 2 / 6, 260 / 6], color: "#5a5d6a" }); asphalt.roughness = 0.35; asphalt.metalness = 0.3; asphalt.envMapIntensity = 1.6;
   const slabs = lib.pbr("concrete", { repeat: [(STREET.walkHalf - STREET.roadHalf) / 4, 260 / 4], color: "#6a6d7a" }); slabs.roughness = 0.5;
   const roadMesh = new THREE.Mesh(new THREE.BoxGeometry(STREET.roadHalf * 2, 0.04, 260), asphalt); roadMesh.position.set(0, 0.005, -60); roadMesh.receiveShadow = true; street.add(roadMesh);
-  for (const s of [-1, 1]) boxAt(street, STREET.walkHalf - STREET.roadHalf, 0.25, 260, s * (STREET.roadHalf + STREET.walkHalf) / 2, 0.12, -60, slabs);
+  for (const s of [-1, 1]) boxAt(street, STREET.walkHalf - STREET.roadHalf, 0.25, 260, s * (STREET.roadHalf + STREET.walkHalf) / 2, 0.12, -60, slabs).userData.label = "sidewalk";
   for (let z = 30; z > -190; z -= 6) boxAt(street, 0.25, 0.03, 2.6, 0, 0.02, z, neon("#ffd166"), false);
   for (const s of [-1, 1]) boxAt(street, 0.12, 0.04, 260, s * (STREET.roadHalf - 0.3), 0.03, -60, neon(s < 0 ? "#19e3c4" : "#ff2e88"), false);
 
+  // ---- the 2D plan (src/kit/plan.ts, Turf) before anything is placed: road and sidewalks, and a stage in front of
+  // the bakery and in front of the school and the hero's spot (where the s01-s06 cameras stand and people act).
+  // Buildings, props, lamps and cars go only where they fit; PlanLab draws it from above.
+  const plan = new Plan(), Z0 = 30, Z1 = -190, midZ = (Z0 + Z1) / 2, len = Z0 - Z1, kerb = STREET.roadHalf + 1.5;
+  plan.zone("road", rect(0, midZ, STREET.roadHalf * 2, len), "#555");
+  for (const s of [-1, 1]) plan.zone(`sidewalk${s > 0 ? "R" : "L"}`, rect(s * (STREET.roadHalf + STREET.walkHalf) / 2, midZ, STREET.walkHalf - STREET.roadHalf, len), "#bbb");
+  // the townsfolk's walking lanes: nothing stands in them (they would walk through it)
+  for (const s of [-1, 1]) for (const lane of ["inner", "outer"] as const) plan.zone(`lane${s > 0 ? "R" : "L"}-${lane}`, rect(s * LANES[lane], midZ, LANES.width, len), "#5dade2");
+  const stage = (name: string, x0: number, x1: number, z0: number, z1: number) => plan.zone(name, rect((x0 + x1) / 2, (z0 + z1) / 2, Math.abs(x1 - x0), Math.abs(z1 - z0)), "#f2c94c");
+  stage("stage-bakery", kerb, STREET.buildingsAt - 0.2, BAKERY.z - 8, BAKERY.z + 8);
+  stage("stage-school-hero", -(STREET.buildingsAt - 0.2), -kerb, SCHOOL.z - 12, HERO_STREET.z + 5);
+  // the two set pieces first (their own fronts are the stages), so the street's buildings make room for them
+  plan.place("bakery", rect(BAKERY.x + 4.2, BAKERY.z, 6, 9), { force: true, except: ["stage-bakery"], color: "#9b59b6" });
+  plan.place("school", rect(SCHOOL.x - 6, SCHOOL.z, 8, 16), { force: true, except: ["stage-school-hero"], color: "#9b59b6" });
+
   // ---- buildings along both sides (Kenney City Kit Commercial, CC0): shops near the street, skyscrapers further
   // in; neon edges on top and holo billboards keep the CTF look. Kenney's daytime colours are darkened for night.
+  // A building that would overlap the bakery or the school steps back behind it (a city backdrop), or is left out.
   const billboards = ["CTF WORLD FINAL // TONIGHT", "pwn or be pwned", "flag{n0t_th1s_0ne}", "RANKINGS LIVE", "SHELLS 2 FOR 1", "sudo make me a sandwich"];
   const night = new Set<THREE.Material>();
   for (const side of [-1, 1]) for (let z = 26, i = 0; z > -190; i++) {
     const tall = z < -40 || r() < 0.35, name = tall ? SKYSCRAPERS[Math.floor(r() * SKYSCRAPERS.length)] : SHOPS[Math.floor(r() * SHOPS.length)];
     const b = lib.model(name, { scale: tall ? 11 + r() * 3 : 10, shadows: false }), size = b.userData.size as THREE.Vector3;
-    const along = size.x, deep = size.z, h = size.y, x = side * (STREET.buildingsAt + deep / 2 + r() * 1.5), zc = z - along / 2;
+    const along = size.x, deep = size.z, h = size.y, zc = z - along / 2;
+    let x = side * (STREET.buildingsAt + deep / 2 + r() * 1.5);
+    if (!plan.place(`building${side > 0 ? "R" : "L"}${i}`, rect(x, zc, deep, along))) {
+      x += side * 8; // behind the set piece
+      if (!plan.place(`building${side > 0 ? "R" : "L"}${i}`, rect(x, zc, deep, along))) { z -= along + 1.5 + r() * 2.5; continue; }
+    }
     b.position.set(x, 0, zc); b.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2; street.add(b);
     b.traverse((o: any) => { if (o.isMesh && !night.has(o.material)) { night.add(o.material); o.material.color.multiplyScalar(0.45); o.material.envMapIntensity = 0.6; } });
     const edge = [neon("#19e3c4"), neon("#ff2e88"), neon("#ffd166")][(i + (side > 0 ? 1 : 0)) % 3];
@@ -74,18 +96,26 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
   }
   // street lights (Kenney City Kit Roads) with glows
   for (let z = 22; z > -120; z -= 14) for (const s of [-1, 1]) {
+    if (!plan.place(`light${s > 0 ? "R" : "L"}${z}`, circle(s * (STREET.roadHalf + 0.8), z, 0.35, 8), { except: [`sidewalk${s > 0 ? "R" : "L"}`], color: "#f1c40f" })) continue;
     const l = lib.model("streetLight", { scale: 12, shadows: false }); l.position.set(s * (STREET.roadHalf + 0.8), 0.25, z); l.rotation.y = s < 0 ? -Math.PI / 2 : Math.PI / 2; street.add(l);
     const gl = glow(s < 0 ? "#7fe9ff" : "#ff7ccf", 6, 0.55); gl.position.set(s * (STREET.roadHalf - 0.6), 7, z); street.add(gl);
   }
-  // street props (Kenney City Kit Roads: dumpsters, cones, traffic lights, signs), clear of the bakery, the school and
-  // the hero's spot; parked cars (Kenney Car Kit) further down; cables overhead
+  // street props (Kenney City Kit Roads: dumpsters, cones, traffic lights, signs) on the sidewalks, wherever they fit
+  // (never on a stage); parked cars (Kenney Car Kit) further down, clear of each other; cables overhead
   const props = ["dumpster", "cone", "trafficLight", "signStreet", "barrier"];
   for (let z = 24, k = 0; z > -130; z -= 7 + r() * 5, k++) for (const s of [-1, 1]) {
-    if (s > 0 && z < 2 && z > -14) continue; if (s < 0 && z < 6 && z > -34) continue;
     if (r() < 0.35) continue;
-    const f = lib.model(props[Math.floor(r() * props.length)], { scale: 10, shadows: false }); f.position.set(s * (STREET.walkHalf - 1.4), 0.25, z); f.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; street.add(f);
+    // its real footprint (the model's measured size, turned to face the street), just beyond the outer lane
+    const name = props[Math.floor(r() * props.length)], f = lib.model(name, { scale: 10, shadows: false }), sz = f.userData.size as THREE.Vector3;
+    const px = s * (LANES.outer + LANES.width / 2 + 0.3 + sz.z / 2);
+    if (!plan.place(`${name}${s > 0 ? "R" : "L"}${k}`, rect(px, z, sz.z, sz.x), { except: [`sidewalk${s > 0 ? "R" : "L"}`], color: "#e67e22" })) continue;
+    f.position.set(px, 0.25, z); f.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; street.add(f);
   }
-  for (let z = -45; z > -130; z -= 26) for (const s of [-1, 1]) { const c = lib.model(["sedan", "taxi", "police", "suv"][Math.floor(r() * 4)], { scale: 3.5 }); c.position.set(s * (STREET.roadHalf - 2.6), 0, z + s * 6); c.rotation.y = s > 0 ? Math.PI : 0; street.add(c); }
+  for (let z = -45; z > -130; z -= 26) for (const s of [-1, 1]) {
+    const cx = s * (STREET.roadHalf - 2.6), cz = z + s * 6;
+    if (!plan.place(`car${s > 0 ? "R" : "L"}${z}`, rect(cx, cz, 4.4, 9.5), { except: ["road"], color: "#e67e22" })) continue;
+    const c = lib.model(["sedan", "taxi", "police", "suv"][Math.floor(r() * 4)], { scale: 3.5 }); c.position.set(cx, 0, cz); c.rotation.y = s > 0 ? Math.PI : 0; street.add(c);
+  }
   for (let z = 14; z > -150; z -= 18) { const y = 15 + r() * 7; street.add(wires([new THREE.Vector3(-STREET.buildingsAt, y, z), new THREE.Vector3(STREET.buildingsAt, y + (r() - 0.5) * 3, z - 4)], 2.2, "#0a0a0f")); }
 
   // glyph rain behind the city
@@ -93,7 +123,8 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
   const rainP = new THREE.Mesh(new THREE.PlaneGeometry(520, 300), glyphRainMaterial(atlas, "#ff2e88")); rainP.position.set(PX, 120, -260); root.add(rainP);
 
   // ---- bakery: storefront, awning, counter with bread, a receipt hologram ----
-  const bakery = new THREE.Group(); bakery.position.set(BAKERY.x, 0, BAKERY.z); street.add(bakery);
+  const bakery = new THREE.Group(); bakery.position.set(BAKERY.x, 0, BAKERY.z); bakery.userData.label = "bakery"; street.add(bakery);
+  plan.place("bakery counter", rect(BAKERY.x - 0.4, BAKERY.z, 1.1, 5.6), { force: true, except: ["stage-bakery", "sidewalkR", "laneR-outer"], color: "#9b59b6" }); // juts onto the sidewalk: walkers step out there
   boxAt(bakery, 6, 6, 9, 4.2, 3, 0, std("#3a2416", { roughness: 0.8 }));
   boxAt(bakery, 0.2, 3.4, 7.4, 1.1, 2.2, 0, new THREE.MeshStandardMaterial({ color: "#ffcf8a", emissive: new THREE.Color("#ff9e4a"), emissiveIntensity: 0.9 }), false); // lit shop window
   for (let i = 0; i < 9; i++) boxAt(bakery, 1.4, 0.12, 0.85, 0.6, 5.0 - i * 0.0, -4 + i * 0.95 + 0.45, std(i % 2 ? "#f4f1ea" : "#e63946"), false); // striped awning
@@ -108,7 +139,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
   const receipt = holo(bakery, receiptTex, 1.5, 1.9, "#39ff88", -1.0, 3.6, 2.0, -Math.PI / 2 + 0.5);
 
   // ---- school: building, a glitching sign, the SQL hologram ----
-  const school = new THREE.Group(); school.position.set(SCHOOL.x, 0, SCHOOL.z); street.add(school);
+  const school = new THREE.Group(); school.position.set(SCHOOL.x, 0, SCHOOL.z); school.userData.label = "school"; street.add(school);
   boxAt(school, 8, 11, 16, -6, 5.5, 0, std("#24324f", { roughness: 0.7 }));
   for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) boxAt(school, 0.2, 2, 3, -1.9, 3 + j * 4, -5 + i * 5, new THREE.MeshStandardMaterial({ color: "#9fd3ff", emissive: new THREE.Color("#4ab3ff"), emissiveIntensity: 0.7 }), false);
   const schoolTex = canvasTex(1024, 256, (g) => neonText(g, "SCH00L", 512, 128, 150, "#7bff8a"));
@@ -139,7 +170,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
   const lights: THREE.Mesh[] = [];
   for (const [x, z] of [[-40, -10], [40, -10], [-30, 30], [30, 30]]) { const s = searchlight(); s.position.set(x, 0.5, z); plaza.add(s); lights.push(s); }
   // the Vault: a dark monolith with glowing seams and a two-part door facing +Z
-  const vault = new THREE.Group(); vault.position.set(0, 0, VAULT.z); plaza.add(vault);
+  const vault = new THREE.Group(); vault.position.set(0, 0, VAULT.z); vault.userData.label = "vault"; plaza.add(vault);
   boxAt(vault, 12, 70, 12, 0, 35, 0, std("#151824", { roughness: 0.35, metalness: 0.8 }));
   for (const y of [8, 20, 34, 50, 66]) boxAt(vault, 12.2, 0.25, 12.2, 0, y, 0, neon("#19e3c4"), false);
   boxAt(vault, 0.3, 70, 12.2, 6.05, 35, 0, neon("#ff2e88"), false); boxAt(vault, 0.3, 70, 12.2, -6.05, 35, 0, neon("#ff2e88"), false);
@@ -153,7 +184,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
   const boardP = holo(plaza, boardTex, 64, 40, "#ffd60a", 0, 62, -100);
   void boardP;
   // the public terminal at the vault door
-  const term = new THREE.Group(); term.position.set(TERMINAL.x - PX, 0, TERMINAL.z); plaza.add(term);
+  const term = new THREE.Group(); term.position.set(TERMINAL.x - PX, 0, TERMINAL.z); term.userData.label = "terminal"; plaza.add(term);
   boxAt(term, 1.6, 2.4, 1.0, 0, 1.2, 0, std("#1b1f2c", { roughness: 0.3, metalness: 0.7 }));
   boxAt(term, 1.7, 0.08, 1.1, 0, 2.44, 0.1, std("#2a3044", { metalness: 0.6 }));
   const keys = boxAt(term, 1.3, 0.05, 0.5, 0, 2.5, 0.3, new THREE.MeshStandardMaterial({ color: "#222", emissive: new THREE.Color("#19e3c4"), emissiveIntensity: 0.3 }), false);
@@ -172,9 +203,16 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
   screen.position.set(0, 3.15, -0.1); screen.rotation.x = -0.25; term.add(screen);
   const screenGlow = glow("#19e3c4", 3.5, 0.35); screenGlow.position.set(0, 3.1, 0.2); term.add(screenGlow);
 
-  // ---- drones, beams and bursts ----
+  // the plaza in the plan too (its own area, far off on +X): the terminal's stage must stay outside the dome
+  plan.area("plaza", circle(PX, VAULT.z + 10, 80, 40), "#58a55c");
+  plan.zone("dome", circle(PX, VAULT.z, VAULT.radius, 48), "#19e3c4");
+  plan.place("vault", rect(PX, VAULT.z, 12, 12), { force: true, except: ["dome"], color: "#9b59b6" });
+  plan.zone("stage-terminal", circle(TERMINAL.x, TERMINAL.z + 3, 3, 16), "#f2c94c");
+  plan.place("terminal", rect(TERMINAL.x, TERMINAL.z, 1.6, 1.0), { except: ["stage-terminal"], color: "#9b59b6" });
+
+  // ---- drones, beams and bursts (moving: not colliders for npm run collide) ----
   const droneGeo = new THREE.BoxGeometry(0.9, 0.25, 0.9), droneMat = std("#1a1a22", { metalness: 0.7, roughness: 0.3 });
-  const drones = Array.from({ length: 22 }, (_, i) => { const d = new THREE.Group(); d.add(new THREE.Mesh(droneGeo, droneMat)); const eye = glow(i % 2 ? "#ff2e88" : "#ff4d5e", 1.8, 0.9); d.add(eye); plaza.add(d); d.visible = false; return d; });
+  const drones = Array.from({ length: 22 }, (_, i) => { const d = new THREE.Group(); d.add(new THREE.Mesh(droneGeo, droneMat)); const eye = glow(i % 2 ? "#ff2e88" : "#ff4d5e", 1.8, 0.9); d.add(eye); d.userData.noCollide = true; plaza.add(d); d.visible = false; return d; });
   const beams = Array.from({ length: 5 }, (_, i) => { const b = beam(i === 4 ? "#ffffff" : "#ff2e88", i === 4 ? 0.45 : 0.22); plaza.add(b); b.visible = false; return b; });
   const sparks = Array.from({ length: 6 }, (_, i) => { const s = burst(90, { origin: new THREE.Vector3(), speed: 9, life: 0.7, size: 0.5, colours: ["#ffffff", "#ff2e88", "#ffd60a"], seed: 100 + i, gravity: -14 }); plaza.add(s); return s; });
   const shards = burst(700, { origin: new THREE.Vector3(0, 10, VAULT.z), speed: 18, life: 2.2, size: 0.9, colours: ["#19e3c4", "#7ff5ff", "#ffffff"], seed: 7, gravity: -9, spread: 0.6, up: 6 });
@@ -190,7 +228,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
   const spillA = new THREE.PointLight("#19e3c4", 40, 30, 1.6), spillB = new THREE.PointLight("#ff2e88", 40, 30, 1.6); root.add(spillA, spillB);
   // weather: rain and splashes around the camera, a lightning flash light and sky flash
   const weather = createWeather();
-  root.add(weather.root);
+  weather.root.userData.noCollide = true; root.add(weather.root);
   const flashLight = new THREE.DirectionalLight("#d6e2ff", 0); root.add(flashLight, flashLight.target);
   const sky = new THREE.Color("#060a1e"), skyFlash = new THREE.Color("#8d9bd6");
 
@@ -230,6 +268,6 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
     flag.visible = s.vaultOpen > 0.2; flag.position.y = 4 + s.vaultOpen * 3; flag.scale.setScalar(0.4 + s.vaultOpen);
     const key = `${s.screen}:${s.screenReveal > 0 ? 1 : 0}`; if (key !== screenState) { screenState = key; drawScreen(s.screen, s.screenReveal); }
   }
-  return { root, update, screenTex };
+  return { root, update, screenTex, plan };
 }
 

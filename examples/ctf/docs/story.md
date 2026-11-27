@@ -21,7 +21,7 @@ size: 1080x1920
 
 - captions: IN THIS *WORLD*, | EVERYBODY PLAYS *CTF*.
 - action: crane down past the sky scoreboard into the busy neon street; people walk, rank tags floating over them
-- emotion: excited
+- emotion: flat
 - camera: high crane down from the scoreboard to street level
 - weather: drizzle
 - time: night

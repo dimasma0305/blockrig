@@ -1,7 +1,7 @@
 // Collision check with Rapier (`npm run collide`): the world's solid things become Rapier colliders, and every
 // sampled frame is checked for staging mistakes a viewer would notice:
 //   camera-inside   the camera is inside a wall or prop (the frame goes blank or shows a wall's back)
-//   hidden          a character in frame is hidden from the camera by a wall or prop
+//   hidden          a character the viewer looks at (mid-frame, within 30 studs) is hidden by a wall or prop
 //   inside          a character's torso is inside a wall, prop or furniture
 //   floating/sunk   a character's feet (or seated hips) are above, or deeper than the surface's softness into, what is
 //                   below (kit/surfaces.ts: a bed or sofa gives ~0.3 studs, a floor nothing)
@@ -77,9 +77,11 @@ export function createProbe(R: R, root: THREE.Object3D) {
         if (!c.rig.object.visible || !c.rig.object.parent) continue;
         const head = c.rig.jointPosition("Neck").add(new THREE.Vector3(0, 0.6, 0)), hip = c.rig.jointPosition("LowerTorso" as any) ?? c.rig.object.position.clone();
         if (cam.distanceTo(head) > 90) continue;
-        const ndc = head.clone().project(camera), onScreen = Math.abs(ndc.x) < 1 && Math.abs(ndc.y) < 1 && ndc.z < 1;
-        // hidden: something solid between the camera and the face
-        if (onScreen && !inCam) {
+        const ndc = head.clone().project(camera);
+        // hidden: something solid between the camera and a face the viewer looks at (in the middle of the frame and
+        // within 30 studs); a background extra passing behind a lamp post for a moment is normal
+        const watched = Math.abs(ndc.x) < 0.7 && Math.abs(ndc.y) < 0.85 && ndc.z < 1 && cam.distanceTo(head) < 30;
+        if (watched && !inCam) {
           const d = head.clone().sub(cam), dist = d.length(), h = ray(cam, d.normalize(), dist - 0.9);
           if (h) out.push({ kind: "hidden", who: c.name, what: h.name, amount: +(dist - h.toi).toFixed(1) });
         }

@@ -42,7 +42,8 @@ const still = async (name, frame) => {
   return output;
 };
 
-if (compId !== "Story") { await still(compId, Math.min(composition.durationInFrames - 1, Number(only[0] ?? 0))); process.exit(0); }
+// other compositions: the frames given (`--comp MapLab 0 70 130`), frame 0 by default
+if (compId !== "Story") { for (const f of only.length ? only : ["0"]) await still(only.length > 1 ? `${compId}-${f}` : compId, Math.min(composition.durationInFrames - 1, Number(f))); process.exit(0); }
 const picks = only.length ? only.map((a) => { const [id, at] = a.split("@"); return { s: shots.find((x) => x.id === id), at: at ? Number(at) : 0.6 }; }).filter((p) => p.s) : shots.map((s) => ({ s, at: 0.6 }));
 const files = [];
 for (const { s, at } of picks) files.push(await still(only.length && at !== 0.6 ? `${s.id}@${at}` : s.id, Math.min(composition.durationInFrames - 1, Math.round((s.start + s.dur * at) * composition.fps))));

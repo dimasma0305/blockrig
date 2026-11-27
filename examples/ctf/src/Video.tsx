@@ -1,21 +1,23 @@
 // The video: a ThreeCanvas with the neon world, the cast and the camera; the shot's weather (rain, lightning);
 // glitch cuts, scanlines and a vignette; captions; narration and music; the debug overlay when { debug: true }.
-import { useMemo } from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
+import { useEffect, useMemo, useState } from "react";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, delayRender, continueRender, cancelRender } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Captions, Soundtrack, Vignette, Scanlines, GlitchCut, LightningFlash, DebugOverlay, useAssetLibrary, type AssetLibrary } from "./kit";
 import { ASSETS } from "./world/assets";
+import { createProbe, loadRapier } from "./kit/collide";
 import { T, weatherAt } from "./story";
 import { buildCast } from "./cast/characters";
 import { buildWorld } from "./world/World";
 import { perform } from "./direction/performance";
 import { cameraFor, applyCamera } from "./direction/camera";
 
-export type VideoProps = { debug?: boolean };
+// collide: log staging problems per frame (npm run collide)
+export type VideoProps = { debug?: boolean; collide?: boolean };
 
-function Scene({ lib }: { lib: AssetLibrary }) {
+function Scene({ lib, rapier }: { lib: AssetLibrary; rapier: any }) {
   const frame = useCurrentFrame(), time = frame / T.FPS;
   const { camera, gl, scene } = useThree() as any;
   // straight to the canvas with AgX tone mapping and soft shadows (an EffectComposer blanks Remotion's frames)
@@ -27,6 +29,8 @@ function Scene({ lib }: { lib: AssetLibrary }) {
   applyCamera(camera, cameraFor(shot, p, local, cast), time);
   camera.updateMatrixWorld(true);
   world.update(state, time, focus, { weather: weatherAt(shot, p), local, camera });
+  const probe = useMemo(() => (rapier ? createProbe(rapier, world.root) : null), [rapier, world]);
+  if (probe) console.log("COLLIDE " + JSON.stringify({ frame, shot: shot.id, issues: probe.check(camera, cast.all) }));
   return (
     <>
       <primitive object={world.root} />
@@ -40,15 +44,24 @@ function Lightning() {
   return <LightningFlash strikes={weatherAt(shot, p).lightning} local={local} />;
 }
 
-export const Video: React.FC<VideoProps> = ({ debug }) => {
+/** Rapier for the collision check: undefined while loading, null when off. */
+function useRapier(enabled: boolean) {
+  const [r, setR] = useState<any>(enabled ? undefined : null);
+  const [handle] = useState(() => (enabled ? delayRender("Loading Rapier") : null));
+  useEffect(() => { if (handle !== null) loadRapier().then((x) => { setR(x); continueRender(handle); }).catch((e) => cancelRender(e)); }, [handle]);
+  return r;
+}
+
+export const Video: React.FC<VideoProps> = ({ debug, collide }) => {
   const { width, height } = useVideoConfig();
   const lib = useAssetLibrary(ASSETS); // downloaded models and textures, loaded before the canvas mounts
+  const rapier = useRapier(!!collide);
   return (
     <AbsoluteFill style={{ background: "#060a1e" }}>
-      {lib && <ThreeCanvas width={width} height={height} shadows dpr={1}
+      {lib && rapier !== undefined && <ThreeCanvas width={width} height={height} shadows dpr={1}
         gl={{ antialias: true, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
         camera={{ fov: 50, near: 0.05, far: 1200, position: [0, 10, 30] }}>
-        <Scene lib={lib} />
+        <Scene lib={lib} rapier={rapier} />
       </ThreeCanvas>}
       <Lightning />
       <Scanlines alpha={0.1} />

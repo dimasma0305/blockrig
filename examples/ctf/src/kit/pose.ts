@@ -41,6 +41,9 @@ export function groundRig(rig: any, ground: number, contacts: [string, number][]
   for (const [j, d] of contacts) { rig.jointPosition(j, v); lowest = Math.min(lowest, v.y - d * s); }
   rig.object.position.y += ground - lowest;
   rig.object.updateMatrixWorld(true);
+  // where the character rests (feet, or hips on a seat): the collision check looks for a surface right there
+  let cx = 0, cz = 0; for (const [j] of contacts) { rig.jointPosition(j, v); cx += v.x / contacts.length; cz += v.z / contacts.length; }
+  rig.object.userData.contact = { ground, x: cx, z: cz };
 }
 export const FEET: [string, number][] = [["LeftFoot", 0.3], ["RightFoot", 0.3]];
 export const KNEEL: [string, number][] = [["LeftFoot", 0.3], ["RightFoot", 0.3], ["RightLowerLeg", 0.5], ["LeftLowerLeg", 0.5]];
