@@ -33,6 +33,7 @@ export function person(name: string, o: {
     if (rb.faces && !rb.head) {
       const made = new Map<RobloxHair, THREE.Object3D>();
       faceSets = Object.fromEntries(Object.entries(rb.faces).map(([emotion, items]) => [emotion, items.filter(Boolean).map((f) => {
+        // (a face decal's white plate is made transparent when it loads: src/cast/roblox.ts faceTexture)
         if (!made.has(f)) { const m = rig.addAccessory(f.mesh, { attachment: f.attachment, map: f.map }); m.visible = false; made.set(f, m); }
         return made.get(f)!;
       })]));
@@ -60,7 +61,7 @@ export function plate() {
 }
 
 export function buildCast(rb: RobloxCast | null = null): Cast {
-  // Roblox items (local --roblox renders): anime face accessories per emotion, anime hair, classic clothing
+  // Roblox items (the default once downloaded): anime face accessories per emotion, anime hair, classic clothing
   const F = (...names: string[]) => names.map((n) => rb?.faces[n]).filter(Boolean) as RobloxHair[];
   const boyFaces = () => ({ neutral: F("faceAnime"), happy: F("faceFang"), grin: F("faceFang"), laugh: F("faceFang"), smug: F("faceFang"), wink: F("faceFang"),
     embarrassed: F("faceAnime"), determined: F("faceRanker"), angry: F("faceRanker"), furious: F("faceRanker"), shocked: F("facePotato"), scared: F("facePotato"), sad: F("faceCrying"), hurt: F("faceCrying") });

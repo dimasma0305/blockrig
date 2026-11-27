@@ -9,13 +9,13 @@ undone later. One line per item: date, what they said, what we did, where.
 - The voice needs intonation, not a flat read; lines with "!" should sound panicked. → Chatterbox engine with `panic` settings.
 - The narrator must sound like the meaning of each line ("Rank... last" said happily was wrong). → `emotion:` per shot (sad, excited, shocked, smug...), with mood-specific voice samples.
 - Use online assets (models, environment, weather, clouds, sun, birds, roads, lamps, wood, grass, faces, clothes, hair) instead of reinventing them in code. → assets-first rule in AGENTS.md and the skills.
-- Use real Roblox items (expressions, clothes, hair) where possible → local Roblox mode: dynamic heads with FaceControls expressions, catalog hair, shirts, pants (`--roblox`; never published).
+- Use real Roblox items (expressions, clothes, hair) where possible → Roblox mode (the default render): dynamic heads with FaceControls expressions, catalog hair, shirts, pants (`--roblox`; never published).
 - Preferred narrator: Kokoro `am_adam`, pitched 1.35, as the voice sample for Chatterbox.
 - Characters must not look plain: real clothes, hair, accessories, an accent colour each. → look skill.
 - Worlds need weather and structure, not empty boxes: houses with roofs, windows, fences, trees, lamps, power lines; rain/snow/fog/lightning per shot. → world skill, kit/weather.ts, kit/structures.ts.
 - Every surface needs a texture (road, sidewalk, bed, lamp, walls...). → materials skill, kit/textures.ts.
 - Body parts must not poke through layered clothing. → BlockRig HSR (on by default).
-- Use visually attractive, good-quality assets, like popular Roblox story channels (girl and boy with anime faces, real hair, detailed houses and rooms). → local Roblox mode: anime face accessories, free Toolbox maps for the house and the bedroom (`buildRobloxMap`).
+- Use visually attractive, good-quality assets, like popular Roblox story channels (girl and boy with anime faces, real hair, detailed houses and rooms). → Roblox items (default): anime face accessories, free Toolbox maps for the house and the bedroom (`buildRobloxMap`).
 - Roads must run along the street, not sideways. → road tiles turned π/2 in World.ts.
 - Every word of the narration must be clear (e.g. "in this town"). → voice takes need per-word clarity ≥0.45 and stricter word match.
 - Pasted a transcription of "Numbers" (94 bpm, Db / Bbm / A-aug arpeggios, ~451 Hz tuning) → `quirky-arp`: same tempo, tuning, chords and texture, our own arpeggio order and top line (default).
@@ -25,6 +25,8 @@ undone later. One line per item: date, what they said, what we did, where.
 - Music must be easy to remember and to echo, brainrot; a full piano tune was "too complex" → `brainrot` earworm: 4-note chant hook, sung, repeated, loudest in the mix.
 - "Memory" record music was "not good"; wanted piano, brainrot music → original `goofy-piano` / `sneaky-piano` themes (default from now on).
 - Background music like "Everywhere at the End of Time" (copyrighted, so not used) → original `memory` / `memory-faded` themes: a worn 1930s ballroom record far away.
+- Premium, good Roblox assets: most-favourited hair and outfits (premium UGC included), not plain free basics → new cast items; face plates made transparent so faces read like decals.
+- Use Roblox assets freely: Roblox allows avatars and catalog items in (monetized) videos → the Roblox version is the default render; files stay git-ignored (`npm run roblox`).
 - Faces, hair and bodies like https://www.youtube.com/shorts/Xd_yEnAdiGo; shade, texture, lighting and sky like https://www.youtube.com/shorts/wVjP5B-94MM. → kit look: ACES Filmic, strong warm low sun, little fill, crisp clear-day fog, grain on map surfaces, pale skin, `avatarAmbient` on characters; low cameras show the sky (look, world, camera skills).
 - Town layout must be realistic: objects placed by rules, not overlapping. → 2D plan with Turf (kit/plan.ts): zones, lots, footprints, scatter/along; PlanLab shows it.
 - The narrator sounded like different people from line to line, and was hard to follow. → one voice sample for every mood (emotion = performance strength, tempo within 5%); hook calm at normal speed; stricter clarity bar. Never per-mood voice samples.

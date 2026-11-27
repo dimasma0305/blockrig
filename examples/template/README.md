@@ -22,10 +22,10 @@ npm run stills    # out/contact-sheet.jpg
 npm run render    # out/<slug>.mp4
 ```
 
-For a **local** version with real Roblox items (free official dynamic heads with expressions, anime face
-accessories, hair, shirts, pants, and free Toolbox maps for the house and bedroom;
-signed in to Roblox in the browser pane): `npm run roblox` (see the assets skill), then `node scripts/render.mjs --roblox`
-→ `out/<slug>-roblox.mp4`. Never post or commit that one.
+With real Roblox items (dynamic heads with expressions, anime face accessories, hair, shirts, pants, and free
+Toolbox maps for the house and bedroom), signed in to Roblox in the browser pane: `npm run roblox` (see the assets
+skill). Renders then use them by default (`--no-roblox` for an all-original/CC0 cut). Roblox allows its avatars and
+catalog items in videos, monetized too; the downloaded files stay git-ignored.
 
 The sample story, "The Rain Knows" (*In this town, it rains every time someone lies*), shows every system: a suburban
 street and bedroom built from downloaded CC0 assets (Kenney houses, roads, cars, furniture; Poly Haven HDRI skies and
@@ -44,4 +44,4 @@ golden hour, a lone rain cloud, and an expressive narrator with an emotion per l
 
 Everything committed is original (MIT). Downloads are never committed; `assets/credits.json` lists each one's source
 and licence, and `npm run assets` prints the credits a video description needs (the sample's bird is CC-BY 3.0,
-"Bird" by Poly by Google via poly.pizza). Roblox catalog items are for local use only and never committed or published.
+"Bird" by Poly by Google via poly.pizza). Roblox items appear in the videos (Roblox allows it) but their files are never committed.

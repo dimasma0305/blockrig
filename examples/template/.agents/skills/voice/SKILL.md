@@ -66,7 +66,7 @@ emotions in `docs/audio.md` (`- emotions: ...` is passed to the script as `emoti
 Every Chatterbox take is transcribed (faster-whisper) and retried until it says the script; the match is saved next
 to each clip and `npm run check` flags anything below 85%. Still: tell the user you can't hear, and when they
 dislike the voice, make numbered samples of the same line (vary voice, pitch, exaggeration, tempo) and let them
-pick. To compare with a reference video, put its script in out/ref (local only) and render it with each option at
+pick. To compare with a reference video, put its script in out/ref (git-ignored) and render it with each option at
 the reference's length.
 
 ## Music

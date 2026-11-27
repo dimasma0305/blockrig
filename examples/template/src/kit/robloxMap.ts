@@ -1,4 +1,4 @@
-// Draw a Roblox map or model (LOCAL videos only: render with --roblox, never commit or publish) from the JSON that
+// Draw a Roblox map or model (Roblox allows its items in videos; the map files stay out of git) from the JSON that
 // scripts/roblox-map.mjs writes: parts, wedges, balls, cylinders, mesh modifiers, MeshParts, decals, textures and
 // lights, the way Roblox shows them. Plain parts are merged into one mesh per material (thousands of parts stay
 // fast); the part colour rides in vertex colours and the Roblox material picks a CC0 surface (normal + roughness

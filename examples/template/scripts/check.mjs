@@ -42,7 +42,7 @@ if (!timings.placeholder && timings.total) {
   if (wpm < 130) problems.push(`pace ${wpm.toFixed(0)} wpm drags: raise "tempo" or shorten "gap"/"min" holds`);
 }
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
-for (const f of walk("src").filter((f) => /\.(ts|tsx)$/.test(f))) if (/["'`]roblox\//.test(fs.readFileSync(f, "utf8"))) notes.push(`${f} loads assets/roblox: fine locally, but never publish or commit that video`);
+for (const f of walk("src").filter((f) => /\.(ts|tsx)$/.test(f))) if (/["'`]roblox\//.test(fs.readFileSync(f, "utf8"))) notes.push(`${f} loads assets/roblox: fine in videos (Roblox allows it); keep the files out of git`);
 
 for (const n of notes) console.log(`  note: ${n}`);
 for (const p of problems) console.log(`  PROBLEM: ${p}`);

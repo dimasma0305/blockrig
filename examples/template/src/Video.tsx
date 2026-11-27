@@ -15,7 +15,7 @@ import { buildWorld } from "./world/World";
 import { perform } from "./direction/performance";
 import { cameraFor } from "./direction/camera";
 
-// roblox: local Roblox items (never publish); collide: log staging problems per frame (npm run collide)
+// roblox: Roblox items (default once downloaded); collide: log staging problems per frame (npm run collide)
 export type VideoProps = { debug?: boolean; roblox?: boolean; collide?: boolean };
 
 function Scene({ lib, rb, rapier }: { lib: AssetLibrary; rb: RobloxCast | null; rapier: any }) {

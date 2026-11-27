@@ -11,7 +11,7 @@ import { Plan, rect, circle } from "../kit/plan";
 import { restOn } from "../kit/surfaces";
 import type { RobloxCast } from "../cast/roblox";
 
-// LOCAL --roblox only: a free Toolbox room replaces the Kenney bedroom. Numbers are in the map's own studs (read
+// With the Roblox items (the default once downloaded): a free Toolbox room replaces the Kenney bedroom. Numbers are in the map's own studs (read
 // them off `npm run stills -- --comp MapLab` and map.json): the room's floor centre, the bed model, and where the
 // wide shot stands and looks. Swap the map by changing these (see the world skill, "Roblox maps").
 // and a Toolbox house for the hero's lot (map studs): `edge` is where its lot meets the street (the end of its

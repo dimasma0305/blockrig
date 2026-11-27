@@ -29,8 +29,8 @@ Reference shorts in docs/references.md: https://www.youtube.com/shorts/Xd_yEnAdi
 https://www.youtube.com/shorts/wVjP5B-94MM (shade, texture, light, sky). Open them and compare stills side by side.
 
 - **Assets first, don't reinvent:** models, textures, skies, clouds, animals, props, faces, clothes, hair and
-  animations come from downloadable assets (`assets` skill, `assets/manifest.json`; local Roblox catalog items and
-  Toolbox maps with `--roblox`). Code-built pieces are a fallback, with the reason in `docs/visuals.md`.
+  animations come from downloadable assets (`assets` skill, `assets/manifest.json`; Roblox catalog items and Toolbox maps
+  first: Roblox allows them in videos). Code-built pieces are a fallback, with the reason in `docs/visuals.md`.
 - **Characters** (`look` skill): classic blocky bodies, very pale slightly pink skin, big fluffy hair with bangs that
   never hides the eyes, 2D anime faces that change with every line, layered detailed outfits, an accent each; evenly
   lit (`avatarAmbient`). Girl and boy leads that look like they belong in a popular Roblox story channel.
@@ -40,20 +40,20 @@ https://www.youtube.com/shorts/wVjP5B-94MM (shade, texture, light, sky). Open th
   give way (`restOn`: beds, sofas), floors do not.
 - **Places** (`world` skill): planned, not scattered: houses set back behind lawns facing the road, roads along the
   street, paths, fences with gaps, trees in yards, lamps, cars at the kerb, people walking in lanes; detailed rooms
-  (Toolbox maps locally). Weather and time of day per shot.
+  (Toolbox maps). Weather and time of day per shot.
 - **Voice** (`voice` skill): ONE narrator on every line (one voice sample; emotion from performance, never per-mood
   samples or pitch shifts), every word clear, the hook calm and plain, "!" lines lively, a breath at every comma and a
   beat at "...", ~150–190 wpm overall with 0.35–0.45 s between lines.
 - **Staging** (`camera` skill): faces never under captions; nobody inside walls, props or each other; seated people
   sink into soft seats; the camera never inside anything. `npm run collide` proves it.
-- **Licences:** original or CC0 in anything committed or published; Roblox catalog items and maps only locally.
+- **Licences:** Roblox allows Roblox avatars and catalog items in videos, monetized too (Developer Relations, devforum.roblox.com/t/1843674, 2022): use them freely in the shorts. The downloaded FILES stay out of git (assets/roblox, fetched per machine by `npm run roblox`): videos yes, redistributing asset files no. Everything else committed is original or CC0; music is always original.
 
 ## Quality bar (every item, before every full render)
 
 Look at stills next to the reference shorts and tick each line; anything that fails is fixed first.
 
 1. `npm run check` passes: every take says its words clearly, one narrator (pitch within the limits), pace in range.
-2. `npm run collide` (and `-- --roblox` for the local version) says "nothing found".
+2. `npm run collide` (with the Roblox items, the default) says "nothing found".
 3. `PlanLab` shows no overlaps; every shot's spot is a clear stage.
 4. Lineup: every character has hair, a face that reads at phone size, a detailed outfit, pale skin, even light.
 5. Contact sheet: no frame is washed out, blank, or a wall; sky visible in outdoor shots that look level or up;

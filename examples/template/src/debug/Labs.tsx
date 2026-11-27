@@ -4,7 +4,7 @@
 //   MaterialBoard every texture in src/kit/textures.ts as a swatch with its name
 //   WeatherLab    the street cycling through every weather preset and time of day
 //   PlanLab       the town's 2D plan (zones, lots, footprints) over the street from above (frame 0: all, 1: hero's block)
-//   MapLab        each local Roblox map (assets/roblox, --roblox only): orbit outside, then a look inside
+//   MapLab        each Roblox map (assets/roblox): orbit outside, then a look inside
 // The Shot composition (Root.tsx) plays one shot of the real video with the debug overlay.
 import { useMemo } from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
@@ -126,7 +126,7 @@ export const WeatherLab: React.FC = () => {
 };
 export const WEATHER_PRESET_COUNT = PRESETS.length;
 
-// ---------------------------------------------------------------- MapLab (local Roblox maps: --roblox only)
+// ---------------------------------------------------------------- MapLab (Roblox maps)
 // Each map in assets/roblox/cast.json in turn, MAP_SECONDS each: a slow orbit outside, then a look from inside,
 // with the hero standing at the centre for scale. Use it to pick a map and find where to stand and point the camera.
 export const MAP_SECONDS = 4;

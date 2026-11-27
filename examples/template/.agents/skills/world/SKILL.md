@@ -20,13 +20,13 @@ scene.background = lib.sky("day");                                  // Poly Have
 const grass = lib.pbr("grass", { repeat: [w / 6, d / 6] });         // PBR set at real size
 ```
 
-**Local Roblox version (`--roblox`): free Toolbox maps.** A house, a room or a street someone built in Roblox looks
+**Roblox version (the default when downloaded): free Toolbox maps.** A house, a room or a street someone built in Roblox looks
 more like the reference shorts than any kit. Add it to `assets/manifest.json` (`{ "mapHouseA": { "assetId": 317197851,
 "kind": "map" } }`), fetch it with the Roblox loop (`assets` skill), and draw it with `buildRobloxMap` (src/kit/robloxMap.ts):
 parts, wedges, corner wedges, balls, cylinders, mesh modifiers, MeshParts with their textures, decals, textures and
 lights, merged per material, with the CC0 PBR sets for surface detail. Then:
 
-1. `ROBLOX=1 npm run stills -- --comp MapLab <frames>`: each map gets a full orbit (quarter turns show which way a
+1. `npm run stills -- --comp MapLab <frames>`: each map gets a full orbit (quarter turns show which way a
    house faces) and a look from inside. Read sizes and names off `assets/roblox/<map>/map.json`.
 2. Place it in `World.ts` the way `ROBLOX_ROOM` and `ROBLOX_HOUSE` do: anchor a known point (a room's floor centre;
    the end of a house's driveway on the sidewalk edge), turn its front towards the camera or road, remove the kit
@@ -95,7 +95,7 @@ of hand-tuned offsets:
    fences, hedges and lamps (gaps appear where paths and the stage are).
 
 `world.plan.conflicts()` lists overlaps that were forced; PlanLab (`npm run stills -- --comp PlanLab 0 1`, add
-`ROBLOX=1` for the local version) draws every zone and footprint over the real street from above. Adding a location:
+`ROBLOX=0` for the all-original cut) draws every zone and footprint over the real street from above. Adding a location:
 give it its own plan and a stage for each of its shots.
 
 ## Check

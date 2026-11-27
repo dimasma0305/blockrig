@@ -24,7 +24,7 @@ What the video looks like. The code follows this file; when the look changes, ch
 
 Every character needs: a body shape, drawn Shirt/Pants, hair or headwear, and one prop or accent. A plain block body looks unfinished.
 
-**Local Roblox version** (`--roblox`, never published): free official catalog items, listed in `assets/manifest.json`.
+**Roblox version** (the default render when downloaded; Roblox allows it in videos): free catalog items, listed in `assets/manifest.json`.
 
 | Id | Head (expressions via FaceControls) | Hair | Shirt | Pants |
 |---|---|---|---|---|
@@ -78,7 +78,7 @@ Times: day, golden, dusk, night, storm: each picks its HDRI sky (background + re
 - Aim a little below a head when something floats above it, or captions cover the face.
 - Never put the camera inside a model or behind a crowd that hides the hero; check with stills.
 
-**Local Roblox version** (`--roblox`): free Toolbox maps replace two kit locations (src/world/World.ts).
+**Roblox version**: free Toolbox maps replace two kit locations (src/world/World.ts).
 
 | Id | Map | Placed |
 |---|---|---|

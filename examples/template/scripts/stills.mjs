@@ -5,7 +5,7 @@
 //   node scripts/stills.mjs s03@0.2      a shot at 20% through it
 //   node scripts/stills.mjs --comp Lineup   frame 0 of another composition (Lineup, MaterialBoard, WeatherLab...)
 //   DEBUG=1 node scripts/stills.mjs      with the debug overlay (shot notes, caption band, app zones)
-//   ROBLOX=1 node scripts/stills.mjs     with the local Roblox items (assets/roblox; never publish)
+//   ROBLOX=0 node scripts/stills.mjs     without the Roblox items (they are used by default once downloaded)
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -23,7 +23,7 @@ const shots = story.shots.map((s) => {
 });
 const args = process.argv.slice(2), ci = args.indexOf("--comp"), compId = ci >= 0 ? args[ci + 1] : "Story";
 const only = args.filter((a, i) => !a.startsWith("--") && !(ci >= 0 && i === ci + 1));
-const inputProps = { debug: !!process.env.DEBUG, roblox: !!process.env.ROBLOX };
+const inputProps = { debug: !!process.env.DEBUG, roblox: process.env.ROBLOX !== "0" && fs.existsSync("assets/roblox/cast.json") }; // ROBLOX=0: without Roblox items
 
 const browserExecutable = fs.existsSync(".browser-path") ? fs.readFileSync(".browser-path", "utf8").trim() : null;
 await ensureBrowser({ browserExecutable });

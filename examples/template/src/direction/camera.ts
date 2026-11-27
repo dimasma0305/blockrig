@@ -10,7 +10,7 @@ const chest = (rig: any) => rig.jointPosition("Neck", new THREE.Vector3()).add(V
 
 export function cameraFor(shot: Shot, p: number, local: number, cast: Cast, world: World): Cam {
   const cam = shotCamera(shot, p, local, cast, world);
-  // a closed room (the local Roblox bedroom): keep the camera inside its walls, or the frame goes blank
+  // a closed room (the Roblox bedroom): keep the camera inside its walls, or the frame goes blank
   if (shot.location === "bedroom" && world.roomBox) world.roomBox.clampPoint(cam.pos, cam.pos);
   return cam;
 }

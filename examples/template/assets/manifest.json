@@ -1,5 +1,5 @@
 {
-  "$about": "Assets this video uses (assets skill). `npm run assets` downloads them into git-ignored folders and writes assets/credits.json. Roblox catalog items (local only) go under roblox and are fetched by `npm run roblox`.",
+  "$about": "Assets this video uses (assets skill). `npm run assets` downloads them into git-ignored folders and writes assets/credits.json. Roblox catalog items and Toolbox maps: used freely in videos (Roblox allows it), files never committed (npm run roblox fetches them).",
   "kenney": {
     "city-kit-suburban": {},
     "city-kit-roads": {},
@@ -70,7 +70,7 @@
     }
   },
   "roblox": {
-    "$about": "Free Roblox catalog items (official, or community UGC at price 0). LOCAL videos only: never commit or publish. npm run roblox (see the assets skill).",
+    "$about": "Free Roblox catalog items (official, or community UGC at price 0) and Toolbox maps: used in posted videos (Roblox allows it); the files are git-ignored, never committed. npm run roblox (see the assets skill). Pick by quality: the most-favourited items (SortType=1), premium UGC included (assetdelivery serves them).",
     "boyHead": {
       "bundle": 949,
       "kind": "head"
@@ -84,72 +84,86 @@
       "kind": "hair"
     },
     "heroShirt": {
-      "assetId": 382537702,
-      "kind": "shirt"
+      "assetId": 398633584,
+      "kind": "shirt",
+      "about": "Denim Jacket with White Hoodie"
     },
     "heroPants": {
-      "assetId": 382538503,
-      "kind": "pants"
+      "assetId": 398633812,
+      "kind": "pants",
+      "about": "Black Jeans with White Shoes"
     },
     "sisterHair": {
       "assetId": 89707605927173,
       "kind": "hair"
     },
     "sisterShirt": {
-      "assetId": 398634295,
-      "kind": "shirt"
+      "assetId": 6876555875,
+      "kind": "shirt",
+      "about": "y2k aesthetic girl vintage trendy soft gray cute (uaeu)"
     },
     "sisterPants": {
-      "assetId": 382537950,
-      "kind": "pants"
+      "assetId": 5197702014,
+      "kind": "pants",
+      "about": "Cute ripped Jeans Y2k aesthetic vintage girl (uaeu)"
     },
     "n0Hair": {
-      "assetId": 77044854392130,
-      "kind": "hair"
+      "assetId": 6823338112,
+      "kind": "hair",
+      "about": "Messy Boy Hair in Black (Rush_X)"
     },
     "n0Shirt": {
-      "assetId": 398635081,
-      "kind": "shirt"
+      "assetId": 7919545692,
+      "kind": "shirt",
+      "about": "Emo y2k black shirt aesthetic boy (reysia)"
     },
     "n0Pants": {
       "assetId": 382537569,
       "kind": "pants"
     },
     "n1Hair": {
-      "assetId": 93440100235529,
-      "kind": "hair"
+      "assetId": 7284206648,
+      "kind": "hair",
+      "about": "Aesthetic Split Bangs Hair in Blonde (Lukacors)"
     },
     "n1Shirt": {
-      "assetId": 382537085,
-      "kind": "shirt"
+      "assetId": 5042211670,
+      "kind": "shirt",
+      "about": "purple cool crop-top (retrogirlz)"
     },
     "n1Pants": {
-      "assetId": 144076760,
-      "kind": "pants"
+      "assetId": 1160488459,
+      "kind": "pants",
+      "about": "Pink! Trendy Girls Cute Casual Outfit (Boho Clothing)"
     },
     "n2Hair": {
-      "assetId": 70568969011219,
-      "kind": "hair"
+      "assetId": 5644883846,
+      "kind": "hair",
+      "about": "Cool Boy Hair (genkroco)"
     },
     "n2Shirt": {
-      "assetId": 382538059,
-      "kind": "shirt"
+      "assetId": 144076436,
+      "kind": "shirt",
+      "about": "Grey Striped Shirt with Denim Jacket"
     },
     "n2Pants": {
       "assetId": 398635338,
       "kind": "pants"
     },
     "n3Hair": {
-      "assetId": 101456180619587,
-      "kind": "hair"
+      "assetId": 6501746646,
+      "kind": "hair",
+      "about": "Popular Girl Blonde & Brown Hair (bunnexh)"
     },
     "n3Shirt": {
-      "assetId": 607785314,
-      "kind": "shirt"
+      "assetId": 6170187890,
+      "kind": "shirt",
+      "about": "y2k vamp girl vintage aesthetic (uaeu)"
     },
     "n3Pants": {
-      "assetId": 382537806,
-      "kind": "pants"
+      "assetId": 5246950670,
+      "kind": "pants",
+      "about": "skirt + converse boots y2k (h34rtSICK)"
     },
     "faceAnime": {
       "assetId": 131886627952212,
