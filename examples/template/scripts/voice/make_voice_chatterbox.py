@@ -33,35 +33,31 @@ cfg = {"voice": "am_adam", "pitch": 1.35, "exaggeration": 0.9, "cfg": 0.35, "tem
 # ex = Chatterbox exaggeration (emotion strength), cfg = cfg_weight (lower = faster, looser),
 # tempo = time-stretch, gain = loudness in dB vs neutral, fx = extra ffmpeg filters, prompt = which voice sample
 EMOTIONS = {
-    # The narrator stays ONE voice: no pitch shifting or filters per emotion (they made sad lines sound like
-    # another person). Emotion comes from the delivery Chatterbox copies (the mood's voice sample), its
-    # exaggeration and pacing, and tempo and loudness.
-    "neutral": {"ex": cfg["exaggeration"], "cfg": cfg["cfg"], "tempo": 1.0, "gain": 0, "prompt": "neutral"},
-    # the viral-narrator deadpan: a strange fact stated like the weather (hooks, rules, "In this town...")
-    # measured on viral shorts (analyze_ref.py): matter-of-fact lines are flat (2-3 st) and FAST (300-390 wpm)
-    "flat":    {"ex": 0.3, "cfg": 0.55, "tempo": 1.2, "gain": 0, "prompt": "flat"},
-    "happy":   {"ex": 1.0, "cfg": 0.4, "tempo": 1.0, "gain": 0.5, "prompt": "excited"},
-    "excited": {"ex": 1.0, "cfg": 0.38, "tempo": 1.04, "gain": 1.5, "prompt": "excited"},
-    "panic":   {"ex": 1.2, "cfg": 0.32, "tempo": 1.06, "gain": 2.0, "prompt": "excited"},
-    "shocked": {"ex": 0.95, "cfg": 0.4, "tempo": 1.0, "gain": 1.5, "prompt": "neutral"},  # the excited sample pushed shocked lines up to +40% pitch
-    "scared":  {"ex": 1.0, "cfg": 0.3, "tempo": 1.04, "gain": -1, "prompt": "sad"},
-    "sad":     {"ex": 0.45, "cfg": 0.6, "tempo": 0.92, "gain": -2.5, "prompt": "sad"},
-    "serious": {"ex": 0.5, "cfg": 0.55, "tempo": 0.96, "gain": -1, "prompt": "serious"},
-    "smug":    {"ex": 0.75, "cfg": 0.5, "tempo": 0.95, "gain": 0, "prompt": "neutral"},
-    "angry":   {"ex": 1.15, "cfg": 0.4, "tempo": 1.02, "gain": 2.5, "prompt": "excited"},
-    "whisper": {"ex": 0.4, "cfg": 0.55, "tempo": 0.93, "gain": -5, "prompt": "serious"},
+    # The narrator stays ONE person. Every mood clones the SAME voice sample ("neutral"): separate excited / sad /
+    # serious samples made each line sound like a different speaker, and the user could not follow the story.
+    # Emotion comes only from how strongly the line is performed (exaggeration, cfg) plus a little tempo (+-5%)
+    # and loudness. No pitch shifting, no filters, no fast "deadpan" tempo (it made the hook hard to catch).
+    "neutral": {"ex": cfg["exaggeration"], "cfg": cfg["cfg"], "tempo": 1.0, "gain": 0},
+    "flat":    {"ex": 0.45, "cfg": 0.5, "tempo": 1.0, "gain": 0},     # calm, matter-of-fact: a strange rule stated plainly
+    "happy":   {"ex": 1.0, "cfg": 0.4, "tempo": 1.0, "gain": 0.5},
+    "excited": {"ex": 1.05, "cfg": 0.38, "tempo": 1.03, "gain": 1.5},
+    "panic":   {"ex": 1.2, "cfg": 0.32, "tempo": 1.04, "gain": 2.0},
+    "shocked": {"ex": 0.95, "cfg": 0.4, "tempo": 1.0, "gain": 1.5},
+    "scared":  {"ex": 0.9, "cfg": 0.35, "tempo": 1.0, "gain": -1},
+    "sad":     {"ex": 0.5, "cfg": 0.55, "tempo": 0.95, "gain": -2},
+    "serious": {"ex": 0.55, "cfg": 0.5, "tempo": 0.97, "gain": -1},
+    "smug":    {"ex": 0.75, "cfg": 0.5, "tempo": 0.97, "gain": 0},
+    "angry":   {"ex": 1.1, "cfg": 0.4, "tempo": 1.02, "gain": 2.5},
+    "whisper": {"ex": 0.45, "cfg": 0.55, "tempo": 0.95, "gain": -5},
 }
+for e in EMOTIONS.values(): e["prompt"] = "neutral"
 # legacy "panic" block from docs/audio.md tunes the panic emotion
 if cfg.get("panic"):
     pz = cfg["panic"]; EMOTIONS["panic"].update({k2: pz[k1] for k1, k2 in [("exaggeration", "ex"), ("cfg", "cfg"), ("gain", "gain")] if k1 in pz})
 for name, over in (cfg.get("emotions") or {}).items(): EMOTIONS.setdefault(name, dict(EMOTIONS["neutral"])).update(over)
 # the voice samples: our own lines read by Kokoro in each mood (speed and level shape the delivery Chatterbox copies)
-PROMPTS = {  # (text, Kokoro speed): same voice and pitch for every mood; only the reading differs
+PROMPTS = {  # (text, Kokoro speed): the ONE voice sample every line clones (see EMOTIONS)
     "neutral": (cfg["prompt"], 0.95),
-    "excited": ("No way! This is the best day ever! Everybody look, I actually did it! Let's go!", 1.12),
-    "sad": ("I tried my best... and it still wasn't enough. Nobody even noticed. I just sat there... alone.", 0.8),
-    "serious": ("Listen carefully. Tonight, everything changes. There is one chance. And no second try.", 0.87),
-    "flat": ("In my school, the lunch lady knows your name. Nobody told her. She just knows. Every day. Same tray.", 1.0),
 }
 lines = json.load(open(a.lines, encoding="utf8"))
 
@@ -100,7 +96,7 @@ def clarity():
     still gets transcribed (the recogniser guesses from context) but with low probability, so this catches it."""
     if not last_probs: return (0.0, 0.0)
     return (min(last_probs), sum(last_probs) / len(last_probs))
-CLEAR_MIN, CLEAR_MEAN = float(cfg.get("clearMin", 0.45)), float(cfg.get("clearMean", 0.8))
+CLEAR_MIN, CLEAR_MEAN = float(cfg.get("clearMin", 0.6)), float(cfg.get("clearMean", 0.85))  # every word easy to catch
 
 def score(text, heard): return difflib.SequenceMatcher(None, norm(text), norm(" ".join(w for w, _, _ in heard))).ratio()
 
@@ -192,9 +188,9 @@ REF_PITCH = mean_pitch(ta.load(prompt_for("neutral"))[0])
 PITCH_TOL = float(cfg.get("pitchTolerance", 0.18))
 print(f"narrator pitch {REF_PITCH:.0f} Hz (takes within +-{PITCH_TOL * 100:.0f}%)", flush=True)
 
-for L in lines:
-    text = L["text"]
-    mood = L.get("emotion") or ("panic" if text.rstrip().endswith("!") else "neutral")
+def voice_part(text, mood, out):
+    """The best take of `text` in one mood, processed as it ships, written to `out`: ((score, final, seconds,
+    heard words, key), engine). Falls back to Kokoro when no Chatterbox take says every word right."""
     emo = EMOTIONS.get(mood, EMOTIONS["neutral"]); ex, cw = emo["ex"], emo["cfg"]
     need = 0.9 if len(text.split()) >= 12 else 0.95  # every word right (homophones are normalised); only very long lines may miss one
     best, cand = None, f"{tmp}/cand.wav"
@@ -209,12 +205,17 @@ for L in lines:
             off = abs(mean_pitch(final) / REF_PITCH - 1) if REF_PITCH else 0
             # rank: right words first, then on-pitch, then the longer (less hurried) take
             key = (sc >= need, clear, off <= PITCH_TOL, round(cmean, 2), -off, sc, dur)
-            if best is None or key > best[4]: best = (sc, final, dur, heard, key); shutil.copyfile(cand, L["out"])
+            if best is None or key > best[4]: best = (sc, final, dur, heard, key); shutil.copyfile(cand, out)
             if sc >= need and clear and off <= PITCH_TOL: break
-    used = "chatterbox"
     if best is None or best[0] < need:
-        final, dur = finish(kokoro(text, PROMPTS.get(emo["prompt"], PROMPTS["neutral"])[1]), emo, L["out"])
-        heard = transcribe(final); best, used = (score(text, heard), final, dur, heard, None), "kokoro"
+        final, dur = finish(kokoro(text, PROMPTS.get(emo["prompt"], PROMPTS["neutral"])[1]), emo, out)
+        heard = transcribe(final); return (score(text, heard), final, dur, heard, None), "kokoro"
+    return best, "chatterbox"
+
+for L in lines:
+    text = L["text"]
+    mood = L.get("emotion") or ("panic" if text.rstrip().endswith("!") else "neutral")
+    best, used = voice_part(text, mood, L["out"])
     sc, final, duration, heard, _ = best
     stretched = breathe(text, heard, L["out"])
     if stretched:  # re-measure what ships: new length and word times (captions follow them)
