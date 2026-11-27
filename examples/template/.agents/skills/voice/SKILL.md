@@ -95,7 +95,12 @@ rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).
 
 ## Music
 
-Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default: `story`**
+Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default: `bedroom`**
+(scripts/music-bedroom.mjs): a dreamy two-bar guitar melody looped over Fmaj7 Em7 Dm7 Cmaj7, lo-fi, 88 bpm, the
+melody the loudest band. When the user names a song ("use this, it's free"), check its page for a license first:
+free to WATCH is not free to USE. A song without an explicit licence (no "no copyright", "free to use", Creative
+Commons) is not used, and neither is its melody (a melody is the most protected part); make an original loop in its
+vibe instead and say why. Also: `story`
 (scripts/music-story.mjs) under the whole video: a singable 8-bar tune that is neither happy nor sad (D Dorian,
 curious and thoughtful, ends open so it keeps moving), marimba and piano over a laid-back beat. The user asked for
 "more of melody, that isn't happy or sad": a real tune beats a 4-note loop, but keep it singable (steps and small

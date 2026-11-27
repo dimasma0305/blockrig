@@ -32,12 +32,12 @@ Each shot's `emotion:` in story.md picks how the narrator says it (see the voice
 
 ## Music
 
-- s01: story
+- s01: bedroom
 
-One melodic piece under the whole video, neither happy nor sad (the user wanted "more of melody, that isn't happy
-or sad"): a singable 8-bar tune in D Dorian, curious and thoughtful, that keeps moving under the narration.
+One dreamy guitar melody loop under the whole video (the user asked for a song's melody in a loop; that song is
+copyrighted, so this loop is our own in the same laid-back bedroom-pop vibe).
 
-Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs), goofy-piano, sneaky-piano (scripts/music-piano.mjs), brainrot (scripts/music-brainrot.mjs), story (scripts/music-story.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
+Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs), goofy-piano, sneaky-piano (scripts/music-piano.mjs), brainrot (scripts/music-brainrot.mjs), story (scripts/music-story.mjs), bedroom (scripts/music-bedroom.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
 
 ## Sound effects (planned)
 
