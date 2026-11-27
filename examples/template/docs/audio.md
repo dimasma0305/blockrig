@@ -15,6 +15,8 @@ a strange rule stated deadpan.
 - cfg: 0.35
 - tempo: 1.0
 - gap: 0.45
+- commaPause: 0.22
+- stopPause: 0.4
 - panic: exaggeration 1.4, cfg 0.3, gain 2
 
 Engines (`npm run setup-voice` installs the offline ones):

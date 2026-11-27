@@ -52,7 +52,7 @@ const vb = bullets(section("Voice"));
 const sub = (v) => Object.fromEntries((v ?? "").split(",").map((p) => p.trim().split(/\s+/)).filter((p) => p.length === 2).map(([k, x]) => [k, Number(x)]));
 const voice = {
   engine: vb.engine ?? "sapi", gapSeconds: num(vb.gap) ?? 0.15, style: vb.style, rate: vb.rate,
-  chatterbox: { voice: vb.voice ?? "am_adam", pitch: num(vb.pitch) ?? 1.35, exaggeration: num(vb.exaggeration) ?? 0.9, cfg: num(vb.cfg) ?? 0.35, tempo: num(vb.tempo) ?? 1, panic: sub(vb.panic) },
+  chatterbox: { voice: vb.voice ?? "am_adam", pitch: num(vb.pitch) ?? 1.35, exaggeration: num(vb.exaggeration) ?? 0.9, cfg: num(vb.cfg) ?? 0.35, tempo: num(vb.tempo) ?? 1, commaPause: num(vb.commaPause) ?? 0.22, stopPause: num(vb.stopPause) ?? 0.4, panic: sub(vb.panic) },
   kokoro: { voice: vb.voice ?? "am_adam", pitch: num(vb.pitch) ?? 1.35, speed: num(vb.speed) ?? 1.0 },
 };
 const music = Object.entries(bullets(section("Music"))).map(([fromShot, theme]) => ({ theme, fromShot }));

@@ -79,3 +79,12 @@ sentences, median pitch and pitch movement in semitones (docs/references.md has 
 viral numbers). Viral narrators: fast inside sentences (200-330 wpm), a 0.35-0.65 s beat between them (`gap`),
 flat lines 2-3 st, lively lines 5-15 st, excited lines up to +50% pitch. `npm run check` allows high-energy lines
 (panic, shocked, excited, angry, happy) 35% above the median; anything else, and anything lower, stays within 20%.
+
+## Punctuation is timing
+
+A comma is a short breath, "..." or a full stop inside a line a beat. Fast and flat takes often run straight
+through them, so after choosing a take the voice script makes every comma at least `commaPause` (0.22 s) and every
+inner "..."/"."/"!"/"?" at least `stopPause` (0.4 s) of real silence (measured from loudness, not Whisper's word
+gaps), cut at the quietest point between the words, and re-times the words for captions. The voice log shows
+"+N pause". Write the pause you want into the line: "In this town, it rains..." gets its breath; "In this town it
+rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).

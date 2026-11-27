@@ -151,6 +151,42 @@ def finish(wav, emo, out):
     final, _ = ta.load(out)
     return ta.functional.resample(final, 48000, SR), final.shape[1] / 48000
 
+# punctuation is a promise to the listener: a comma is a short breath, "..." or a full stop inside a line a beat.
+# Takes (especially fast, flat ones) often run straight through them, so the shipped file gets the missing silence.
+COMMA_PAUSE, STOP_PAUSE = float(cfg.get("commaPause", 0.22)), float(cfg.get("stopPause", 0.4))
+def breathe(text, heard, out):
+    """Make every comma / inner stop at least COMMA_PAUSE / STOP_PAUSE long, cutting at the quietest point between
+    the two words. Returns how many pauses were stretched."""
+    wav, sr = ta.load(out)
+    words = words_for(text, heard, wav.shape[1] / sr)
+    cuts = []  # (time, seconds of silence to add)
+    hop = int(0.01 * sr)
+    rms = lambda s: float(wav[:, max(0, s):s + hop].pow(2).mean().sqrt())
+    quiet = 0.03 * float(wav.abs().max())  # what counts as silence (Whisper's word gaps do not: they overlap breaths)
+    for i, w in enumerate(words[:-1]):
+        tok = w["word"]
+        need = STOP_PAUSE if re.search(r"(\.\.\.|…|[.!?])[\"')]*$", tok) else COMMA_PAUSE if re.search(r"[,;:—-][\"')]*$", tok) else 0
+        if not need: continue
+        # the quietest 10 ms around the boundary (word timings are approximate: never cut into a word)
+        a, b = max(0, int((w["end"] - 0.1) * sr)), min(wav.shape[1], int((words[i + 1]["start"] + 0.1) * sr))
+        best, at = None, int(((w["end"] + words[i + 1]["start"]) / 2) * sr)
+        for s in range(a, max(a + 1, b - hop), hop):
+            e = rms(s)
+            if best is None or e < best: best, at = e, s + hop // 2
+        # how much real silence is already there, measured from the audio around that point
+        l = r = at
+        while l - hop > 0 and rms(l - hop) < quiet: l -= hop
+        while r + hop < wav.shape[1] and rms(r) < quiet: r += hop
+        have = (r - l) / sr
+        if have < need: cuts.append((at, need - have))
+    if not cuts: return 0
+    parts, prev = [], 0
+    for at, add in sorted(cuts):
+        parts += [wav[:, prev:at], torch.zeros(wav.shape[0], int(add * sr))]; prev = at
+    parts.append(wav[:, prev:])
+    ta.save(out, torch.cat(parts, 1), sr)
+    return len(cuts)
+
 # the narrator's own pitch, from the neutral sample: a take far from it sounds like another voice (a "spike")
 REF_PITCH = mean_pitch(ta.load(prompt_for("neutral"))[0])
 PITCH_TOL = float(cfg.get("pitchTolerance", 0.18))
@@ -180,7 +216,11 @@ for L in lines:
         final, dur = finish(kokoro(text, PROMPTS.get(emo["prompt"], PROMPTS["neutral"])[1]), emo, L["out"])
         heard = transcribe(final); best, used = (score(text, heard), final, dur, heard, None), "kokoro"
     sc, final, duration, heard, _ = best
+    stretched = breathe(text, heard, L["out"])
+    if stretched:  # re-measure what ships: new length and word times (captions follow them)
+        shipped, ssr = ta.load(L["out"]); final = ta.functional.resample(shipped, ssr, SR); duration = shipped.shape[1] / ssr
+        heard = transcribe(final)
     transcribe(final); cmin, cmean = clarity()
     with open(L["out"] + ".json", "w") as f:
         json.dump({"duration": round(duration, 3), "engine": used, "emotion": mood, "match": round(sc, 3), "clarity": [round(cmin, 2), round(cmean, 2)], "pitch": mean_pitch(final), "words": words_for(text, heard, duration)}, f)
-    print(f"{L['id']}  {used:10s} {mood:8s} clear {cmin:.2f}/{cmean:.2f} match {sc:.2f}  {mean_pitch(final):5.0f} Hz  {duration:.2f}s  {text}", flush=True)
+    print(f"{L['id']}  {used:10s} {mood:8s} clear {cmin:.2f}/{cmean:.2f} match {sc:.2f}  {mean_pitch(final):5.0f} Hz  {duration:.2f}s  {'+%d pause ' % stretched if stretched else ''}{text}", flush=True)
