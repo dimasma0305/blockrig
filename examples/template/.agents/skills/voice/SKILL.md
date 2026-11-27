@@ -95,7 +95,12 @@ rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).
 
 ## Music
 
-Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default: `bedroom`**
+Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default: `casio`**
+(scripts/music-casio.mjs), built to the user's own brief: instrumental lo-fi bedroom pop, cheap 90s Casio toy
+keyboard (pulse-wave stabs and rhythm box crushed to 6 bits / 11 kHz), bouncy staccato bass (root-octave-fifth
+eighths, chromatic walk-ups), slightly detuned retro lead (+-12 cents), quirky awkward comedy (C E7 F Fm, a
+hesitating tune with a chromatic "wah-wah" slide), 120 bpm, 4-bar loop. When the user writes a brief like that,
+build to every item and show which line answers which. Also: `bedroom`
 (scripts/music-bedroom.mjs): a dreamy two-bar guitar melody looped over Fmaj7 Em7 Dm7 Cmaj7, lo-fi, 88 bpm, the
 melody the loudest band. When the user names a song ("use this, it's free"), check its page for a license first:
 free to WATCH is not free to USE. A song without an explicit licence (no "no copyright", "free to use", Creative

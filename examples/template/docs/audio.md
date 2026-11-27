@@ -32,12 +32,12 @@ Each shot's `emotion:` in story.md picks how the narrator says it (see the voice
 
 ## Music
 
-- s01: bedroom
+- s01: casio
 
-One dreamy guitar melody loop under the whole video (the user asked for a song's melody in a loop; that song is
-copyrighted, so this loop is our own in the same laid-back bedroom-pop vibe).
+The user's brief: "instrumental only, lo-fi bedroom pop, cheap 90s Casio toy keyboard preset, bouncy staccato
+bassline, slightly detuned retro synth lead, quirky awkward comedy background loop, 120 bpm, no vocals".
 
-Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs), goofy-piano, sneaky-piano (scripts/music-piano.mjs), brainrot (scripts/music-brainrot.mjs), story (scripts/music-story.mjs), bedroom (scripts/music-bedroom.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
+Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs), goofy-piano, sneaky-piano (scripts/music-piano.mjs), brainrot (scripts/music-brainrot.mjs), story (scripts/music-story.mjs), bedroom (scripts/music-bedroom.mjs), casio (scripts/music-casio.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
 
 ## Sound effects (planned)
 
