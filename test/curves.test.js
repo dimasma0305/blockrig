@@ -94,3 +94,29 @@ test("binary strings: raw bytes from .rbxm, base64 from .rbxmx", () => {
   const fromXml = parseRbxmx(xml)[0];
   assert.deepEqual(decodeFloatCurve(fromXml.props.ValuesAndTimes).map((k) => k.value), [1, 2]);
 });
+
+// Real data: a CurveAnimation built in Roblox Studio 0.748 (our own keys, test/fixtures/studio-curves.lua), saved
+// to file, and the values Studio itself evaluated from those curves.
+import fs from "node:fs";
+test("Roblox Studio curves: the blobs decode, and evaluate to what Studio returns", () => {
+  const fx = JSON.parse(fs.readFileSync(new URL("./fixtures/studio-curves.json", import.meta.url), "utf8"));
+  const blob = (path) => new Uint8Array(Buffer.from(fx.curves.find((c) => c.path === path).valuesAndTimes, "base64"));
+  for (const [path, vals] of Object.entries(fx.expected.float)) {
+    const keys = decodeFloatCurve(blob(path));
+    for (const [t, v] of Object.entries(vals)) near(evalFloatCurve(keys, +t), v, 2e-6);
+  }
+  for (const [path, vals] of Object.entries(fx.expected.rotation)) {
+    const keys = decodeRotationCurve(blob(path));
+    for (const [t, [x, y, z, a]] of Object.entries(vals)) assert.ok(evalRotationCurve(keys, +t).angleTo(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(x, y, z).normalize(), a)) < 1e-4, `rotation at ${t}`);
+  }
+  // explicit tangents, the Constant mode, the 1/3 s key (800 ticks) and the marker strings come back as written
+  const x = decodeFloatCurve(blob("HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation/X"));
+  assert.deepEqual(x.map((k) => k.interpolation), ["Linear", "Cubic", "Constant", "Linear"]);
+  near(x[1].leftTangent, 0.5); near(x[1].rightTangent, -2); assert.equal(x[1].tangentMode, 3);
+  near(decodeFloatCurve(blob("HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation/Y"))[1].t, 1 / 3, 1e-9);
+  assert.deepEqual(decodeMarkerCurve(blob("Footstep")).map((m) => [m.t, m.value]), fx.expected.markers.map((m) => [m.t, m.value]));
+  // the Euler curve's YXZ order: Studio's YXZ readback is the channel values, so the clip's rotation is Ry * Rx * Rz
+  const ex = decodeFloatCurve(blob("HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation/X")), ey = decodeFloatCurve(blob("HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation/Y"));
+  for (const [t, [ax, ay]] of Object.entries(fx.expected.eulerYXZ["HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation"])) { near(evalFloatCurve(ex, +t), ax, 1e-4); near(evalFloatCurve(ey, +t), ay, 1e-4); }
+  assert.equal(fx.curves.find((c) => c.className === "EulerRotationCurve").props.RotationOrder, 3, "YXZ");
+});

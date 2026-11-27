@@ -60,7 +60,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` and `CurveAnimation` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **134 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **135 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -340,7 +340,7 @@ new Animator(rig).play(clip, { fade: 0.1 });
 - R6 animations are converted out of the classic R6 joint frames, so they play correctly on `rigType: "R6"` rigs.
 - Joints your rig doesn't have (Rthro extras, face bones) are skipped.
 - XML `.rbxmx` files work the same way (`parseRbxm` detects them).
-- `CurveAnimation`s (curve-editor exports) import through the same call, or `curveAnimationToClip()`. Euler and quaternion rotation curves, position curves, `MarkerCurve`s and FaceControls curves become a clip sampled at 60 fps. The curve key layout follows the community description in rbx-dom (not yet official), so check a curve export of your own if it matters. The official animations checked so far (emotes, the 2024 Bold pack, head moods) all download as KeyframeSequences.
+- `CurveAnimation`s (curve-editor exports) import through the same call, or `curveAnimationToClip()`. Euler and quaternion rotation curves, position curves, `MarkerCurve`s and FaceControls curves become a clip sampled at 60 fps. Checked against Roblox Studio: a CurveAnimation built and saved in Studio decodes key for key, and evaluates to the values Studio itself returns, to within 0.000001 for float curves and 0.0003° for rotation curves (`test/fixtures/studio-curves.json`). The official animations checked so far (emotes, the 2024 Bold pack, head moods) all download as KeyframeSequences.
 
 BlockRig ships no Roblox animations. Use animations you made or have the right to use.
 

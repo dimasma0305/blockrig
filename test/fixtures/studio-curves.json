@@ -1,0 +1,152 @@
+{
+ "note": "Curve key blobs (ValuesAndTimes) from a CurveAnimation built in Roblox Studio (test/fixtures/studio-curves.lua, our own keys) and saved with Save to File As; studio: values Studio itself returned (FloatCurve:GetValueAtTime, RotationCurve:GetValueAtTime as axis + angle, EulerRotationCurve:GetRotationAtTime as YXZ angles).",
+ "studio": "Roblox Studio 0.748.0.7481526 (2026-11-27)",
+ "animation": {
+  "name": "BlockRigProbe",
+  "loop": false,
+  "priority": 2
+ },
+ "curves": [
+  {
+   "path": "HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation",
+   "className": "EulerRotationCurve",
+   "props": {
+    "RotationOrder": 3
+   }
+  },
+  {
+   "path": "HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation/X",
+   "className": "FloatCurve",
+   "valuesAndTimes": "AgAAAAQAAAABAAAAAAAAACBAAAAgQAIDAACgPwAAAD8AAADAAAAAAEC/AAAAAAAAAAABAJqZmT4AAAAAAAAAAAEAAAAEAAAAAAAAALAEAABACwAAwBIAAA=="
+  },
+  {
+   "path": "HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation/Y",
+   "className": "FloatCurve",
+   "valuesAndTimes": "AgAAAAMAAAABAM3MzD1nZmY/Z2ZmPwIAzczMPmdmZj9nZmY/AQDNzMw+AAAAAAAAAAABAAAAAwAAAAAAAAAgAwAAwBIAAA=="
+  },
+  {
+   "path": "HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation/Z",
+   "className": "FloatCurve",
+   "valuesAndTimes": "AgAAAAEAAAAAAM3MTD4AAAAAAAAAAAEAAAABAAAAAAAAAA=="
+  },
+  {
+   "path": "HumanoidRootPart/LowerTorso/UpperTorso/Rotation",
+   "className": "RotationCurve",
+   "valuesAndTimes": "AQAAAAMAAAANAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAADgAAAABDHa8+AAAAALKPcD8AAAAAAAAAAAybIzG+a/Z3PIHIrz3EJns/AAAAAAAAAAABAAAAAwAAAAAAAABgCQAAwBIAAA=="
+  },
+  {
+   "path": "HumanoidRootPart/LowerTorso/UpperTorso/Head/FaceControls/JawDrop",
+   "className": "FloatCurve",
+   "valuesAndTimes": "AgAAAAMAAAABAAAAAAD//78///+/PwIAZmZmP///vz///78/AQAAAAAAAAAAAAAAAAABAAAAAwAAAAAAAACgBQAAIA0AAA=="
+  },
+  {
+   "path": "HumanoidRootPart/LowerTorso/Position",
+   "className": "Vector3Curve",
+   "props": {}
+  },
+  {
+   "path": "HumanoidRootPart/LowerTorso/Position/X",
+   "className": "FloatCurve",
+   "valuesAndTimes": "AgAAAAIAAAABAAAAAAAAAAA/AAAAPwEAAAAAPwAAAAAAAAAAAQAAAAIAAAAAAAAAYAkAAA=="
+  },
+  {
+   "path": "HumanoidRootPart/LowerTorso/Position/Y",
+   "className": "FloatCurve",
+   "valuesAndTimes": "AgAAAAIAAAACAwAAAAAAAAAAAADAPwEAAACAPgAAAAAAAAAAAQAAAAIAAAAAAAAAYAkAAA=="
+  },
+  {
+   "path": "HumanoidRootPart/LowerTorso/Position/Z",
+   "className": "FloatCurve",
+   "valuesAndTimes": "AgAAAAEAAAABAM3MzL0AAAAAAAAAAAEAAAABAAAAAAAAAA=="
+  },
+  {
+   "path": "Footstep",
+   "className": "MarkerCurve",
+   "valuesAndTimes": "AgAAAAMAAABsZWZ0AHJpZ2h0AAABAAAAAwAAAFgCAAAIBwAAEA4AAA=="
+  }
+ ],
+ "expected": {
+  "float": {
+   "HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation/X": {
+    "1": -0.435131,
+    "0.25": 0.625,
+    "0.4": 1,
+    "0.75": 0.460277,
+    "1.5": -0.75,
+    "1.9": -0.75
+   },
+   "HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation/Y": {
+    "1": 0.616,
+    "0.1": 0.19,
+    "0.2": 0.28,
+    "1.7": 0.439852
+   },
+   "HumanoidRootPart/LowerTorso/Position/Y": {
+    "0.25": 0.25,
+    "0.5": 0.3125,
+    "0.75": 0.28125
+   },
+   "HumanoidRootPart/LowerTorso/UpperTorso/Head/FaceControls/JawDrop": {
+    "0.3": 0.45,
+    "0.9": 0.791016,
+    "1.2": 0.196875
+   }
+  },
+  "rotation": {
+   "HumanoidRootPart/LowerTorso/UpperTorso/Rotation": {
+    "0.5": [
+     0,
+     1,
+     0,
+     0.34907
+    ],
+    "1.25": [
+     -0.09396,
+     0.99448,
+     0.04662,
+     0.59828
+    ],
+    "1.5": [
+     -0.42606,
+     0.87965,
+     0.2114,
+     0.41664
+    ],
+    "1.75": [
+     -0.82826,
+     0.38091,
+     0.41096,
+     0.35686
+    ]
+   }
+  },
+  "eulerYXZ": {
+   "HumanoidRootPart/LowerTorso/UpperTorso/RightUpperArm/Rotation": {
+    "0.25": [
+     0.625,
+     0.325,
+     0.2
+    ],
+    "0.75": [
+     0.46028,
+     0.61094,
+     0.2
+    ]
+   }
+  },
+  "markers": [
+   {
+    "t": 0.25,
+    "value": "left"
+   },
+   {
+    "t": 0.75,
+    "value": "right"
+   },
+   {
+    "t": 1.5,
+    "value": ""
+   }
+  ]
+ }
+}

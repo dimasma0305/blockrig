@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **CurveAnimation checked against Roblox Studio**: a CurveAnimation built and saved in Studio 0.748 decodes key for key, and evaluates to Studio's own values (float curves within 1e-6, rotations within 0.0003°). The blobs and Studio's values are a test fixture (`test/fixtures/studio-curves.json`, with the script that made them).
+
 - **Smaller things**: `createRig({ shadows })` / `rig.setShadows(cast, receive)` (outlines never cast; later parts follow); `rig.clone(over)` rebuilds a rig the same way (welded objects cloned, live face shared unless given); `rig.dispose()` frees what the rig made and leaves your textures and welded props; `rig.update(dt)` runs faces and IK without an Animator; three.js `BufferGeometry` is accepted wherever a parsed mesh is (`meshFromGeometry`); legacy BrickColor BodyColors are read (`BRICK_COLORS`, `brickColorHex`, palette from rbx-dom, MIT).
 
 - **HipHeight**: `rig.hipHeight` measures Humanoid.HipHeight from the body (R6: 0) and can be set to raise or lower the body.
@@ -32,7 +34,7 @@
 - `examples/clothing.html` and `docs/clothing.png`; `ONLY=name npm run screenshots`.
 - The story example (`examples/story`): a 26-second short made with BlockRig, Remotion and three.js.
 - Bundlers: version-specific three.js colour-space constants are read at run time.
-- 134 tests.
+- 135 tests.
 
 ## 0.2.0
 
