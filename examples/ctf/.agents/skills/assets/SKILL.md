@@ -48,9 +48,25 @@ They belong to Roblox and their creators: `assets/roblox/` is git-ignored; never
 published or README video. The user signs in to Roblox in the browser pane themselves; never type passwords or read
 cookies.
 
-1. Add items to `roblox` in the manifest: `{ "name": { "assetId": 123, "format": "avatar_meshpart_accessory" } }` (layered clothing with cages) or `"avatar_meshpart_head"` (dynamic heads with FACS), or no format for plain assets.
-2. `node scripts/fetch-roblox.mjs snippet` prints a script; run it in the browser pane on a roblox.com page (signed in). Save its JSON result as `assets/roblox/locations.json`.
-3. `npm run roblox` downloads from the CDN into `assets/roblox/`.
-4. Read with BlockRig: `parseRbxm`, `describeAccessory`, `describeHead`, `describeClothing`, `describeBodyParts`, `parseMesh`, `keyframeSequenceToClip`, `curveAnimationToClip`. Wear with `addAccessory`, `addLayeredClothing({ wrap })`, `setHead`, `buildBodyFromParts`.
+**Find free official items** (creator Roblox, price 0) from a roblox.com page in the browser pane:
+`https://catalog.roblox.com/v1/search/items/details?CreatorName=Roblox&MaxPrice=0&SalesTypeFilter=1&Limit=30&Category=<c>&Keyword=<k>`
+— shirts `Category=3&Subcategory=56`, pants `Category=3&Subcategory=57`, hair `Category=1&Keyword=hair` (keep
+assetType 41), dynamic heads `Category=1&Keyword=face` (bundles with bundleType 4: Man Face 949, Woman Face 948).
+There are no free classic face decals: expressions come from dynamic heads (FaceControls), see `facsExpression`.
+
+**Fetch them** (`scripts/fetch-roblox.mjs`, a loop because each item references meshes and textures):
+1. List items in `assets/manifest.json` under `roblox`: `{ "heroHair": { "assetId": 376548738, "kind": "hair" }, "heroShirt": { "assetId": 382537702, "kind": "shirt" }, "boyHead": { "bundle": 949, "kind": "head" } }`.
+2. `npm run roblox` downloads what it can and writes `assets/roblox/needs.json` for the rest.
+3. Resolve the needs in the browser pane **on an `https://assetdelivery.roblox.com/...` page** (same origin; from roblox.com the request is blocked): `fetch("/v2/assetId/<id>", { credentials: "include", headers: format ? { "Roblox-AssetFormat": format } : {} })` → `locations[0].location`. Bundle contents come from `https://catalog.roblox.com/v1/bundles/<id>/details`, which only works from a roblox.com page. Heads need format `avatar_meshpart_head`.
+4. Merge the `{ key: url }` results into `assets/roblox/locations.json` and run `npm run roblox` again. Repeat until it says "roblox items ready" (three rounds: items, then their meshes/textures/templates, then head meshes).
+
+It writes `assets/roblox/cast.json`; `src/cast/roblox.ts` loads it, `buildCast(rb)` dresses each character (dynamic head,
+hair, shirt, pants), and `act()` turns story faces into FaceControls with BlockRig's `facsExpression`.
+Render with `--roblox` (`node scripts/render.mjs --roblox`, `ROBLOX=1 npm run stills`): the output is
+`out/<slug>-roblox.mp4`, for the user only.
+
+**Pitfalls:** layered hair (a MeshPart Handle with a WrapLayer, e.g. "Braided Hair") is placed by wrapping around the
+head's cage, not by its attachment: pick classic hair (SpecialMesh or MeshPart without WrapLayer) unless you wire up
+`addLayeredClothing({ wrap })`. Signed CDN links expire within hours: fetch soon after resolving.
 
 `npm run check` notes any source file that loads `roblox/` so it never slips into a published render.

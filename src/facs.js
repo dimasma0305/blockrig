@@ -79,3 +79,34 @@ export function facsBoneOffsets(facs, values, out = new Float32Array(facs.rows *
   }
   return out;
 }
+
+// ---- expressions as FaceControls, for dynamic heads ----
+// The same names as the drawn expressions (EXPRESSIONS in face.js), so a story can say "sad" and get it on either
+// kind of head. Values follow FACS: a smile is LipCornerPuller + CheekRaiser, sadness is InnerBrowRaiser +
+// LipCornerDown, surprise is brows up + UpperLidRaiser + JawDrop, anger is BrowLowerer + Corrugator + LipPresser.
+const both = (name, v) => ({ [`Left${name}`]: v, [`Right${name}`]: v });
+export const FACS_EXPRESSIONS = {
+  neutral: {},
+  happy: { ...both("LipCornerPuller", 0.7), ...both("CheekRaiser", 0.35) },
+  grin: { ...both("LipCornerPuller", 1), ...both("CheekRaiser", 0.6), ...both("LipStretcher", 0.3), JawDrop: 0.15 },
+  laugh: { ...both("LipCornerPuller", 1), ...both("CheekRaiser", 0.8), ...both("EyeClosed", 0.6), JawDrop: 0.5 },
+  smug: { RightLipCornerPuller: 0.8, RightCheekRaiser: 0.3, ...both("EyeClosed", 0.25), ...both("BrowLowerer", 0.2), EyesLookRight: 0.2 },
+  wink: { ...both("LipCornerPuller", 0.7), LeftEyeClosed: 1, LeftCheekRaiser: 0.5 },
+  determined: { ...both("BrowLowerer", 0.6), Corrugator: 0.3, LipPresser: 0.5, ChinRaiser: 0.3 },
+  angry: { ...both("BrowLowerer", 1), Corrugator: 1, LipPresser: 0.7, ...both("NoseWrinkler", 0.5), ...both("UpperLipRaiser", 0.2) },
+  furious: { ...both("BrowLowerer", 1), Corrugator: 1, ...both("NoseWrinkler", 0.8), ...both("UpperLipRaiser", 0.6), ...both("LipStretcher", 0.6), JawDrop: 0.25 },
+  roar: { ...both("BrowLowerer", 1), Corrugator: 1, ...both("NoseWrinkler", 1), ...both("UpperLipRaiser", 0.8), JawDrop: 0.9 },
+  shocked: { ...both("InnerBrowRaiser", 1), ...both("OuterBrowRaiser", 1), ...both("EyeUpperLidRaiser", 0.9), JawDrop: 0.7, Funneler: 0.2 },
+  scared: { ...both("InnerBrowRaiser", 1), ...both("OuterBrowRaiser", 0.4), ...both("EyeUpperLidRaiser", 0.8), ...both("LipStretcher", 0.7), Corrugator: 0.3, JawDrop: 0.2 },
+  sad: { ...both("InnerBrowRaiser", 0.9), Corrugator: 0.4, ...both("LipCornerDown", 0.8), ChinRaiser: 0.4, EyesLookDown: 0.3, ...both("EyeClosed", 0.15) },
+  hurt: { ...both("InnerBrowRaiser", 0.8), Corrugator: 0.6, ...both("EyeClosed", 0.5), ...both("LipStretcher", 0.5), ...both("LipCornerDown", 0.4) },
+  sleepy: { ...both("EyeClosed", 0.75), ...both("InnerBrowRaiser", 0.2), JawDrop: 0.1 },
+  embarrassed: { ...both("LipCornerPuller", 0.35), ...both("InnerBrowRaiser", 0.5), EyesLookDown: 0.6, EyesLookLeft: 0.3, LipPresser: 0.3 },
+  dazed: { ...both("EyeClosed", 0.35), EyesLookUp: 0.3, EyesLookLeft: 0.2, JawDrop: 0.3, ...both("InnerBrowRaiser", 0.3) },
+};
+/** FaceControls values for an expression name (0 for every control it doesn't use). Unknown names give neutral. */
+export function facsExpression(name, amount = 1) {
+  const out = Object.fromEntries(FACE_CONTROLS.map((c) => [c, 0]));
+  for (const [c, v] of Object.entries(FACS_EXPRESSIONS[name] ?? {})) out[c] = Math.min(1, v * amount);
+  return out;
+}

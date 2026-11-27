@@ -24,6 +24,14 @@ What the video looks like. The code follows this file; when the look changes, ch
 
 Every character needs: a body shape, drawn Shirt/Pants, hair or headwear, and one prop or accent. A plain block body looks unfinished.
 
+**Local Roblox version** (`--roblox`, never published): free official catalog items, listed in `assets/manifest.json`.
+
+| Id | Head (expressions via FaceControls) | Hair | Shirt | Pants |
+|---|---|---|---|---|
+| hero | Man Face (bundle 949) | Brown Charmer Hair | Teal Shirt | Black Jeans with Sneakers |
+| sister | Woman Face (bundle 948) | Belle Of Belfast Long Red Hair | Pastel Starburst Top with Gray Jacket | Jean Shorts with White Shoes |
+| neighbours | Man / Woman Face | Brown Hair, Pal Hair, Blonde Spiked Hair, Straight Blonde Hair | Blue Plaid, I <3 Pizza, Green Jersey, ROBLOX Jacket | Black Jeans, Dark Green Jeans, Ripped Skater Pants, Jean Shorts |
+
 ## Locations
 
 | Id | What | Built from |

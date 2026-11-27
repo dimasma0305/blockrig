@@ -7,20 +7,21 @@ import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Captions, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera, useAssetLibrary, type AssetLibrary } from "./kit";
 import { ASSETS } from "./world/assets";
+import { useRobloxCast, type RobloxCast } from "./cast/roblox";
 import { T, weatherAt, daylightAt } from "./story";
 import { buildCast } from "./cast/characters";
 import { buildWorld } from "./world/World";
 import { perform } from "./direction/performance";
 import { cameraFor } from "./direction/camera";
 
-export type VideoProps = { debug?: boolean };
+export type VideoProps = { debug?: boolean; roblox?: boolean }; // roblox: local Roblox items (never publish)
 
-function Scene({ lib }: { lib: AssetLibrary }) {
+function Scene({ lib, rb }: { lib: AssetLibrary; rb: RobloxCast | null }) {
   const frame = useCurrentFrame(), time = frame / T.FPS;
   const { camera, gl, scene } = useThree() as any;
   // straight to the canvas with AgX tone mapping and soft shadows (an EffectComposer blanks Remotion's frames)
   const world = useMemo(() => { gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap; return buildWorld(gl, scene, lib); }, [gl, scene, lib]);
-  const cast = useMemo(() => buildCast(), []);
+  const cast = useMemo(() => buildCast(rb), [rb]);
   const { shot, local, p } = T.shotAt(time);
   const state = perform(shot, local, p, cast, world);
   for (const q of cast.all) q.rig.object.updateMatrixWorld(true);
@@ -41,17 +42,18 @@ function Lightning() {
   return <LightningFlash strikes={weatherAt(shot, p).lightning} local={local} />;
 }
 
-export const Video: React.FC<VideoProps> = ({ debug }) => {
+export const Video: React.FC<VideoProps> = ({ debug, roblox }) => {
   const { width, height } = useVideoConfig();
   // downloaded models, skies and textures: loaded before the canvas mounts (delayRender holds the render), because
   // ThreeCanvas only redraws on frame changes, not on state changes inside it
   const lib = useAssetLibrary(ASSETS);
+  const rb = useRobloxCast(!!roblox); // undefined while loading, null when off
   return (
     <AbsoluteFill style={{ background: "#0b0d14" }}>
-      {lib && <ThreeCanvas width={width} height={height} shadows dpr={1}
+      {lib && rb !== undefined && <ThreeCanvas width={width} height={height} shadows dpr={1}
         gl={{ antialias: true, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
         camera={{ fov: 50, near: 0.1, far: 2000, position: [0, 10, 30] }}>
-        <Scene lib={lib} />
+        <Scene lib={lib} rb={rb} />
       </ThreeCanvas>}
       <Lightning />
       <Vignette strength={0.45} />

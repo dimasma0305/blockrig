@@ -309,6 +309,9 @@ rig.faceControls.JawDrop = 0.8;
 rig.faceControls.LeftEyeClosed = rig.faceControls.RightEyeClosed = 1;
 rig.applyFaceControls();                                      // the Animator does this on every update
 
+Object.assign(rig.faceControls, facsExpression("sad"));        // presets with the drawn expression names (happy, shocked, ...)
+rig.applyFaceControls();
+
 const mood = keyframeSequenceToClip(parseRbxm(moodAnimationBytes)); // FaceControls NumberPoses become face keys
 new Animator(rig).play(mood);
 ```

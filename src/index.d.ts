@@ -288,6 +288,10 @@ export interface Facs {
 export function parseFacs(bytes: Uint8Array): Facs;
 export function facsWeights(facs: Facs, values: Partial<Record<string, number>>): Float32Array;
 export function facsBoneOffsets(facs: Facs, values: Partial<Record<string, number>>, out?: Float32Array): Float32Array;
+/** FaceControls presets for the drawn expression names (happy, sad, shocked, ...), for dynamic heads. */
+export const FACS_EXPRESSIONS: Record<string, Partial<Record<FaceControlName, number>>>;
+/** FaceControls values (every control, 0 when unused) for an expression name; `amount` scales it. */
+export function facsExpression(name: string, amount?: number): Record<FaceControlName, number>;
 export function cageKey(u: number, v: number): string;
 export function cageMap(cage: CageMesh, o?: { origin?: number[]; at?: number[]; scale?: number[]; into?: Map<string, number[]> }): Map<string, number[]>;
 export function fitLayer(positions: ArrayLike<number>, layer: WrapLayerSpec, target: Map<string, number[]>, o?: { k?: number; normals?: ArrayLike<number> | null; inflate?: number }): { positions: Float32Array; target: Map<string, number[]>; matched: number };

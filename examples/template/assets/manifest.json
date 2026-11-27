@@ -70,10 +70,86 @@
     }
   },
   "roblox": {
-    "$example": {
-      "name": "classic-hair",
-      "assetId": 0,
-      "format": "avatar_meshpart_accessory"
+    "$about": "Free official Roblox items (creator: Roblox, price 0). LOCAL videos only: never commit or publish. npm run roblox (see the assets skill).",
+    "boyHead": {
+      "bundle": 949,
+      "kind": "head"
+    },
+    "girlHead": {
+      "bundle": 948,
+      "kind": "head"
+    },
+    "heroHair": {
+      "assetId": 376548738,
+      "kind": "hair"
+    },
+    "heroShirt": {
+      "assetId": 382537702,
+      "kind": "shirt"
+    },
+    "heroPants": {
+      "assetId": 382538503,
+      "kind": "pants"
+    },
+    "sisterHair": {
+      "assetId": 2956239660,
+      "kind": "hair"
+    },
+    "sisterShirt": {
+      "assetId": 398634295,
+      "kind": "shirt"
+    },
+    "sisterPants": {
+      "assetId": 382537950,
+      "kind": "pants"
+    },
+    "n0Hair": {
+      "assetId": 62234425,
+      "kind": "hair"
+    },
+    "n0Shirt": {
+      "assetId": 398635081,
+      "kind": "shirt"
+    },
+    "n0Pants": {
+      "assetId": 382537569,
+      "kind": "pants"
+    },
+    "n1Hair": {
+      "assetId": 63690008,
+      "kind": "hair"
+    },
+    "n1Shirt": {
+      "assetId": 382537085,
+      "kind": "shirt"
+    },
+    "n1Pants": {
+      "assetId": 144076760,
+      "kind": "pants"
+    },
+    "n2Hair": {
+      "assetId": 376524487,
+      "kind": "hair"
+    },
+    "n2Shirt": {
+      "assetId": 382538059,
+      "kind": "shirt"
+    },
+    "n2Pants": {
+      "assetId": 398635338,
+      "kind": "pants"
+    },
+    "n3Hair": {
+      "assetId": 376526888,
+      "kind": "hair"
+    },
+    "n3Shirt": {
+      "assetId": 607785314,
+      "kind": "shirt"
+    },
+    "n3Pants": {
+      "assetId": 382537806,
+      "kind": "pants"
     }
   }
 }

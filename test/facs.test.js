@@ -117,3 +117,18 @@ test("face animation: FaceControls NumberPoses import and play through the Anima
   an.stop(clip, 0); an.update(0.01);
   assert.equal(rig.faceControls.JawDrop, 0, "controls the animation stops driving go back to 0");
 });
+
+test("FACS expressions: the drawn expression names, valid FaceControls, in range", async () => {
+  const { FACS_EXPRESSIONS, facsExpression, FACE_CONTROLS } = await import("../src/facs.js");
+  const { EXPRESSIONS } = await import("../src/face.js");
+  for (const name of Object.keys(EXPRESSIONS)) assert.ok(FACS_EXPRESSIONS[name], `no FACS expression for ${name}`);
+  for (const [name, fc] of Object.entries(FACS_EXPRESSIONS)) for (const [c, v] of Object.entries(fc)) {
+    assert.ok(FACE_CONTROLS.includes(c), `${name}: ${c} is not a FaceControl`);
+    assert.ok(v >= 0 && v <= 1, `${name}: ${c} = ${v}`);
+  }
+  const sad = facsExpression("sad");
+  assert.equal(Object.keys(sad).length, FACE_CONTROLS.length);
+  assert.ok(sad.LeftLipCornerDown > 0 && sad.LeftLipCornerPuller === 0);
+  assert.equal(facsExpression("nope").JawDrop, 0);
+  assert.equal(facsExpression("shocked", 0.5).JawDrop, 0.35);
+});

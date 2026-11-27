@@ -21,6 +21,10 @@ npm run stills    # out/contact-sheet.jpg
 npm run render    # out/<slug>.mp4
 ```
 
+For a **local** version with real Roblox items (free official dynamic heads with expressions, hair, shirts, pants;
+signed in to Roblox in the browser pane): `npm run roblox` (see the assets skill), then `node scripts/render.mjs --roblox`
+→ `out/<slug>-roblox.mp4`. Never post or commit that one.
+
 The sample story, "The Rain Knows" (*In this town, it rains every time someone lies*), shows every system: a suburban
 street and bedroom built from downloaded CC0 assets (Kenney houses, roads, cars, furniture; Poly Haven HDRI skies and
 textures; clouds, birds and an animated dog), drawn clothes and hair, faces, a storm with lightning, wet ground,

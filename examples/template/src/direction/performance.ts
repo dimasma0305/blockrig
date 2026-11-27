@@ -2,6 +2,7 @@
 // (shot, local time): call it every frame. Unused characters are hidden. Follow docs/story.md "action" notes.
 import * as THREE from "three";
 import { poseAt, groundRig, FEET, ON_SEAT, type Layer } from "../kit/pose";
+import { facsExpression } from "blockrig";
 import type { Shot } from "../kit";
 import * as C from "../cast/clips";
 import type { Cast, Person } from "../cast/characters";
@@ -12,8 +13,8 @@ export function place(p: Person, x: number, z: number, rotY: number, y = 0) { p.
 /** Pose a person from clip layers at local time t, set the face, and stand them on the ground (or seat them). */
 export function act(p: Person, layers: Layer[], t: number, face: string | undefined, ground = 0, contacts = FEET) {
   poseAt(p.rig, layers, t);
-  if (face) p.face.set(face, { fade: 0 });
-  p.rig.updateFace(0); // redraw the live face texture for this frame
+  if (p.dynamic) { Object.assign(p.rig.faceControls, facsExpression(face ?? "neutral")); p.rig.applyFaceControls(); } // Roblox dynamic head
+  else { if (face) p.face.set(face, { fade: 0 }); p.rig.updateFace(0); } // drawn face: redraw the live texture
   groundRig(p.rig, ground, contacts);
 }
 const faceOf = (shot: Shot, who: string, fallback = "neutral") => shot.faces?.[who] ?? fallback;

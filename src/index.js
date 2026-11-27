@@ -17,7 +17,7 @@ export { occluder, mergeOccluders, triangleCoverage, coveredTriangles } from "./
 export { BRICK_COLORS, brickColorHex } from "./brickcolor.js";
 export { solvePosition, applyPole, solveRotation, solveLookAt } from "./ik.js";
 export { curveAnimationToClip, decodeFloatCurve, decodeRotationCurve, decodeMarkerCurve, evalFloatCurve, evalRotationCurve, KEY_INTERPOLATION, ROTATION_ORDER, TICKS_PER_SECOND } from "./curves.js";
-export { parseFacs, facsWeights, facsBoneOffsets, FACS_CODES, FACE_CONTROLS } from "./facs.js";
+export { parseFacs, facsWeights, facsBoneOffsets, FACS_CODES, FACE_CONTROLS, FACS_EXPRESSIONS, facsExpression } from "./facs.js";
 export { keyframeSequenceToClip, POSE_EASING_STYLE, POSE_EASING_DIRECTION, ANIMATION_PRIORITY, R6_C0_ROTATIONS } from "./keyframes.js";
 export { lz4Block } from "./binary.js";
 export const VERSION = "0.2.0";
