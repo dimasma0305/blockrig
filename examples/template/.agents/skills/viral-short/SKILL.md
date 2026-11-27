@@ -24,7 +24,9 @@ video is worth more than questions up front.
 
 ## Defaults users asked for (keep them unless told otherwise)
 
-- **Voice:** expressive young male narrator (Kokoro `am_adam` pitched ×1.35, performed by Chatterbox). ~160 wpm overall, short gaps, never rushed. Lines ending in "!" sound panicked/excited.
+- **Assets first, don't reinvent:** Before building anything in code (a model, texture, sky, cloud, animal, prop, face, clothing, hair, animation), look for a downloadable asset: the source list in the `assets` skill, listed in `assets/manifest.json`, fetched by `npm run assets` / `npm run roblox`. Code-built kit pieces (`src/kit/structures.ts`, `textures.ts`, procedural hair/clothes) are only a fallback when no asset fits, and the reason goes in `docs/visuals.md`. Every visual item in `docs/visuals.md` names its source.
+
+- **Voice:** expressive young male narrator (Kokoro `am_adam` pitched ×1.35, performed by Chatterbox). ~160 wpm overall, short gaps, never rushed. Every line performed with the emotion its meaning calls for (`emotion:` per shot: sad lines sad, reveals shocked, punchlines smug).
 - **Characters:** classic blocky Roblox look, but never plain: drawn clothes, hair or hat, an accent colour, accessories. Expressive faces that change with the story.
 - **Places:** suburban houses with few windows set back behind lawns; real structure (roofs, porches, fences, trees, lamps, power lines, cars); people in the street.
 - **Surfaces:** every surface textured (road, sidewalk, grass, walls, roofs, wood, fabric, carpet, lamp shades).

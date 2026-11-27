@@ -25,6 +25,13 @@ for (const s of story.shots) {
     if (c.words.at(-1).start > c.duration + 0.05) problems.push(`${s.id}: a caption word starts after the clip ends`);
   }
 }
+// one narrator: every clip's median pitch should sit near the others (a big jump sounds like another person)
+const pitches = story.shots.filter((s) => s.narration && fs.existsSync(`assets/audio/${s.id}.wav.json`)).map((s) => [s.id, JSON.parse(fs.readFileSync(`assets/audio/${s.id}.wav.json`, "utf8")).pitch]).filter(([, p]) => p > 0);
+if (pitches.length > 2) {
+  const sorted = pitches.map(([, p]) => p).sort((a, b) => a - b), median = sorted[Math.floor(sorted.length / 2)];
+  notes.push(`voice pitch: median ${median.toFixed(0)} Hz, range ${sorted[0].toFixed(0)}-${sorted.at(-1).toFixed(0)} Hz`);
+  for (const [id, p] of pitches) { const d = p / median - 1; if (Math.abs(d) > 0.2) problems.push(`${id}: voice pitch ${p.toFixed(0)} Hz is ${(d * 100).toFixed(0)}% off the narrator's ${median.toFixed(0)} Hz (sounds like another voice)`); else if (Math.abs(d) > 0.12) notes.push(`${id}: voice pitch ${(d * 100).toFixed(0)}% off the median`); }
+}
 if (!timings.placeholder && timings.total) {
   const wpm = (60 * words) / timings.total;
   notes.push(`pace: ${words} words in ${timings.total.toFixed(1)} s = ${wpm.toFixed(0)} wpm overall (target ~160)`);

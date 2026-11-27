@@ -5,7 +5,13 @@ description: Build the locations and atmosphere - structure (houses, rooms, stre
 
 # World: structure and atmosphere
 
-## Structure (src/kit/structures.ts)
+## Assets first
+
+Buildings, roads, lamps, fences, trees, cars, furniture, clouds, birds and skies come from downloaded assets
+(`assets` skill: CC0 model kits, Poly Haven HDRI skies with real sun and clouds, PBR textures). Place them with
+GLTFLoader inside `delayRender`. The code builders below are the fallback when no asset fits; say why in docs/visuals.md.
+
+## Structure fallback (src/kit/structures.ts)
 
 Scale: a character is ~5 studs, a door ~7, a storey ~10. Everything is seeded and textured.
 

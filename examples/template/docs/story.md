@@ -22,6 +22,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - captions: 2-4 WORDS | PER CAPTION | *ONE* WORD IN STARS IS HIGHLIGHTED   (must cover the narration, in order)
 - action: who does what (one clear action, from clips in src/cast/clips.ts)
 - camera: where it is, how tight, at most one move
+  (match the meaning: "Rank... last." is sad, not panic; without it, "!" lines are panic)
 - faces: hero=shock, sister=angry   (BlockRig expressions: neutral happy grin laugh smug wink determined angry furious roar shocked scared sad hurt sleepy embarrassed dazed)
 - weather: clear | overcast | fog | drizzle | rain | storm | snow | blizzard   (add "lightning 0.3" for a strike at 0.3 s)
 - time: day | golden | dusk | night | storm
@@ -36,6 +37,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: IN THIS TOWN | IT *RAINS* EVERY TIME | SOMEONE *LIES*
 - action: hero walks down the sunny street; neighbours chat on the sidewalk
+- emotion: neutral
 - camera: high wide crane down onto the street, ending behind the hero
 - faces: hero=happy
 - weather: clear
@@ -47,6 +49,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: MY SISTER ASKED | IF I ATE | HER *COOKIES*
 - action: sister stands with arms crossed; hero sits on the bed next to an empty plate
+- emotion: serious
 - camera: front three-quarter of the room, both in frame, slow push in
 - faces: sister=angry, hero=embarrassed
 - weather: clear
@@ -58,6 +61,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: I SAID... | NOT *ME!*
 - action: hero shrugs too hard
+- emotion: panic
 - camera: close-up on the hero, quick push in
 - faces: hero=grin
 - weather: clear
@@ -78,6 +82,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: THE WHOLE STREET | *KNEW!*
 - action: neighbours in the rain turn and point at the hero
+- emotion: shocked
 - camera: wide over the neighbours' shoulders to the hero on his lawn
 - faces: hero=shocked
 - weather: rain
@@ -89,6 +94,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: SO I TOLD | THE *TRUTH*
 - action: hero slumps; the rain stops and the sun breaks through
+- emotion: sad
 - camera: medium on the hero, slow pull back as the light comes back
 - faces: hero=sad
 - weather: rain -> clear
@@ -100,6 +106,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: NOW IT ONLY RAINS... | WHEN *SHE* LIES
 - action: sister smiles sweetly; one small cloud rains only on her
+- emotion: smug
 - camera: two-shot, hero in the foreground looking at the camera
 - faces: hero=smug, sister=happy
 - weather: clear

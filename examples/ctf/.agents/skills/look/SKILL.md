@@ -5,6 +5,10 @@ description: Design and build the cast - BlockRig bodies, drawn Shirt/Pants temp
 
 # Look: characters that are never plain
 
+**Assets first:** real Roblox faces (expressions), shirts/pants, hair and accessories from the catalog (`assets` skill,
+local videos only) before drawing anything. The drawn wardrobe and procedural hair below are the fallback for videos
+that will be published or committed, where catalog items can't be used.
+
 A bare rig is flat-coloured blocks. Every character gets five layers (all in `src/cast/`), recorded in the Cast
 table of `docs/visuals.md` first.
 

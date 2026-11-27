@@ -1,6 +1,6 @@
 # Audio
 
-Fast, expressive narrator; the "!" lines are performed with panic/energy. Measured target: ~160 wpm overall.
+Expressive narrator: every line has the emotion of its meaning (`emotion:` in story.md, see the voice skill). Measured target: ~160 wpm overall.
 
 ## Voice
 
@@ -11,7 +11,7 @@ Fast, expressive narrator; the "!" lines are performed with panic/energy. Measur
 - cfg: 0.35
 - tempo: 1.12
 - gap: 0.2
-- panic: exaggeration 1.4, cfg 0.3, lift 1.05, gain 2.5
+- panic: exaggeration 1.4, cfg 0.3, gain 2
 
 ## Music
 

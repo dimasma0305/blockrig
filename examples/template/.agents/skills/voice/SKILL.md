@@ -26,10 +26,35 @@ Default (docs/audio.md): `engine: chatterbox`, `voice: am_adam`, `pitch: 1.35`, 
 
 `npm run setup-voice` installs Kokoro, faster-whisper and (with a GPU) Chatterbox into `~/.venvs/blockrig-voice`.
 
+## Emotion: say each line the way it means
+
+Every narrated shot has `emotion:` in docs/story.md. The narrator must sound like the line: "Rank... last." is
+**sad** (it was once marked "!" and came out cheerful: never use "!" to mean "emotional"). Each emotion picks a voice
+sample read in that mood (Chatterbox copies its delivery), the exaggeration and pacing, and tempo and volume. **Never
+shift pitch or add filters per emotion**: that made sad lines sound like a different person. `npm run check` flags any
+clip whose pitch drifts more than 20% from the narrator's median.
+
+| Emotion | Use for | Delivery |
+|---|---|---|
+| neutral | plain set-up lines | base settings |
+| happy | good news, warm lines | brighter |
+| excited | hype, the hook, wins, lists building up | energetic, a bit faster, louder |
+| panic | lies, chaos, "oh no" | most intense, fast, loud |
+| shocked | sudden reveals, "Nothing worked!" | intense |
+| scared | fear, threats | anxious, a bit fast, softer |
+| sad | losses, loneliness, confessions | slow, flat, soft |
+| serious | stakes, rules, determination | slower, steady |
+| smug | punchlines, twists, "I did it my way" | relaxed, a bit slower |
+| angry | arguments | intense, loud |
+| whisper | secrets, tension before a reveal | quiet, slow |
+
+Lesson: an early version also pitched sad lines down (184 → 128 Hz) and it sounded like another voice. Tune or add
+emotions in `docs/audio.md` (`- emotions: ...` is passed to the script as `emotions`) or in `EMOTIONS`.
+
 ## Pace and emotion
 
 - Pace is set by `tempo` (time-stretch, same pitch) and `gap`; `npm run check` reports wpm overall. Aim 150–170.
-- Panic/energy: end the line with "!". Put only the panicked sentence in its own shot or line, or the whole line rises.
+- Emotion is per line (`emotion:`); a line ending in "!" without one defaults to panic. A line has one mood, so split a shot's narration into two shots when the mood turns mid-line.
 - Each clip is trimmed to the speech; pauses inside a line ("Rank... last!") stay.
 
 ## You cannot hear it

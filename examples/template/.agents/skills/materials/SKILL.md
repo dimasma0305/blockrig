@@ -8,7 +8,13 @@ description: Textures and materials for every surface - road, sidewalk, grass, b
 Flat colour reads as unfinished. Every surface gets a texture at its real size; record choices in the
 "Materials and textures" table of `docs/visuals.md`.
 
-## Procedural (default, no downloads): src/kit/textures.ts
+## Downloaded first
+
+Use CC0 PBR textures (Poly Haven, ambientCG: colour + roughness + normal) for road, grass, wood, brick, fabric,
+concrete and tiles, listed in `assets/manifest.json` and fetched by `npm run assets`. Downloaded models usually bring
+their own textures: keep them. The procedural painters below are the fallback (offline, or nothing suitable).
+
+## Procedural fallback: src/kit/textures.ts
 
 `TEXTURES` holds painters for: asphalt (cracks, patches), sidewalk (4-stud slabs), grass (blades, flowers), dirt,
 brick, siding, shingles, wood (planks, grain), plaster, tile (checker with an accent), carpet, fabric (weave; plaid
@@ -34,9 +40,9 @@ Add a texture: a painter in `TEXTURES` (paint at 256 px over `studs` studs), the
 | roof | shingles |
 | road, sidewalk, lawn | asphalt + markings, sidewalk, grass |
 
-## Photo-real CC0 PBR (optional)
+## Using downloaded PBR sets
 
-For hero surfaces, Poly Haven / ambientCG CC0 sets (colour + roughness + normal) look richer. List them under
+Poly Haven / ambientCG CC0 sets (colour + roughness + normal) are the default for every large surface. List them under
 `textures` in `assets/manifest.json`, `npm run assets` (downloads into `assets/textures/<name>/`, git-ignored, licence
 kept), then load with `TextureLoader` inside a `delayRender` and use the same `studs` repeat. Keep them stylised
-enough for blocky characters (low-contrast, not noisy); one or two hero surfaces, not everything.
+enough for blocky characters (low-contrast, not noisy).

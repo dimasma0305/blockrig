@@ -54,7 +54,7 @@ function estimateWords(text, phrases, duration) {
 const timings = { engine, fps: story.fps, clips: {} };
 // Chatterbox loads a large model, so every line is voiced in one run of its own Python environment
 if (engine === "chatterbox") {
-  const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.narration, out: `${outDir}/${s.id}.wav` }));
+  const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
   fs.writeFileSync(`${outDir}/lines.json`, JSON.stringify(lines));
   execFileSync(voicePy, ["scripts/voice/make_voice_chatterbox.py", "--lines", `${outDir}/lines.json`, "--config", JSON.stringify(story.voice?.chatterbox || {})], { stdio: ["ignore", "inherit", "ignore"] });
 }

@@ -50,7 +50,8 @@ npm run preview          # small MP4 + GIF for sharing
 3. **Voice before animation.** Shot lengths come from the measured narration, never guesses.
 4. **Frame-pure.** Everything is a function of the frame: no `Math.random()`, `Date.now()`, `useFrame` deltas or `THREE.Clock`. Use `rng(seed)`, `poseAt`, and time-driven shaders. Remotion renders frames in parallel tabs, so even textures must be seeded.
 5. **Characters come from BlockRig** and follow its Roblox-parity rules (`../../AGENTS.md`). If a character needs something BlockRig lacks, add it to the library with tests.
-6. **Nothing plain.** Every character has clothes, hair or headwear and an accent; every location has structure (buildings with roofs, windows, fences, props), every surface a texture, every outdoor shot a weather and time of day.
-7. **Check stills before a full render**, with the debug overlay for framing (faces clear of captions and app buttons).
-8. **Licences.** Commit only original or CC0 content. Roblox catalog items are for local use only (`assets/roblox/`, git-ignored) and never appear in a published or committed video. Posting is the user's job.
-9. **You cannot hear audio.** Use `npm run check` (speech recognition of every take), measure pace, and ask the user to listen.
+6. **Assets first: don't reinvent.** Before building anything in code (a model, texture, sky, cloud, animal, prop, face, clothing, hair, animation), look for a downloadable asset: the source list in the `assets` skill, listed in `assets/manifest.json`, fetched by `npm run assets` / `npm run roblox`. Code-built kit pieces (`src/kit/structures.ts`, `textures.ts`, procedural hair/clothes) are only a fallback when no asset fits, and the reason goes in `docs/visuals.md`. Every visual item in `docs/visuals.md` names its source.
+7. **Nothing plain.** Every character has clothes, hair or headwear and an accent; every location has structure (buildings with roofs, windows, fences, props), every surface a texture, every outdoor shot a weather and time of day.
+8. **Check stills before a full render**, with the debug overlay for framing (faces clear of captions and app buttons).
+9. **Licences.** Commit only original or CC0 content. Roblox catalog items are for local use only (`assets/roblox/`, git-ignored) and never appear in a published or committed video. Posting is the user's job.
+10. **You cannot hear audio.** Use `npm run check` (speech recognition of every take), measure pace, and ask the user to listen.

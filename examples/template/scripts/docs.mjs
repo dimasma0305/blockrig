@@ -8,6 +8,7 @@ import { THEME_NAMES } from "./music.mjs";
 const EXPRESSIONS = "neutral happy grin laugh smug wink determined angry furious roar shocked scared sad hurt sleepy embarrassed dazed".split(" ");
 const WEATHER = "clear overcast fog drizzle rain storm snow blizzard lightning".split(" ");
 const TIMES = "day golden dusk night storm".split(" ");
+const EMOTIONS = "neutral happy excited panic shocked scared sad serious smug angry whisper".split(" ");
 
 const read = (f) => fs.readFileSync(f, "utf8").replace(/\r\n/g, "\n").replace(/<!--[\s\S]*?-->/g, "");
 const errors = [], warnings = [];
@@ -72,6 +73,8 @@ for (const s of shots) {
   if (!s.action) warnings.push(`${s.id}: no action note`);
   for (const [who, face] of Object.entries(s.faces ?? {})) if (!EXPRESSIONS.includes(face)) errors.push(`${s.id}: face "${face}" for ${who} is not a BlockRig expression (${EXPRESSIONS.join(", ")})`);
   for (const part of (s.weather ?? "").split(/->|;/)) { const w = part.trim().split(/\s+/)[0]; if (w && !WEATHER.includes(w)) errors.push(`${s.id}: unknown weather "${w}"`); }
+  if (s.emotion && !EMOTIONS.includes(s.emotion)) errors.push(`${s.id}: unknown emotion "${s.emotion}" (${EMOTIONS.join(", ")})`);
+  if (s.narration && !s.emotion) warnings.push(`${s.id}: no emotion for the narrator (defaults to ${s.narration.trim().endsWith("!") ? "panic" : "neutral"})`);
   for (const part of (s.time ?? "").split("->")) { const t = part.trim(); if (t && !TIMES.includes(t)) errors.push(`${s.id}: unknown time "${t}"`); }
 }
 for (const m of music) { if (!ids.has(m.fromShot)) errors.push(`audio.md music: no shot "${m.fromShot}"`); if (!THEME_NAMES.includes(m.theme)) errors.push(`audio.md music: unknown theme "${m.theme}" (${THEME_NAMES.join(", ")})`); }

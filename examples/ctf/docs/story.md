@@ -21,6 +21,7 @@ size: 1080x1920
 
 - captions: IN THIS *WORLD*, | EVERYBODY PLAYS *CTF*.
 - action: crane down past the sky scoreboard into the busy neon street; people walk, rank tags floating over them
+- emotion: excited
 - camera: high crane down from the scoreboard to street level
 - weather: drizzle
 - time: night
@@ -31,6 +32,7 @@ size: 1080x1920
 
 - captions: EVEN THE *BAKERY* | HIDES A *FLAG* | IN ITS RECEIPTS.
 - action: the baker hands over bread; a receipt hologram pops up with a glowing flag{...} line
+- emotion: happy
 - camera: medium on the baker at the shop counter, slight push-in
 - faces: baker=happy
 - weather: drizzle
@@ -42,6 +44,7 @@ size: 1080x1920
 
 - captions: *KIDS* LEARN | *SQL* INJECTION | BEFORE MULTIPLICATION.
 - action: two kids outside the school cheer at a floating ' OR 1=1-- hologram; the school sign glitches
+- emotion: excited
 - camera: low angle on the kids, school sign above
 - faces: kids=grin
 - weather: drizzle
@@ -49,10 +52,11 @@ size: 1080x1920
 - mood: funny
 
 ### s04 · street
-> And me? Rank... last!
+> And me? Rank... last.
 
 - captions: AND *ME*? | RANK... *LAST*.
 - action: the hero alone on the pavement, the rank tag above them flickers to #8,000,000,000; slump
+- emotion: sad
 - camera: close on the hero, pull up to reveal the tag
 - faces: hero=sad
 - weather: rain
@@ -64,6 +68,7 @@ size: 1080x1920
 
 - captions: *TONIGHT* IS | THE WORLD *FINAL*. | ONE *FLAG*, | LOCKED INSIDE THE *VAULT*.
 - action: reveal the Vault tower under the hex firewall dome, searchlights sweeping, crowd behind barriers
+- emotion: serious
 - camera: wide low orbit around the dome
 - weather: rain; lightning 0.4
 - time: night
@@ -74,6 +79,7 @@ size: 1080x1920
 
 - captions: THE *PROS* | THREW *EVERYTHING*.
 - action: the pro team steps forward in formation and raises their laptops
+- emotion: serious
 - camera: low hero shot of the team, slow push
 - faces: pros=determined
 - weather: storm
@@ -85,6 +91,7 @@ size: 1080x1920
 
 - captions: ZERO-DAYS. | *RAINBOW* TABLES. | AN ACTUAL *BOTNET*.
 - action: packet beams and a rainbow beam hit the dome, impacts ripple; a swarm of drones dives in; sparks
+- emotion: excited
 - camera: fast side tracking along the beams, camera shake
 - faces: pros=furious
 - weather: storm; lightning 0.5 1.6
@@ -96,6 +103,7 @@ size: 1080x1920
 
 - captions: *NOTHING* WORKED.
 - action: dome flickers and holds; drones drop; the pros slump
+- emotion: shocked
 - camera: static wide, dome centred
 - faces: pros=sad
 - weather: storm; lightning 0.05
@@ -108,6 +116,7 @@ size: 1080x1920
 
 - captions: SO I *TRIED* | THE *ONE* THING | *NOBODY* DID.
 - action: the hero walks through the crowd to the little terminal at the Vault door
+- emotion: serious
 - camera: behind the hero, tracking forward
 - faces: hero=determined
 - weather: rain
@@ -119,6 +128,7 @@ size: 1080x1920
 
 - captions: I *VIEWED* | THE PAGE *SOURCE*.
 - action: the hero's hand on the keyboard (IK), the screen fills with HTML
+- emotion: smug
 - camera: over the shoulder onto the screen
 - faces: hero=smug
 - weather: rain
@@ -140,6 +150,7 @@ size: 1080x1920
 
 - captions: THE *FLAG* | WAS IN A *COMMENT*.
 - action: the dome shatters into hexes, the Vault opens, glyph confetti bursts, the crowd's jaws drop
+- emotion: excited
 - camera: wide pull-back from the opening Vault
 - faces: hero=laugh, pros=shocked, crowd=shocked
 - weather: rain -> clear
@@ -152,6 +163,7 @@ size: 1080x1920
 
 - captions: *NOW* I'M | RANK *ONE*.
 - action: the sky scoreboard flips; the hero's tag spins to #1; victory jump
+- emotion: excited
 - camera: low angle on the hero, scoreboard behind
 - faces: hero=grin
 - weather: clear
@@ -164,6 +176,7 @@ size: 1080x1920
 
 - captions: AND *EVERYBODY* | IN THIS *WORLD* | CHECKS THE *SOURCE* | FIRST.
 - action: back on the street: everyone, the baker and kids included, types view-source; screens glow green
+- emotion: smug
 - camera: crane up from the street back to the scoreboard
 - faces: baker=smug, kids=grin
 - weather: clear

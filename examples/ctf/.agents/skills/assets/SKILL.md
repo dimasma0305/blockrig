@@ -5,8 +5,9 @@ description: Download assets for a video - CC0 models, PBR textures and HDRI ski
 
 # Assets
 
-The template's sample needs no downloads: everything is built in code. Downloads are listed in
-`assets/manifest.json` and land in git-ignored folders under `assets/`.
+**Assets first.** Use downloaded assets for models, environments, skies, clouds, animals, textures, faces, clothes and
+hair before building anything in code; the code-built kit is only a fallback. Downloads are listed in
+`assets/manifest.json` and land in git-ignored folders under `assets/`; licences stay next to them.
 
 ## CC0 (safe to publish)
 

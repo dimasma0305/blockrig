@@ -12,7 +12,7 @@ overall with no dead air (reference measured at 161 wpm, 2.7 words/s including p
 - cfg: 0.35
 - tempo: 1.0
 - gap: 0.2
-- panic: exaggeration 1.4, cfg 0.3, lift 1.05, gain 2.5
+- panic: exaggeration 1.4, cfg 0.3, gain 2
 
 Engines (`npm run setup-voice` installs the offline ones):
 
@@ -23,7 +23,7 @@ Engines (`npm run setup-voice` installs the offline ones):
 | edge | Microsoft neural voices | `pip install edge-tts`; sends the text to Microsoft (ask the user first) |
 | sapi | Windows' built-in voice | nothing; robotic placeholder |
 
-Lines ending in "!" get the `panic` settings: more emotion, a little higher and louder.
+Each shot's `emotion:` in story.md picks how the narrator says it (see the voice skill's table); a line ending in "!" without one is `panic`.
 
 ## Music
 
