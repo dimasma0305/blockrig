@@ -8,6 +8,7 @@ import { createLighting, createWeather, applyFog, rng, type AssetLibrary, type W
 import { HOUSES } from "./assets";
 import { buildRobloxMap } from "../kit/robloxMap";
 import { Plan, rect, circle } from "../kit/plan";
+import { restOn } from "../kit/surfaces";
 import type { RobloxCast } from "../cast/roblox";
 
 // LOCAL --roblox only: a free Toolbox room replaces the Kenney bedroom. Numbers are in the map's own studs (read
@@ -140,7 +141,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     // sit on the long side that faces the room's centre, a little below the blanket top
     // (hips over the mattress, on top of the blanket: npm run collide checks both)
     const side = Math.sign(B.x - bc.x) || 1, blanket = m.find(ROBLOX_ROOM.blanket).translate(shift);
-    bedSpot = { seat: V3(side > 0 ? bed.max.x - 0.9 : bed.min.x + 0.9, 0, bc.z - 1), top: blanket.isEmpty() ? B.y + (bed.max.y - B.y) * 0.62 : blanket.max.y - 0.2 };
+    bedSpot = { seat: V3(side > 0 ? bed.max.x - 0.9 : bed.min.x + 0.9, 0, bc.z - 1), top: restOn(blanket.isEmpty() ? bed.max.y : blanket.max.y, "bed") }; // the mattress gives a little (kit/surfaces.ts)
     bedView = { from: ROBLOX_ROOM.view.from.clone().add(shift), to: ROBLOX_ROOM.view.to.clone().add(shift) };
     roomBox = ROBLOX_ROOM.inner.clone().translate(shift).expandByScalar(-0.8);
     const fill = new THREE.PointLight("#fff1dc", 22, 40, 1.3); fill.position.set(B.x, B.y + 9.5, B.z); root.add(fill);
@@ -159,7 +160,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     room.add(at(lib.model("rug", { scale: FURN }), 0.5, 0.06, 1.5), at(lib.model("plant", { scale: FURN }), half - 1.5, 0.05, half - 3));
     const lampLight = new THREE.PointLight("#ffcf8a", 14, 22, 1.6); lampLight.position.set(-half + 8.6, 3.6, -half + 1.6); room.add(lampLight);
     const ceiling = new THREE.PointLight("#fff3dc", 26, 40, 1.4); ceiling.position.set(0, 8.5, 0); room.add(ceiling);
-    bedSpot = { seat: new THREE.Vector3(B.x - half + 3.4 + bedSize.x / 2 - 0.3, 0, B.z - half + 5.4), top: 0.05 + bedSize.y - 0.7 }; // the mattress is 0.7 below the headboard top (measured: npm run collide)
+    bedSpot = { seat: new THREE.Vector3(B.x - half + 3.4 + bedSize.x / 2 - 0.3, 0, B.z - half + 5.4), top: restOn(0.05 + bedSize.y - 0.7, "bed") }; // mattress top: 0.7 below the headboard (measured: npm run collide); it gives a little
     bedView = { from: V3(B.x - 4.2, 7.4, B.z + 14), to: V3(B.x - 3.2, 2.6, B.z - 4) };
 
   }

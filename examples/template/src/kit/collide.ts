@@ -3,7 +3,9 @@
 //   camera-inside   the camera is inside a wall or prop (the frame goes blank or shows a wall's back)
 //   hidden          a character in frame is hidden from the camera by a wall or prop
 //   inside          a character's torso is inside a wall, prop or furniture
-//   floating/sunk   a character's feet are above or below the ground they stand on
+//   floating/sunk   a character's feet (or seated hips) are above, or deeper than the surface's softness into, what is
+//                   below (kit/surfaces.ts: a bed or sofa gives ~0.3 studs, a floor nothing)
+//   stiff           a character rests exactly on top of something soft (a bed should give a little)
 //   overlap         two characters stand inside each other
 // The probe runs inside the real render (same scene, poses, cameras), so it checks exactly what the video shows.
 // Characters are not colliders (they are checked against the world). Objects with userData.noCollide (clouds,
@@ -11,9 +13,10 @@
 // solid, so "inside a wall" is caught even where a mesh would be hollow.
 import * as THREE from "three";
 import type RAPIER_NS from "@dimforge/rapier3d-compat";
+import { surfaceOf } from "./surfaces";
 
 type R = typeof RAPIER_NS;
-export type Issue = { kind: "camera-inside" | "hidden" | "inside" | "floating" | "sunk" | "overlap"; who: string; what: string; amount?: number };
+export type Issue = { kind: "camera-inside" | "hidden" | "inside" | "floating" | "sunk" | "stiff" | "overlap"; who: string; what: string; amount?: number };
 export type Probed = { name: string; rig: { object: THREE.Object3D; jointPosition(n: string, t?: THREE.Vector3): THREE.Vector3 } };
 
 let rapier: Promise<R> | null = null;
@@ -30,17 +33,17 @@ const solidMaterial = (m: any) => m && !m.isShaderMaterial && !m.isPointsMateria
 
 /** Colliders for everything under `root` (built once per tab; the world does not move except noCollide things). */
 export function createProbe(R: R, root: THREE.Object3D) {
-  const world = new R.World({ x: 0, y: 0, z: 0 }), names = new Map<number, string>();
+  const world = new R.World({ x: 0, y: 0, z: 0 }), names = new Map<number, string>(), materials = new Map<number, number>();
   root.updateMatrixWorld(true);
-  const add = (desc: any, name: string) => names.set(world.createCollider(desc).handle, name);
+  const add = (desc: any, name: string, material?: number) => { const h = world.createCollider(desc).handle; names.set(h, name); if (material != null) materials.set(h, material); };
   const m = new THREE.Matrix4(), p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
   const visit = (o: THREE.Object3D) => {
     if (o.userData.noCollide) return;
-    const boxes = o.userData.colliders as { size: number[]; matrix: THREE.Matrix4; name: string }[] | undefined;
+    const boxes = o.userData.colliders as { size: number[]; matrix: THREE.Matrix4; name: string; material?: number }[] | undefined;
     if (boxes) { // a Roblox map: one solid box per part, named after its model
       for (const b of boxes) {
         m.multiplyMatrices(o.matrixWorld, b.matrix).decompose(p, q, s);
-        add(R.ColliderDesc.cuboid(Math.max(b.size[0], 0.05) / 2, Math.max(b.size[1], 0.05) / 2, Math.max(b.size[2], 0.05) / 2).setTranslation(p.x, p.y, p.z).setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }), b.name);
+        add(R.ColliderDesc.cuboid(Math.max(b.size[0], 0.05) / 2, Math.max(b.size[1], 0.05) / 2, Math.max(b.size[2], 0.05) / 2).setTranslation(p.x, p.y, p.z).setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }), b.name, b.material);
       }
       return;
     }
@@ -59,7 +62,7 @@ export function createProbe(R: R, root: THREE.Object3D) {
   const solidAt = (at: THREE.Vector3) => { let hit: string | null = null; world.intersectionsWithPoint({ x: at.x, y: at.y, z: at.z }, (c) => { hit = names.get(c.handle) ?? "?"; return false; }); return hit as string | null; };
   const ray = (from: THREE.Vector3, dir: THREE.Vector3, max: number) => {
     const h = world.castRay(new R.Ray({ x: from.x, y: from.y, z: from.z }, { x: dir.x, y: dir.y, z: dir.z }), max, true);
-    return h ? { toi: h.timeOfImpact, name: names.get(h.collider.handle) ?? "?" } : null;
+    return h ? { toi: h.timeOfImpact, name: names.get(h.collider.handle) ?? "?", material: materials.get(h.collider.handle) } : null;
   };
 
   return {
@@ -89,10 +92,13 @@ export function createProbe(R: R, root: THREE.Object3D) {
         const ct = c.rig.object.userData.contact as { ground: number; x: number; z: number } | undefined;
         const feet = ct?.ground ?? c.rig.object.position.y, from = new THREE.Vector3(ct?.x ?? hip.x, feet + 1.2, ct?.z ?? hip.z);
         if (!solidAt(from)) {
+          // a soft surface (bed, sofa, pillow) should take the body in by about its `sink`; a hard one not at all
           const g = ray(from, new THREE.Vector3(0, -1, 0), 12), ground = g ? from.y - g.toi : -Infinity, gap = feet - ground;
+          const sink = g ? surfaceOf(g.name, g.material).sink : 0;
           if (!g) out.push({ kind: "floating", who: c.name, what: "nothing below", amount: 12 });
           else if (gap > 0.45) out.push({ kind: "floating", who: c.name, what: g.name, amount: +gap.toFixed(2) });
-          else if (gap < -0.45) out.push({ kind: "sunk", who: c.name, what: g.name, amount: +(-gap).toFixed(2) });
+          else if (gap < -(sink + 0.4)) out.push({ kind: "sunk", who: c.name, what: g.name, amount: +(-gap).toFixed(2) });
+          else if (sink >= 0.2 && gap > -sink * 0.4) out.push({ kind: "stiff", who: c.name, what: g.name, amount: sink });
         }
         torsos.push({ name: c.name, at: mid });
       }

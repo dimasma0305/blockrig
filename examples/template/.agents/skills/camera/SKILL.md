@@ -11,6 +11,9 @@ Per shot: `place(person, x, z, rotY)` then `act(person, layers, local, face, gro
 `facing(from, to)` gives the rotation. Layers are BlockRig clips (`src/cast/clips.ts`) with `at` (start offset),
 `fade`, `weight`, `speed`; `poseAt` seeks them so any frame is exact. Contacts: `FEET` (standing), `ON_SEAT` (sitting
 on furniture: hips on the seat, legs hang). New action → add a clip, check it in PoseLab.
+**Soft things give way** (src/kit/surfaces.ts): a body sinks into a bed, sofa or pillow and a little into grass,
+never into a floor. Put a character on a surface with `restOn(top, "bed")`, not the raw top: hips sink ~0.35 studs
+into a mattress, which is what makes them look seated rather than perched on a board.
 
 ## Camera (src/direction/camera.ts + src/kit/camera.ts)
 
@@ -23,7 +26,8 @@ the staging. Vary the angle every cut; the hook shot is wide and moving; reactio
 - **Caption over the face**: captions sit at 62% height. Aim slightly *below* the head (chest) for medium shots, and keep the face in the upper half. Floating tags above heads make this worse.
 - **Camera inside something**: wide props (hair, headphones, statues, trees, fences, lamp posts) swallow over-the-shoulder cameras. Prefer profile or front three-quarter, and move the camera rather than the world.
 - **Blocked hero**: crowds, fences, trees and poles between camera and hero. Go top-down, low, or to the other side.
-- **Seated characters floating or standing on furniture**: use `ON_SEAT`, not feet contacts.
+- **Seated characters floating or standing on furniture**: use `ON_SEAT`, not feet contacts, and `restOn()` for soft seats.
+- **Perched on a bed like a board**: `npm run collide` reports "stiff"; seat with `restOn(top, "bed")`.
 - **App zones**: keep faces out of the right 14% (buttons) and bottom 16% (username/caption).
 
 `npm run stills -- s03 s05` for changed shots, `DEBUG=1` to see the caption band and app zones, and the `Shot`

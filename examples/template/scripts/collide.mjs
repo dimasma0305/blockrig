@@ -49,6 +49,7 @@ const say = {
   inside: (g) => `${g.who} is inside ${g.what}`,
   floating: (g) => `${g.who} floats ${g.worst} studs above ${g.what}`,
   sunk: (g) => `${g.who} is sunk ${g.worst} studs into ${g.what}`,
+  stiff: (g) => `${g.who} rests on top of ${g.what} without sinking in (it is soft: ~${g.worst} studs, use restOn())`,
   overlap: (g) => `${g.who} and ${g.what} stand inside each other`,
 };
 const list = [...groups.values()];

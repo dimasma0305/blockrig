@@ -18,7 +18,8 @@ description: Check a video before and after rendering - docs and voice checks, s
    (src/kit/collide.ts) and prints each problem with its shot and frames:
    - camera inside a wall or prop (blank or wall-back frames);
    - a character's face hidden from the camera by something solid;
-   - a character inside a wall, prop or furniture; feet (or seated hips) floating above or sunk into what is below;
+   - a character inside a wall, prop or furniture; feet (or seated hips) floating above or sunk deeper than the
+     surface's softness (kit/surfaces.ts), or "stiff": resting exactly on top of something soft like a bed;
    - two characters inside each other.
    Fix the staging (World.ts spots, performance.ts, camera.ts) and run it again until it says "nothing found".
    Things that move (clouds, birds, the dog, weather) carry `userData.noCollide`; a Roblox map collides with
