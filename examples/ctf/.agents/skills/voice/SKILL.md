@@ -95,11 +95,16 @@ rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).
 
 ## Music
 
-Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default to the piano
-themes**: `goofy-piano` (bouncy major oom-pah piano with a catchy tune, pizzicato answers, snaps: the brainrot
-staple) and `sneaky-piano` (minor tiptoe staccato for "uh-oh" moments), from scripts/music-piano.mjs. Others:
-mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, and `memory` / `memory-faded` (a worn 1930s
-record far away; the user found it "not good" next to the piano, so only on request). Never download chart songs
-or copyrighted albums ("Everywhere at the End of Time" was refused for reuse; Content ID claims it); the user adds
-trending sounds in the app. Pick themes per shot in docs/audio.md "Music", then `node scripts/voice.mjs --music-only` rebuilds the music without re-voicing. You cannot hear it: check loudness and
+Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default: `brainrot`**
+(scripts/music-brainrot.mjs), one earworm loop under the whole video. What makes it stick (the user asked for music
+"easy to remember, easy to echo", and found a full tune "too complex"):
+- a hook of 3-4 notes only, on intervals everyone can already sing (the playground chant sol-mi-la-sol), in a chant
+  rhythm ("da-da DUM"), repeated A A A B;
+- sung ("la-la" formant voice) and doubled by a bell an octave up, LOUDER than the drums and bass (check the
+  250 Hz-1 kHz band is the loudest);
+- the most familiar chords (C Am F G), a bouncy bass, four-on-the-floor kick, claps on 2 and 4, hats.
+Also: `goofy-piano` / `sneaky-piano` (simple 4-note piano loops), mystery, suspense, happy, comedy, sad, action,
+chill, cyber, triumph, `memory` / `memory-faded` (a worn 1930s record; "not good" to the user, only on request).
+Never download chart songs or copyrighted albums ("Everywhere at the End of Time" was refused for reuse; Content ID
+claims it); the user adds trending sounds in the app. Pick themes per shot in docs/audio.md "Music", then `node scripts/voice.mjs --music-only` rebuilds the music without re-voicing. You cannot hear it: check loudness and
 bands (`ffmpeg ... volumedetect` per band) and ask the user to listen.

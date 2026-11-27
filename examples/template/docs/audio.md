@@ -32,14 +32,12 @@ Each shot's `emotion:` in story.md picks how the narrator says it (see the voice
 
 ## Music
 
-- s01: goofy-piano
-- s04: sneaky-piano
-- s06: goofy-piano
+- s01: brainrot
 
-Bouncy original piano in the brainrot style (the user preferred it to the "memory" record sound): goofy for the
-town, sneaky when the lie catches up with him, goofy again for the twist.
+One earworm loop under the whole video (the user: "easy to remember, easy to echo, brainrot"): a four-note
+playground-chant hook sung "la-la", repeated, so viewers hum it after one watch.
 
-Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs), goofy-piano, sneaky-piano (scripts/music-piano.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
+Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs), goofy-piano, sneaky-piano (scripts/music-piano.mjs), brainrot (scripts/music-brainrot.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
 
 ## Sound effects (planned)
 

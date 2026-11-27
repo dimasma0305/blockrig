@@ -1,45 +1,38 @@
 // "goofy-piano" / "sneaky-piano": ORIGINAL bouncy piano pieces in the playful style of viral Roblox / brainrot
 // shorts. A modelled piano (two detuned strings per note, stretched partials, brighter partials fading faster, a
-// hammer thump, staccato notes damped), an oom-pah left hand (bass on 1 and 3, chord on 2 and 4), a hand-written
-// right-hand tune, pizzicato strings answering it the second time round, soft kick and finger snaps, a small room.
-//   goofy:  F major, ~132 bpm, cheeky leaps and one odd note (the lydian E over Bb)
-//   sneaky: D minor, ~112 bpm, tiptoe staccato with chromatic creeping
+// hammer thump, staccato notes damped), an oom-pah left hand (bass on 1 and 3, chord on 2 and 4), a simple
+// repeating right-hand motif of 3-4 notes, soft kick and finger snaps, a small room.
+//   goofy:  F major, ~132 bpm, F A C D over F and C7
+//   sneaky: D minor, ~112 bpm, tiptoe staccato on D F A C# over Dm and A7
 // piano(seconds, seed, style) -> Float32Array (mono, 48 kHz)
 
 const SR = 48000;
 const hz = (m) => 440 * 2 ** ((m - 69) / 12);
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
+// Simple on purpose (the user: "too complex, maybe 3 or 4 notes"): a two-bar motif of 3-4 notes that repeats,
+// over two chords. Catchy loops beat busy tunes in these videos.
+// melody: [scale degree | null rest, beats] per bar
 const STYLES = {
   goofy: {
-    bpm: 132, key: 65, scale: [0, 2, 4, 5, 7, 9, 11], // F major, melody around F4-F5
-    chords: [[0, 4, 7], [-3, 0, 4], [-5, -2, 2], [-5, -1, 2, 5], [0, 4, 7], [-7, -3, 0], [-5, -1, 2, 5], [0, 4, 7]],
-    roots: [0, -3, -5, -5, 0, -7, -5, 0],            // F Dm Gm C7 F Bb C7 F (semitones from F)
-    melody: [                                         // [scale degree | null rest, beats]
-      [[4, .5], [4, .5], [2, .5], [0, .5], [2, 1], [4, 1]],
-      [[5, .5], [4, .5], [2, .5], [1, .5], [0, 1], [null, 1]],
-      [[1, .5], [1, .5], [3, .5], [1, .5], [-1, 1], [1, 1]],
-      [[4, .5], [3, .5], [2, .5], [1, .5], [2, .5], [1, .5], [0, 1]],
-      [[4, .5], [4, .5], [2, .5], [0, .5], [7, 1], [4, 1]],
-      [[3, .5], [5, .5], [6, .5], [5, .5], [3, 1], [null, 1]],
-      [[4, .5], [2, .5], [4, .5], [1, .5], [2, .5], [-1, .5], [0, 1]],
-      [[0, .5], [null, .5], [4, .5], [null, .5], [7, 1], [null, 1]],
+    bpm: 132, key: 65, scale: [0, 2, 4, 5, 7, 9, 11],  // F major; the tune uses only F A C D (degrees 0 2 4 5)
+    chords: [[0, 4, 7], [-5, -1, 2, 5]], roots: [0, -5], // F, C7, alternating every bar
+    melody: [
+      [[4, .5], [2, .5], [4, .5], [2, .5], [0, 1], [null, 1]],     // C A C A F
+      [[4, .5], [2, .5], [4, .5], [5, .5], [4, 1], [null, 1]],     // C A C D C
+      [[4, .5], [2, .5], [4, .5], [2, .5], [0, 1], [null, 1]],
+      [[5, .5], [4, .5], [2, .5], [4, .5], [0, 1], [null, 1]],     // D C A C F
     ],
     staccato: 0.5, swing: 0.06,
   },
   sneaky: {
-    bpm: 112, key: 62, scale: [0, 2, 3, 5, 7, 8, 11], // D harmonic minor
-    chords: [[0, 3, 7], [0, 3, 7], [-2, 2, 5], [-5, -1, 2, 5], [0, 3, 7], [-4, 0, 3], [-5, -1, 2, 5], [0, 3, 7]],
-    roots: [0, 0, -2, -5, 0, -4, -5, 0],             // Dm Dm Bb A7 Dm Bb A7 Dm
+    bpm: 112, key: 62, scale: [0, 2, 3, 5, 7, 8, 11],  // D harmonic minor; the tune uses only D F A C# (0 2 4 -1)
+    chords: [[0, 3, 7], [-5, -1, 2, 5]], roots: [0, -5], // Dm, A7
     melody: [
-      [[0, .5], [null, .5], [1, .5], [null, .5], [2, .5], [null, .5], [1, .5], [null, .5]],
-      [[0, .5], [null, .5], [-1, .5], [null, .5], [0, 1], [null, 1]],
-      [[2, .5], [null, .5], [3, .5], [null, .5], [4, .5], [3, .5], [2, .5], [null, .5]],
-      [[1, .5], [null, .5], [-1, .5], [null, .5], [-3, 1], [null, 1]],
-      [[4, .5], [null, .5], [5, .5], [null, .5], [4, .5], [3, .5], [2, .5], [null, .5]],
-      [[3, .5], [2, .5], [1, .5], [null, .5], [2, 1], [null, 1]],
-      [[1, .5], [null, .5], [2, .5], [null, .5], [1, .5], [0, .5], [-1, .5], [null, .5]],
-      [[0, .5], [null, .5], [4, .25], [null, .25], [7, .5], [null, 1.5]],
+      [[0, .5], [null, .5], [2, .5], [null, .5], [4, .5], [null, .5], [2, .5], [null, .5]], // D . F . A . F .
+      [[0, .5], [null, .5], [-1, .5], [null, .5], [0, 1], [null, 1]],                       // D . C# . D
+      [[0, .5], [null, .5], [2, .5], [null, .5], [4, .5], [null, .5], [2, .5], [null, .5]],
+      [[4, .5], [null, .5], [-1, .5], [null, .5], [0, 1], [null, 1]],                       // A . C# . D
     ],
     staccato: 0.35, swing: 0,
   },
@@ -60,16 +53,6 @@ function pianoNote(out, t0, f, held, vel, r) {
     out[i0 + i] += v * damp * Math.min(1, t / 0.0015);
   }
 }
-// pizzicato string (Karplus-Strong)
-function pizz(out, t0, f, amp, r) {
-  const i0 = Math.floor(t0 * SR), N = Math.max(2, Math.round(SR / f)), buf = new Float32Array(N);
-  for (let i = 0; i < N; i++) buf[i] = r() * 2 - 1;
-  let p = 0;
-  for (let i = 0; i < SR * 0.5 && i0 + i < out.length; i++) {
-    const a = buf[p], b = buf[(p + 1) % N]; buf[p] = (a + b) * 0.5 * 0.985; p = (p + 1) % N;
-    out[i0 + i] += a * amp * Math.exp(-i / SR * 6);
-  }
-}
 const kick = (out, t0, amp) => { const i0 = Math.floor(t0 * SR); for (let i = 0; i < SR * 0.18 && i0 + i < out.length; i++) { const t = i / SR; out[i0 + i] += Math.sin(2 * Math.PI * (48 + 70 * Math.exp(-t * 35)) * t) * Math.exp(-t * 16) * amp; } };
 function snap(out, t0, amp, r) { // finger snap: a bright noise tick
   const i0 = Math.floor(t0 * SR); let hp = 0, prev = 0;
@@ -88,18 +71,17 @@ export function piano(seconds, seed = 1, style = "goofy") {
   const beat = 60 / S.bpm, bar = beat * 4;
   const deg = (d) => S.key + S.scale[((d % 7) + 7) % 7] + 12 * Math.floor(d / 7);
   for (let b = 0; b * bar < seconds + bar; b++) {
-    const t = b * bar, k = b % 8, second = Math.floor(b / 8) % 2 === 1, ch = S.chords[k], root = S.roots[k];
+    const t = b * bar, k = b % S.melody.length, ch = S.chords[b % S.chords.length], root = S.roots[b % S.roots.length];
     // left hand: bass on 1 and 3 (root, then fifth), the chord on 2 and 4, short and bouncy
     pianoNote(out, t, hz(S.key - 24 + root), beat * 0.7, 0.75, r);
-    pianoNote(out, t + 2 * beat, hz(S.key - 24 + root + (k % 2 ? 7 : -5)), beat * 0.7, 0.65, r);
+    pianoNote(out, t + 2 * beat, hz(S.key - 24 + root + 7), beat * 0.7, 0.65, r);
     for (const q of [1, 3]) for (const c of ch) pianoNote(out, t + q * beat + (r() - 0.5) * 0.006, hz(S.key - 12 + c), beat * 0.32, 0.38, r);
     // right hand: the tune (an octave up the second time round), staccato, a touch of swing on the off-beats
     let at = t;
     for (const [d, beats] of S.melody[k]) {
       if (d !== null) {
-        const off = Math.abs((at - t) / beat % 1 - 0.5) < 1e-6 ? S.swing * beat : 0, m = deg(d) + (second && k < 4 ? 12 : 0);
+        const off = Math.abs((at - t) / beat % 1 - 0.5) < 1e-6 ? S.swing * beat : 0, m = deg(d);
         pianoNote(out, at + off, hz(m), beats * beat * (beats >= 1 ? 0.8 : S.staccato), 0.85 + r() * 0.1, r);
-        if (second) pizz(out, at + off + beat * 0.5, hz(m - 12), 0.22, r); // the strings answer half a beat later
       }
       at += beats * beat;
     }
