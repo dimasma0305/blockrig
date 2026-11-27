@@ -30,6 +30,15 @@ body under it automatically (HSR), so nothing pokes through.
 
 Hair, heads, faces, clothing and bundles from the catalog can be worn (see the `assets` skill) for local videos only.
 
+## Held things (torches, flags, swords, tools)
+
+Hold them the Roblox way, never with a hand-made weld rotation (a hand-rolled rotation held torches backwards):
+model the handle +Y up and -Z forward, `rig.equipTool(handle, { grip })` (Humanoid:EquipTool: RightGripAttachment
+and Tool.Grip; `grip.pos` is the point of the handle in the fist), and play BlockRig's `clips.toolHold` on top of
+the shot's clip (Roblox's "toolnone": right arm forward; only that arm is keyed, so walking still plays). In that
+pose the handle stands upright. With the arm hanging, a Roblox grip points the handle backwards: that is why the
+pose is needed. Small things carried low (a bucket, a lantern, a sack) are welded to the hand hanging down.
+
 ## Checklist
 
 - Distinct silhouette from neighbours (shape, hair, hat). One accent colour across hair, clothes, props.

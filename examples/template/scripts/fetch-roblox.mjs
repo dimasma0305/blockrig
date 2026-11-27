@@ -54,6 +54,17 @@ if (fs.existsSync(txt)) {
 const file = (key) => path.join(DIR, key);
 const have = (key) => fs.existsSync(file(key));
 fs.mkdirSync(DIR, { recursive: true });
+// an item whose id changed in the manifest (same name, new asset) starts over: its old files and saved links would
+// otherwise be reused (a new pair of pants came out as the old ones)
+for (const it of items) {
+  const mark = path.join(DIR, it.name, ".id"), id = String(it.assetId ?? `bundle-${it.bundle}`);
+  if (fs.existsSync(mark) && fs.readFileSync(mark, "utf8") !== id) {
+    fs.rmSync(path.join(DIR, it.name), { recursive: true, force: true });
+    for (const k of Object.keys(locations)) if (k.startsWith(`${it.name}/`) || k.startsWith(`${it.name}-`)) delete locations[k];
+    console.log(`${it.name}: new asset id, fetching it again`);
+  }
+  if (!fs.existsSync(mark) && fs.existsSync(path.join(DIR, it.name))) fs.writeFileSync(mark, id);
+}
 
 async function download(key, url) {
   const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
@@ -123,7 +134,7 @@ for (const it of items) {
   } else {
     const a = describeAccessory(roots), texId = a.textureId ?? a.colorMapId;
     const okMesh = want(`${base}/mesh`, a.meshId), okTex = texId ? want(`${base}/texture`, texId) : true;
-    if (okMesh && okTex) cast[base] = { kind: it.kind ?? "accessory", mesh: `roblox/${base}/mesh`, texture: texId ? `roblox/${base}/texture` : null, attachment: a.attachment };
+    if (okMesh && okTex) cast[base] = { kind: it.kind ?? "accessory", mesh: `roblox/${base}/mesh`, texture: texId ? `roblox/${base}/texture` : null, attachment: a.attachment, scale: a.scale, offset: a.offset };
   }
 }
 // mesh v7 is Draco-compressed: decode it here and save it as v4, so the video needs no Draco decoder

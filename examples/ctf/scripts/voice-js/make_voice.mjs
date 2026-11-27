@@ -1,4 +1,4 @@
-﻿// The narration in plain Node (no Python): engine "chatterbox-js" in docs/audio.md.
+// The narration in plain Node (no Python): engine "chatterbox-js" in docs/audio.md.
 //   node scripts/voice-js/make_voice.mjs --lines assets/audio/lines.json --config '{...}'
 // Same job as scripts/voice/make_voice_chatterbox.py:
 // - the voice sample: Kokoro (kokoro-js) reading our own text as am_adam, pitched x1.35 with Rubber Band (ffmpeg);
@@ -70,8 +70,12 @@ function similarity(a, b) { // letters only, spaces ignored ("bot net" = "botnet
 // script words with times: the heard words in order when the counts agree, otherwise spread by length over the speech
 function wordsFor(text, chunks, duration) {
   const words = text.split(/\s+/).filter(Boolean);
-  if (chunks.length === words.length) return words.map((w, i) => ({ word: w, start: chunks[i].timestamp[0], end: chunks[i].timestamp[1] ?? chunks[i].timestamp[0] + 0.2 }));
-  const t0 = chunks[0]?.timestamp[0] ?? 0, t1 = chunks.at(-1)?.timestamp[1] ?? duration, total = words.reduce((n, w) => n + w.length, 0);
+  // Whisper's word times are sometimes nonsense on short clips (times past the end, all words at one instant): use
+  // them only when they fit inside the clip and move forward; otherwise spread the words by length
+  const ts = chunks.map((c) => c.timestamp), ok = ts.length > 0 && ts.every(([a, b], i) => a >= 0 && a <= duration + 0.05 && (b ?? a) <= duration + 0.3 && (i === 0 || a >= ts[i - 1][0]))
+    && (ts.at(-1)[1] ?? ts.at(-1)[0]) - ts[0][0] > 0.4 * duration;
+  if (ok && chunks.length === words.length) return words.map((w, i) => ({ word: w, start: chunks[i].timestamp[0], end: chunks[i].timestamp[1] ?? chunks[i].timestamp[0] + 0.2 }));
+  const t0 = ok ? ts[0][0] : 0.05, t1 = ok ? (ts.at(-1)[1] ?? duration) : Math.max(0.3, duration - 0.05), total = words.reduce((n, w) => n + w.length, 0);
   let t = t0; return words.map((w) => { const d = ((t1 - t0) * w.length) / total, r = { word: w, start: +t.toFixed(3), end: +(t + d).toFixed(3) }; t += d; return r; });
 }
 
@@ -85,7 +89,7 @@ function breathe(x, sr, words) {
   const quiet = 0.03 * peak, cuts = [];
   words.forEach((w, i) => {
     if (i + 1 >= words.length) return;
-    const need = /(\.\.\.|â€¦|[.!?])["')]*$/.test(w.word) ? STOP_P : /[,;:â€”-]["')]*$/.test(w.word) ? COMMA : 0;
+    const need = /(\.\.\.|…|[.!?])["')]*$/.test(w.word) ? STOP_P : /[,;:—-]["')]*$/.test(w.word) ? COMMA : 0;
     if (!need) return;
     const a = Math.max(0, Math.round((w.end - 0.1) * sr)), b = Math.min(x.length, Math.round((words[i + 1].start + 0.1) * sr));
     let best = Infinity, at = Math.round(((w.end + words[i + 1].start) / 2) * sr);

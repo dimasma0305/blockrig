@@ -25,7 +25,7 @@ export function person(name: string, o: {
     // Roblox items: dynamic head (expressions through FaceControls), catalog hair, classic shirt and pants
     const rig = createRig({ shape: o.shape as any, scale: o.scale as any, bodyColors: skin(rb.skin ?? o.skin), clothing: { shirt: rb.shirt ?? o.shirt, pants: rb.pants ?? o.pants },
       bodyParts: rb.head ? { Head: { mesh: rb.head.mesh, size: rb.head.size, attachments: rb.head.attachments, map: rb.head.map ?? undefined } } : undefined, outline: 0.035, shadows: true } as any);
-    if (rb.hair) rig.addAccessory(rb.hair.mesh, { attachment: rb.hair.attachment, map: rb.hair.map });
+    if (rb.hair) rig.addAccessory(rb.hair.mesh, { attachment: rb.hair.attachment, map: rb.hair.map, scale: rb.hair.scale, offset: rb.hair.offset });
     else if (o.hair) rig.attachTo(o.hair, "HairAttachment");
     if (o.back) rig.attachTo(o.back, "BodyBackAttachment", AT([0, 0, -0.32]));
     // face accessories (one set per emotion, e.g. angry = sharp eyes + anger vein): all attached, shown per shot by act()
@@ -34,7 +34,7 @@ export function person(name: string, o: {
       const made = new Map<RobloxHair, THREE.Object3D>();
       faceSets = Object.fromEntries(Object.entries(rb.faces).map(([emotion, items]) => [emotion, items.filter(Boolean).map((f) => {
         // (a face decal's white plate is made transparent when it loads: src/cast/roblox.ts faceTexture)
-        if (!made.has(f)) { const m = rig.addAccessory(f.mesh, { attachment: f.attachment, map: f.map }); m.visible = false; made.set(f, m); }
+        if (!made.has(f)) { const m = rig.addAccessory(f.mesh, { attachment: f.attachment, map: f.map, scale: f.scale, offset: f.offset }); m.visible = false; made.set(f, m); }
         return made.get(f)!;
       })]));
     }

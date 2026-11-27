@@ -24,14 +24,14 @@ function person(name: string, o: {
   const roblox = !!o.rb?.faces;
   const face = roblox ? null : createFace({ expression: o.expression ?? "neutral", blink: false, seed: o.seed ?? 1 });
   const rig = createRig({ shape: o.shape as any, scale: o.scale as any, bodyColors: skin(o.rb?.skin ?? o.skin), clothing: { shirt: o.shirt, pants: o.pants }, ...(face ? { face } : {}), outline: 0.035, shadows: true } as any);
-  if (o.rb?.hair) rig.addAccessory(o.rb.hair.mesh, { attachment: o.rb.hair.attachment, map: o.rb.hair.map });
+  if (o.rb?.hair) rig.addAccessory(o.rb.hair.mesh, { attachment: o.rb.hair.attachment, map: o.rb.hair.map, scale: o.rb.hair.scale, offset: o.rb.hair.offset });
   else if (o.hair) rig.attachTo(o.hair, "HairAttachment");
   // Roblox face accessories (one set per emotion), all attached, shown per shot by act()
   let faceSets: Record<string, THREE.Object3D[]> | undefined;
   if (o.rb?.faces) {
     const made = new Map<RobloxHair, THREE.Object3D>();
     faceSets = Object.fromEntries(Object.entries(o.rb.faces).map(([emotion, items]) => [emotion, items.filter(Boolean).map((f) => {
-      if (!made.has(f)) { const m = rig.addAccessory(f.mesh, { attachment: f.attachment, map: f.map }); m.visible = false; made.set(f, m); }
+      if (!made.has(f)) { const m = rig.addAccessory(f.mesh, { attachment: f.attachment, map: f.map, scale: f.scale, offset: f.offset }); m.visible = false; made.set(f, m); }
       return made.get(f)!;
     })]));
   }

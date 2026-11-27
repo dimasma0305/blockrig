@@ -34,7 +34,7 @@ const tmp = new THREE.Vector3();
 export function applyCamera(cam: THREE.PerspectiveCamera, c: Cam, frame: number) {
   cam.position.copy(c.pos);
   if (c.shake > 0) { const r = rng(frame + 1); cam.position.add(tmp.set(r() - 0.5, r() - 0.5, r() - 0.5).multiplyScalar(c.shake * 2)); }
-  cam.fov = c.fov; cam.near = 0.1; cam.far = 2000; cam.updateProjectionMatrix();
+  cam.fov = c.fov; cam.near = 0.3; cam.far = 2000; cam.updateProjectionMatrix(); // near 0.3 (not 0.1): 3x the depth precision, so close surfaces don't flicker far away
   cam.up.set(0, 1, 0); cam.lookAt(c.target);
   if (c.roll) cam.rotateZ(c.roll);
 }

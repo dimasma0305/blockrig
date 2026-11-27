@@ -98,6 +98,16 @@ of hand-tuned offsets:
 `ROBLOX=0` for the all-original cut) draws every zone and footprint over the real street from above. Adding a location:
 give it its own plan and a stage for each of its shots.
 
+## Ground layers: never two surfaces at one height (src/kit/ground.ts)
+
+Flat ground pieces that lie on each other (grass, a field of soil, a road, a square, burnt ground) flicker when two
+share a height: the depth buffer can't tell which is on top, worse at a distance (a forest floor and the soil beside
+it flickered under the kids in a sawit-video shot). Every flat ground goes through `layer(mesh, n)`: 0 is the base
+grass, higher numbers draw on top (a road over a field: road 2, field 1). It sets the height step and a polygon
+offset, which wins at any distance. `checkGround(root)` at the end of buildWorld throws if two overlapping surfaces
+share a layer, so the render fails with the two names instead of flickering. The camera near plane is 0.3 (not 0.1)
+for the same reason: depth precision.
+
 ## Check
 
 `npm run stills -- --comp WeatherLab 0` (and other frames) for weather; PlanLab for the layout; stills of every

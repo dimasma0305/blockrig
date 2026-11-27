@@ -13,7 +13,10 @@ description: Check a video before and after rendering - docs and voice checks, s
    - nothing between the camera and the hero; camera not inside a model;
    - every surface textured, every outdoor shot with its weather and time of day;
    - characters on the ground (not floating, not sunk), seated ones on the seat;
-   - expressions match the line.
+   - expressions match the line;
+   - held torches, flags and swords upright (equipTool + toolHold, look skill); mouths whole (no head showing through);
+   - no flickering ground: the build fails on overlapping ground layers (world skill), but also watch a few frames
+     of wide shots across ground seams.
 3. `npm run collide` (with the Roblox items by default; `-- --no-roblox` for the all-original cut): Rapier checks every 6th frame of the real render
    (src/kit/collide.ts) and prints each problem with its shot and frames:
    - camera inside a wall or prop (blank or wall-back frames);

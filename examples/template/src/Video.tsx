@@ -65,7 +65,7 @@ export const Video: React.FC<VideoProps> = ({ debug, roblox, collide }) => {
     <AbsoluteFill style={{ background: "#0b0d14" }}>
       {lib && rb !== undefined && rapier !== undefined && <ThreeCanvas width={width} height={height} shadows dpr={1}
         gl={{ antialias: true, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
-        camera={{ fov: 50, near: 0.1, far: 2000, position: [0, 10, 30] }}>
+        camera={{ fov: 50, near: 0.3, far: 2000, position: [0, 10, 30] }}>
         <Scene lib={lib} rb={rb} rapier={rapier} />
       </ThreeCanvas>}
       <Lightning />

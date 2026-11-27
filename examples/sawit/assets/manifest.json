@@ -1,0 +1,331 @@
+{
+  "$about": "Assets this video uses (assets skill). `npm run assets` downloads them into git-ignored folders and writes assets/credits.json. Roblox catalog items and Toolbox maps: used freely in videos (Roblox allows it), files never committed (npm run roblox fetches them).",
+  "kenney": {
+    "city-kit-suburban": {},
+    "city-kit-roads": {},
+    "car-kit": {},
+    "furniture-kit": {},
+    "nature-kit": {},
+    "fantasy-town-kit": {},
+    "castle-kit": {},
+    "pirate-kit": {}
+  },
+  "github": {
+    "kenney-platformer": {
+      "base": "https://raw.githubusercontent.com/KenneyNL/Starter-Kit-3D-Platformer/main/models/",
+      "files": [
+        "cloud.glb",
+        "coin.glb",
+        "Textures/colormap.png"
+      ],
+      "licence": "CC0 1.0",
+      "author": "Kenney (kenney.nl)",
+      "page": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer"
+    }
+  },
+  "hdri": {
+    "day": {
+      "id": "kloofendal_48d_partly_cloudy_puresky",
+      "res": "2k"
+    },
+    "golden": {
+      "id": "qwantani_dusk_2_puresky",
+      "res": "2k"
+    },
+    "storm": {
+      "id": "overcast_soil_puresky",
+      "res": "2k"
+    },
+    "night": {
+      "id": "rogland_clear_night",
+      "res": "2k"
+    }
+  },
+  "textures": {
+    "asphalt": {
+      "id": "asphalt_02",
+      "res": "1k"
+    },
+    "planks": {
+      "id": "brown_planks_04",
+      "res": "1k"
+    },
+    "fabric": {
+      "id": "denim_fabric",
+      "res": "1k"
+    },
+    "concrete": {
+      "id": "brushed_concrete",
+      "res": "1k"
+    },
+    "cobble": {
+      "id": "cobblestone_floor_08",
+      "res": "1k"
+    },
+    "soil": {
+      "id": "farm_soil",
+      "res": "1k"
+    },
+    "forestFloor": {
+      "id": "forest_leaves_02",
+      "res": "1k"
+    },
+    "burnt": {
+      "id": "burned_ground_01",
+      "res": "1k"
+    },
+    "castleWall": {
+      "id": "castle_brick_07",
+      "res": "1k"
+    },
+    "path": {
+      "id": "stony_dirt_path",
+      "res": "1k"
+    }
+  },
+  "ambientcg": {
+    "grass": {
+      "id": "Grass004",
+      "res": "1K-JPG"
+    }
+  },
+  "polypizza": {
+    "shiba": {
+      "id": "y4wdQpg767"
+    },
+    "bird": {
+      "id": "8Ph79kHbt9s"
+    }
+  },
+  "roblox": {
+    "$about": "Free Roblox catalog items (official, or community UGC at price 0) and Toolbox maps: used in posted videos (Roblox allows it); the files are git-ignored, never committed. npm run roblox (see the assets skill). Pick by quality: the most-favourited items (SortType=1), premium UGC included (assetdelivery serves them).",
+    "boyHead": {
+      "bundle": 949,
+      "kind": "head"
+    },
+    "girlHead": {
+      "bundle": 948,
+      "kind": "head"
+    },
+    "heroHair": {
+      "assetId": 101109395111164,
+      "kind": "hair"
+    },
+    "heroShirt": {
+      "assetId": 398633584,
+      "kind": "shirt",
+      "about": "Denim Jacket with White Hoodie"
+    },
+    "heroPants": {
+      "assetId": 398633812,
+      "kind": "pants",
+      "about": "Black Jeans with White Shoes"
+    },
+    "sisterHair": {
+      "assetId": 89707605927173,
+      "kind": "hair"
+    },
+    "sisterShirt": {
+      "assetId": 6876555875,
+      "kind": "shirt",
+      "about": "y2k aesthetic girl vintage trendy soft gray cute (uaeu)"
+    },
+    "sisterPants": {
+      "assetId": 5197702014,
+      "kind": "pants",
+      "about": "Cute ripped Jeans Y2k aesthetic vintage girl (uaeu)"
+    },
+    "n0Hair": {
+      "assetId": 6823338112,
+      "kind": "hair",
+      "about": "Messy Boy Hair in Black (Rush_X)"
+    },
+    "n0Shirt": {
+      "assetId": 7919545692,
+      "kind": "shirt",
+      "about": "Emo y2k black shirt aesthetic boy (reysia)"
+    },
+    "n0Pants": {
+      "assetId": 382537569,
+      "kind": "pants"
+    },
+    "n1Hair": {
+      "assetId": 7284206648,
+      "kind": "hair",
+      "about": "Aesthetic Split Bangs Hair in Blonde (Lukacors)"
+    },
+    "n1Shirt": {
+      "assetId": 5042211670,
+      "kind": "shirt",
+      "about": "purple cool crop-top (retrogirlz)"
+    },
+    "n1Pants": {
+      "assetId": 1160488459,
+      "kind": "pants",
+      "about": "Pink! Trendy Girls Cute Casual Outfit (Boho Clothing)"
+    },
+    "n2Hair": {
+      "assetId": 5644883846,
+      "kind": "hair",
+      "about": "Cool Boy Hair (genkroco)"
+    },
+    "n2Shirt": {
+      "assetId": 144076436,
+      "kind": "shirt",
+      "about": "Grey Striped Shirt with Denim Jacket"
+    },
+    "n2Pants": {
+      "assetId": 398635338,
+      "kind": "pants"
+    },
+    "n3Hair": {
+      "assetId": 6501746646,
+      "kind": "hair",
+      "about": "Popular Girl Blonde & Brown Hair (bunnexh)"
+    },
+    "n3Shirt": {
+      "assetId": 6170187890,
+      "kind": "shirt",
+      "about": "y2k vamp girl vintage aesthetic (uaeu)"
+    },
+    "n3Pants": {
+      "assetId": 5246950670,
+      "kind": "pants",
+      "about": "skirt + converse boots y2k (h34rtSICK)"
+    },
+    "faceAnime": {
+      "assetId": 131886627952212,
+      "kind": "face"
+    },
+    "faceFang": {
+      "assetId": 106459314796536,
+      "kind": "face"
+    },
+    "faceRanker": {
+      "assetId": 114738498874820,
+      "kind": "face"
+    },
+    "facePotato": {
+      "assetId": 71083397812129,
+      "kind": "face"
+    },
+    "faceCrying": {
+      "assetId": 140335885709847,
+      "kind": "face"
+    },
+    "faceSparkle": {
+      "assetId": 117530109834139,
+      "kind": "face"
+    },
+    "faceSmile": {
+      "assetId": 73803306079949,
+      "kind": "face"
+    },
+    "faceSharpEyes": {
+      "assetId": 87283810049324,
+      "kind": "face"
+    },
+    "faceAngerVein": {
+      "assetId": 96729799003786,
+      "kind": "face"
+    },
+    "faceChibi": {
+      "assetId": 96980015396127,
+      "kind": "face"
+    },
+    "faceHearts": {
+      "assetId": 100152234940998,
+      "kind": "face"
+    },
+    "kingCrown": {
+      "assetId": 4962613368,
+      "kind": "hair",
+      "about": "Golden Flying Crown (Ellzd)"
+    },
+    "kingPants": {
+      "assetId": 7189083561,
+      "kind": "pants",
+      "about": "all black pants (#AMS)"
+    },
+    "guardHood": {
+      "assetId": 617605556,
+      "kind": "hair",
+      "about": "Medieval Hood of Mystery (Roblox)"
+    },
+    "guardShirt": {
+      "assetId": 110479780412932,
+      "kind": "shirt",
+      "about": "Royal Knight Golden Shirt (CHOPPAKHXORD2)"
+    },
+    "guardPants": {
+      "assetId": 10914703582,
+      "kind": "pants",
+      "about": "Royal Knight Golden Pants (ForeignersGod)"
+    },
+    "grandpaBeard": {
+      "assetId": 4482792246,
+      "kind": "hair",
+      "about": "Cartoony Santa Beard (TheShipArchitect)"
+    },
+    "grandpaShirt": {
+      "assetId": 5537325922,
+      "kind": "shirt",
+      "about": "Rice Farmer (RICEMETAL)"
+    },
+    "grandpaPants": {
+      "assetId": 5537327657,
+      "kind": "pants",
+      "about": "Rice Farmer Pants (RICEMETAL)"
+    },
+    "farmerShirt": {
+      "assetId": 90494202813033,
+      "kind": "shirt",
+      "about": "Just a Farmer (CHOPPAKHXORD2)"
+    },
+    "farmerPants": {
+      "assetId": 74719601085484,
+      "kind": "pants",
+      "about": "Farmer (CHOPPAKHXORD2)"
+    },
+    "peasantShirt": {
+      "assetId": 1908559308,
+      "kind": "shirt",
+      "about": "Old peasant top (the roblox warriors 2.0 xD)"
+    },
+    "mapHouseTall": {
+      "assetId": 1486589794,
+      "kind": "map",
+      "about": "Medieval House (detonador665)"
+    },
+    "mapHousePorch": {
+      "assetId": 2616942293,
+      "kind": "map",
+      "about": "Small Medieval House 2 (detonador665)"
+    },
+    "mapCottage": {
+      "assetId": 2210545308,
+      "kind": "map",
+      "about": "Small Medieval House, fancy texture (detonador665)"
+    },
+    "mapWoodHouse": {
+      "assetId": 15485395576,
+      "kind": "map",
+      "about": "Village House (Thiagozts)"
+    },
+    "mapCastle": {
+      "assetId": 1664938359,
+      "kind": "map",
+      "about": "castle (Scullgaming962)"
+    },
+    "kingPeci": {
+      "assetId": 12968131880,
+      "kind": "hair",
+      "about": "fez (WhoseTrade): a short brimless cap, tinted black as a peci"
+    },
+    "kingShirt": {
+      "assetId": 17790535117,
+      "kind": "shirt",
+      "about": "Baju batik KORPRI (BAROKAH): the civil servants' batik"
+    }
+  }
+}

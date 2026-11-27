@@ -16,3 +16,4 @@ export * from "./assets";
 export * from "./robloxMap";
 export * from "./plan";
 export * from "./surfaces";
+export * from "./ground";

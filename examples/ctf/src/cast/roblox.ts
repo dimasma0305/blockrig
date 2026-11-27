@@ -8,7 +8,7 @@ import { parseMesh, parseRbxm, keyframeSequenceToClip } from "blockrig";
 import type { MapData } from "../kit/robloxMap";
 
 export type RobloxHead = { mesh: any; map: THREE.Texture | null; size: number[]; attachments: Record<string, number[]>; mood: any | null };
-export type RobloxHair = { mesh: any; map: THREE.Texture | null; attachment: { name: string; cframe: any }; plate?: string | null };
+export type RobloxHair = { mesh: any; map: THREE.Texture | null; attachment: { name: string; cframe: any }; plate?: string | null; scale?: number[]; offset?: number[] };
 export type RobloxMapItem = { data: MapData; meshes: Record<string, any>; images: Record<string, HTMLImageElement> };
 export type RobloxCast = { heads: Record<string, RobloxHead>; hair: Record<string, RobloxHair>; faces: Record<string, RobloxHair>; clothing: Record<string, HTMLImageElement>; maps: Record<string, RobloxMapItem> };
 
@@ -33,7 +33,7 @@ async function faceItem(c: any) {
     plate = "#" + [med(0), med(1), med(2)].map((v) => v.toString(16).padStart(2, "0")).join("");
   }
   const t = new THREE.Texture(img); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; t.needsUpdate = true;
-  return { mesh: parseMesh(await bytes(c.mesh)), map: t, attachment: c.attachment, plate };
+  return { mesh: parseMesh(await bytes(c.mesh)), map: t, attachment: c.attachment, plate, scale: c.scale, offset: c.offset };
 }
 
 async function load(): Promise<RobloxCast> {
@@ -55,7 +55,7 @@ async function load(): Promise<RobloxCast> {
       out.maps[name] = { data: await (await fetch(staticFile(c.data))).json(), meshes, images };
     } else if (c.kind === "shirt" || c.kind === "pants") out.clothing[name] = await image(c.template);
     else if (c.kind === "face") out.faces[name] = await faceItem(c);
-    else out.hair[name] = { mesh: parseMesh(await bytes(c.mesh)), map: await texture(c.texture), attachment: c.attachment };
+    else out.hair[name] = { mesh: parseMesh(await bytes(c.mesh)), map: await texture(c.texture), attachment: c.attachment, scale: c.scale, offset: c.offset };
   }));
   return out;
 }
