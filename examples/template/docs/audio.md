@@ -32,12 +32,13 @@ Each shot's `emotion:` in story.md picks how the narrator says it (see the voice
 
 ## Music
 
-- s01: casio
+- s01: quirky-arp
 
-The user's brief: "instrumental only, lo-fi bedroom pop, cheap 90s Casio toy keyboard preset, bouncy staccato
-bassline, slightly detuned retro synth lead, quirky awkward comedy background loop, 120 bpm, no vocals".
+A bouncy, awkward broken-chord loop at 94 bpm tuned to A = 451 Hz, over Db, Db6/Bbm, Bbm and an augmented A-Db-F
+twist (the user's notes on a song they like: its tempo, tuning and chords are free to use, its riff is not, so the
+arpeggio order and top line are our own).
 
-Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs), goofy-piano, sneaky-piano (scripts/music-piano.mjs), brainrot (scripts/music-brainrot.mjs), story (scripts/music-story.mjs), bedroom (scripts/music-bedroom.mjs), casio (scripts/music-casio.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
+Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs), goofy-piano, sneaky-piano (scripts/music-piano.mjs), brainrot (scripts/music-brainrot.mjs), story (scripts/music-story.mjs), bedroom (scripts/music-bedroom.mjs), casio (scripts/music-casio.mjs), quirky-arp (scripts/music-arp.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
 
 ## Sound effects (planned)
 

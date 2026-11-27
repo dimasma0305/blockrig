@@ -7,6 +7,7 @@ import { brainrot } from "./music-brainrot.mjs";
 import { story } from "./music-story.mjs";
 import { bedroom } from "./music-bedroom.mjs";
 import { casio } from "./music-casio.mjs";
+import { quirkyArp } from "./music-arp.mjs";
 
 export const SR = 48000;
 const THEMES = {
@@ -23,13 +24,14 @@ const THEMES = {
 /** The mood names docs/audio.md can use. */
 // memory / memory-faded: a worn 1930s ballroom record far away (scripts/music-memory.mjs)
 // goofy-piano / sneaky-piano: bouncy brainrot-style piano (scripts/music-piano.mjs)
-export const THEME_NAMES = [...Object.keys(THEMES), "memory", "memory-faded", "goofy-piano", "sneaky-piano", "brainrot", "story", "bedroom", "casio"];
+export const THEME_NAMES = [...Object.keys(THEMES), "memory", "memory-faded", "goofy-piano", "sneaky-piano", "brainrot", "story", "bedroom", "casio", "quirky-arp"];
 
 const hz = (m) => 440 * 2 ** ((m - 69) / 12);
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
 export function compose(theme, seconds, seed = 1) {
   if (theme === "memory" || theme === "memory-faded") return memory(seconds, seed, theme === "memory-faded");
+  if (theme === "quirky-arp") return quirkyArp(seconds, seed); // 94 bpm awkward arpeggio loop, A=451 (scripts/music-arp.mjs)
   if (theme === "casio") return casio(seconds, seed); // quirky toy-keyboard comedy loop (scripts/music-casio.mjs)
   if (theme === "bedroom") return bedroom(seconds, seed); // dreamy guitar melody loop (scripts/music-bedroom.mjs)
   if (theme === "story") return story(seconds, seed); // melodic, neither happy nor sad (scripts/music-story.mjs)

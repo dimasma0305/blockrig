@@ -95,7 +95,11 @@ rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).
 
 ## Music
 
-Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default: `casio`**
+Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default:
+`quirky-arp`** (scripts/music-arp.mjs): a bouncy staccato piano + detuned synth arpeggio, 94 bpm, tuned to A=451 Hz,
+over Db, Db6/Bbm, Bbm and an augmented A-Db-F twist (the awkward colour the user likes). When the user brings a
+transcription of a song they like, use what nobody owns (tempo, tuning, chord progression, instruments, texture)
+and write the riff and melody yourself; never play a song's riff or melody note for note. Also: `casio`
 (scripts/music-casio.mjs), built to the user's own brief: instrumental lo-fi bedroom pop, cheap 90s Casio toy
 keyboard (pulse-wave stabs and rhythm box crushed to 6 bits / 11 kHz), bouncy staccato bass (root-octave-fifth
 eighths, chromatic walk-ups), slightly detuned retro lead (+-12 cents), quirky awkward comedy (C E7 F Fm, a

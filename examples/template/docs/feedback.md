@@ -18,7 +18,8 @@ undone later. One line per item: date, what they said, what we did, where.
 - Use visually attractive, good-quality assets, like popular Roblox story channels (girl and boy with anime faces, real hair, detailed houses and rooms). → local Roblox mode: anime face accessories, free Toolbox maps for the house and the bedroom (`buildRobloxMap`).
 - Roads must run along the street, not sideways. → road tiles turned π/2 in World.ts.
 - Every word of the narration must be clear (e.g. "in this town"). → voice takes need per-word clarity ≥0.45 and stricter word match.
-- Music brief: "instrumental only, lo-fi bedroom pop, cheap 90s Casio toy keyboard preset, bouncy staccato bassline, slightly detuned retro synth lead, quirky awkward comedy background loop, 120 bpm, no vocals" → `casio` theme (default).
+- Pasted a transcription of "Numbers" (94 bpm, Db / Bbm / A-aug arpeggios, ~451 Hz tuning) → `quirky-arp`: same tempo, tuning, chords and texture, our own arpeggio order and top line (default).
+- Music brief: "instrumental only, lo-fi bedroom pop, cheap 90s Casio toy keyboard preset, bouncy staccato bassline, slightly detuned retro synth lead, quirky awkward comedy background loop, 120 bpm, no vocals" → `casio` theme.
 - Asked for "Numbers" by TEMPOREX (thought free; it is a registered release, lyrics only, no licence) "only the melody in loop" → original `bedroom` guitar melody loop in that vibe.
 - Wanted more melody, neither happy nor sad → `story` theme (D Dorian, singable 8-bar tune).
 - Music must be easy to remember and to echo, brainrot; a full piano tune was "too complex" → `brainrot` earworm: 4-note chant hook, sung, repeated, loudest in the mix.
