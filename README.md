@@ -25,7 +25,7 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 | <img src="docs/wave.png" width="200" alt="wave clip"> | <img src="docs/run.png" width="200" alt="run clip"> | <img src="docs/card.png" width="200" alt="card throw clip"> | <img src="docs/victory.png" width="200" alt="victory jump clip"> |
 | `wave` | `run` | `card` | `victory` |
 
-## Made with BlockRig: a story short
+## Made with BlockRig: story shorts
 
 <table><tr>
 <td width="300"><a href="docs/ctf.mp4"><img src="docs/ctf-preview.gif" width="300" alt="Everybody Plays CTF: in a neon city where everyone hacks, the last-ranked player finds the flag in the page source"></a></td>
@@ -40,6 +40,22 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 They play in a rainy neon city with custom shaders: dressed towers, a lightning storm, a hex force-field dome, holograms, glyph rain, beams and particles. The expressive narrator runs offline in plain Node (Chatterbox ONNX + Kokoro + Whisper, no Python).
 
 ▶ [**Watch it with sound**](docs/ctf.mp4) · [How it's made](examples/ctf/README.md)
+
+</td>
+</tr>
+<tr>
+<td width="300"><a href="docs/sawit.mp4"><img src="docs/sawit-preview.gif" width="300" alt="The Sawit Spirit: forests burn and turn into oil palm overnight, and a kid finds out the kind King is behind it"></a></td>
+<td>
+
+**"The Sawit Spirit"**: a 2-minute story in a kingdom where every forest left unplanted burns at night and is sawit (oil palm) by morning. A kid catches the "spirit" (three men with torches), follows them into the palace, and the whole town sees the proof of what the King did.
+
+- Characters wear real Roblox catalog items: a peci and KORPRI batik on the King, a beard on Grandpa, hoods and torches on the guards.
+- The village, the palace and the houses are Roblox Toolbox maps, with forests and sawit fields made from Kenney models.
+- Fire, smoke and water are frame-pure shaders.
+
+Making it fixed several things in the library so every video gets them: beards drawn at their real size, face shells that never let the head show through, torches held upright the Roblox way, and elbows and knees that bend like Roblox's R15 block rig.
+
+▶ [**Watch it with sound**](docs/sawit.mp4) · [How it's made](examples/sawit/README.md)
 
 </td>
 </tr></table>
@@ -73,17 +89,17 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 
 - 🙂 **Dynamic heads**: Roblox FACS heads posed by the 50 `FaceControls`, with corrective poses, mood animations and face keys in imported clips.
 - 👕 **Roblox avatars**: `BodyColors`, classic **Shirt / Pants / T-shirt** templates composited the Roblox way, and **body packages** whose joints are built from their rig attachments (`BuildRigFromAttachments`), with accessories on body attachments too.
-- 🧍 **Every classic body**: **R6** (six parts, classic pivots) and **R15** in five shapes (`classic`, `slender`, `buff`, `tall`, `child`) or your own proportions, with Roblox-style `height / width / depth / head` scaling, swappable body-part meshes, and R15 ⇄ R6 clip retargeting.
+- 🧍 **Every classic body**: **R6** (six parts, classic pivots) and **R15** in five shapes (`classic`, `slender`, `buff`, `tall`, `child`) or your own proportions, with Roblox-style `height / width / depth / head` scaling, swappable body-part meshes, and R15 ⇄ R6 clip retargeting. R15 limb parts overlap at the joints with the sizes of Roblox's own R15 block rig (`R15_OVERLAP`), so bent elbows and knees look the way they do in Roblox.
 - 😃 **Live facial expressions**: 17 built-in expressions drawn from 21 blendable parameters (brows, eye shape, look direction, wink, `><` and `x` eyes, mouth curve/open/skew, teeth, tongue, blush, tears, sweat), with automatic blinking, talking, smooth fades and `face:` markers inside clips. Works on BlockRig heads or as a decal on any head.
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
 - 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, **fitted to the body through its WrapLayer/WrapTarget cages** (matched by template UV, like Roblox) and stacked by `Order`. **Hidden Surface Removal** stops the body poking through it.
-- 🎩 **Rigid accessories, welds and tools**: attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`), `Weld`-style C0/C1 welds, and `Humanoid:EquipTool`'s RightGrip with `Tool.Grip`.
+- 🎩 **Rigid accessories, welds and tools**: attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`), drawn at the handle's own size (SpecialMesh `Scale` / `Offset`, MeshPart `Size`), face shells lifted so the head never shows through, `Weld`-style C0/C1 welds, and `Humanoid:EquipTool`'s RightGrip with `Tool.Grip`, plus `clips.toolHold` (Roblox's tool pose) so held torches and swords stand upright.
 - 🦵 **HipHeight and IKControl**: Roblox-style `hipHeight`, and IK chains (Position, Rotation, Transform, LookAt, with pole and weight) solved on top of animation.
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion, and Roblox-style `AnimationTrack`s (seek, speed, weight, looped, priority, marker and keyframe signals, Stopped/Ended/DidLoop).
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` and `CurveAnimation` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **135 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **151 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
