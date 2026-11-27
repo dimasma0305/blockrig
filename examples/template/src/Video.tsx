@@ -5,7 +5,7 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig, delayRender, continueRen
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { Captions, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera, useAssetLibrary, type AssetLibrary } from "./kit";
+import { applyLook, Captions, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera, useAssetLibrary, type AssetLibrary } from "./kit";
 import { ASSETS } from "./world/assets";
 import { createProbe, loadRapier } from "./kit/collide";
 import { useRobloxCast, type RobloxCast } from "./cast/roblox";
@@ -21,8 +21,8 @@ export type VideoProps = { debug?: boolean; roblox?: boolean; collide?: boolean 
 function Scene({ lib, rb, rapier }: { lib: AssetLibrary; rb: RobloxCast | null; rapier: any }) {
   const frame = useCurrentFrame(), time = frame / T.FPS;
   const { camera, gl, scene } = useThree() as any;
-  // straight to the canvas with AgX tone mapping and soft shadows (an EffectComposer blanks Remotion's frames)
-  const world = useMemo(() => { gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap; return buildWorld(gl, scene, lib, rb); }, [gl, scene, lib, rb]);
+  // straight to the canvas with the kit look (ACES Filmic) and soft shadows (an EffectComposer blanks Remotion's frames)
+  const world = useMemo(() => { applyLook(gl); return buildWorld(gl, scene, lib, rb); }, [gl, scene, lib, rb]);
   const cast = useMemo(() => buildCast(rb), [rb]);
   const { shot, local, p } = T.shotAt(time);
   const state = perform(shot, local, p, cast, world);

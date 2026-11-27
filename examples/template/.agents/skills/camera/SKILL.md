@@ -21,6 +21,12 @@ Recipes: `move(from, to, p)` (dolly/crane), `pushIn(subject, dir, far, near, p)`
 `topDown`; `shake` is seeded per frame. Targets come from joints (`rig.jointPosition("Neck")`), so framing follows
 the staging. Vary the angle every cut; the hook shot is wide and moving; reactions are close and still.
 
+## Show the sky
+
+The reference shorts shoot characters from slightly below (camera near chest height or lower, looking level or up),
+so the deep blue sky and clouds fill the frame behind them. A camera looking down at the street shows only grey
+ground and a hazy horizon. Outdoor close-ups: low and level; wides: high only when the place itself is the subject.
+
 ## Framing mistakes we made (check every new shot for these)
 
 - **Caption over the face**: captions sit at 62% height. Aim slightly *below* the head (chest) for medium shots, and keep the face in the upper half. Floating tags above heads make this worse.

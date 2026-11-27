@@ -11,7 +11,7 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { TEXTURES, texture, WEATHER, TIMES, createLighting, createWeather, applyFog, applyWetness, suburbanStreet, Materials, applyCamera, V } from "../kit";
+import { applyLook, LOOK, TEXTURES, texture, WEATHER, TIMES, createLighting, createWeather, applyFog, applyWetness, suburbanStreet, Materials, applyCamera, V } from "../kit";
 import { buildCast } from "../cast/characters";
 import { ALL } from "../cast/clips";
 import { act, place } from "../direction/performance";
@@ -32,7 +32,7 @@ const canvas = (children: React.ReactNode) => <Canvas>{children}</Canvas>;
 function useStage(background = "#2a3140") {
   const { gl, scene } = useThree() as any;
   return useMemo(() => {
-    gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap; scene.background = new THREE.Color(background);
+    applyLook(gl); scene.background = new THREE.Color(background);
     const lighting = createLighting({ shadowSize: 20 }); scene.add(lighting.root); lighting.update({ time: TIMES.day });
     const floor = new THREE.Mesh(new THREE.CircleGeometry(30, 48), new THREE.MeshStandardMaterial({ color: "#5d6577", roughness: 0.9 }));
     floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
@@ -101,7 +101,7 @@ const PRESETS = Object.keys(WEATHER), PRESET_TIME: Record<string, keyof typeof T
 function WeatherScene() {
   const frame = useCurrentFrame(), { fps } = useVideoConfig(), { camera, gl, scene } = useThree() as any;
   const w = useMemo(() => {
-    gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap;
+    applyLook(gl);
     const M = new Materials(), town = suburbanStreet({ M, seed: 2, perSide: 4, length: 140 }), lighting = createLighting(), weather = createWeather();
     scene.add(town.root, lighting.root, weather.root);
     return { M, lighting, weather };
@@ -113,7 +113,7 @@ function WeatherScene() {
   const overcast = Math.min(1, weather.rain * 0.9 + weather.fog * 0.5 + weather.snow * 0.5);
   const { flash } = w.weather.update(weather, t, local, camera);
   w.lighting.update({ time, overcast, flash });
-  gl.toneMappingExposure = time.exposure;
+  gl.toneMappingExposure = LOOK.exposure * time.exposure;
   applyFog(scene, weather, new THREE.Color(time.horizon).lerp(new THREE.Color("#7d8796"), overcast));
   for (const g of w.M.ground) applyWetness(g.mat, weather.wet, g.dry);
   w.M.setNight(Math.min(1, Math.max(0, 1 - time.sunIntensity / 2.2) + overcast * 0.3));
@@ -134,7 +134,7 @@ function MapScene({ lib, rb }: { lib: AssetLibrary; rb: RobloxCast }) {
   const frame = useCurrentFrame(), { fps } = useVideoConfig(), { camera, gl, scene } = useThree() as any;
   const names = Object.keys(rb.maps).sort();
   const built = useMemo(() => {
-    gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap;
+    applyLook(gl);
     const lighting = createLighting({ shadowSize: 70 }); scene.add(lighting.root); lighting.update({ time: TIMES.day });
     scene.environment = lib.sky("day"); scene.environmentIntensity = 0.5;
     const maps = names.map((n) => { const m = buildRobloxMap(rb.maps[n].data, { ...rb.maps[n], pbr: (s) => lib.pbr(s) }); m.group.visible = false; scene.add(m.group); return m; });
@@ -170,7 +170,7 @@ export const MapLab: React.FC<{ roblox?: boolean }> = () => {
 function PlanScene({ lib, rb }: { lib: AssetLibrary; rb: RobloxCast | null }) {
   const frame = useCurrentFrame(), { camera, gl, scene } = useThree() as any;
   const world = useMemo(() => {
-    gl.toneMapping = THREE.AgXToneMapping;
+    applyLook(gl);
     const w = buildWorld(gl, scene, lib, rb), overlay = new THREE.Group();
     for (const it of w.plan.items) {
       const pts = planPoints(it.shape).map(([x, z]) => new THREE.Vector2(x, -z));

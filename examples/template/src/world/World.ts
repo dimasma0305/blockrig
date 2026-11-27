@@ -4,7 +4,7 @@
 // that must follow the camera (rain, splashes, lightning, fog, wet ground) and the sun for shadows are code.
 // Each location sits far from the others so two never share a frame.
 import * as THREE from "three";
-import { createLighting, createWeather, applyFog, rng, type AssetLibrary, type Weather, type Daylight } from "../kit";
+import { createLighting, createWeather, applyFog, rng, LOOK, type AssetLibrary, type Weather, type Daylight } from "../kit";
 import { HOUSES } from "./assets";
 import { buildRobloxMap } from "../kit/robloxMap";
 import { Plan, rect, circle } from "../kit/plan";
@@ -187,8 +187,8 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
       scene.background = lib.sky(skyName); scene.environment = env(skyName);
       scene.backgroundIntensity = (skyName === "storm" ? 0.55 : 1) * (1 + flash * 2.5); scene.environmentIntensity = (skyName === "storm" ? 0.6 : 1) * (inside ? 0.6 : 1);
       lighting.update({ time: o.daylight, overcast, flash, focus: inside ? focus : (o.camera as THREE.PerspectiveCamera).position.clone().setY(0) });
-      gl.toneMappingExposure = o.daylight.exposure * (inside ? 1.05 : 1);
-      applyFog(scene, w, new THREE.Color(o.daylight.horizon).lerp(new THREE.Color("#7d8796"), overcast), inside ? 0.001 : 0.003);
+      gl.toneMappingExposure = LOOK.exposure * o.daylight.exposure * (inside ? 1.05 : 1);
+      applyFog(scene, w, new THREE.Color(o.daylight.horizon).lerp(new THREE.Color("#7d8796"), overcast), inside ? 0.001 : 0.0009); // clear days stay crisp to the horizon (reference); weather adds its own haze
       for (const g of wet) { g.mat.roughness = g.rough + (0.12 - g.rough) * w.wet; g.mat.envMapIntensity = 1 + 1.5 * w.wet; }
       // clouds drift with the wind; birds glide in slow loops (hidden in rain)
       for (const c of clouds) { const h = c.userData.home; c.position.set(((h.x + o.time * (2 + w.wind * 6) + 180) % 360) - 180, h.y, h.z); c.visible = !inside; }

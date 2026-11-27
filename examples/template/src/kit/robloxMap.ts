@@ -119,6 +119,26 @@ function facePlane(size: number[], face: number) {
   return { g, dims };
 }
 
+// A PBR set's colour map as grey grain around 0.5 (so `color * 2` keeps the part's colour on average), with its
+// contrast lifted a little: Roblox materials tint one texture by the part's colour the same way.
+const grains = new WeakMap<object, THREE.Texture>();
+function grain(map: THREE.Texture): THREE.Texture | null {
+  const img = map.image as HTMLImageElement | HTMLCanvasElement | undefined;
+  if (!img || !(img as any).width) return null;
+  const cached = grains.get(img); if (cached) return cached;
+  const size = 512, c = document.createElement("canvas"); c.width = c.height = size;
+  const g = c.getContext("2d")!; g.drawImage(img as CanvasImageSource, 0, 0, size, size);
+  const d = g.getImageData(0, 0, size, size), px = d.data; let mean = 0;
+  for (let i = 0; i < px.length; i += 4) mean += 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+  mean /= px.length / 4;
+  for (let i = 0; i < px.length; i += 4) {
+    const l = 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2], v = Math.max(0, Math.min(255, 128 + (l - mean) * 1.4));
+    px[i] = px[i + 1] = px[i + 2] = v;
+  }
+  g.putImageData(d, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.colorSpace = THREE.NoColorSpace;
+  grains.set(img, t); return t;
+}
 const toLinear = (c: number[]) => new THREE.Color().setRGB(c[0], c[1], c[2], THREE.SRGBColorSpace);
 
 export function buildRobloxMap(data: MapData, assets: MapAssets, o: MapOpts = {}) {
@@ -189,7 +209,13 @@ export function buildRobloxMap(data: MapData, assets: MapAssets, o: MapOpts = {}
     else {
       const sm = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: b.look.rough, metalness: b.look.metal ?? 0, transparent: b.opacity < 1, opacity: b.opacity, depthWrite: b.opacity >= 0.6 });
       if (b.look.set && assets.pbr) {
-        try { const src = assets.pbr(b.look.set); sm.normalMap = src.normalMap; sm.normalScale.set(0.8, 0.8); sm.roughnessMap = src.roughnessMap; if (sm.normalMap) sm.normalMap.repeat.set(1, 1); if (sm.roughnessMap) sm.roughnessMap.repeat.set(1, 1); } catch { /* the set is not in the asset list */ }
+        try {
+          const src = assets.pbr(b.look.set);
+          sm.normalMap = src.normalMap; sm.normalScale.set(1.3, 1.3); sm.roughnessMap = src.roughnessMap;
+          if (sm.normalMap) sm.normalMap.repeat.set(1, 1); if (sm.roughnessMap) sm.roughnessMap.repeat.set(1, 1);
+          // the texture's grain without its colour: the part keeps its Roblox colour, the surface reads as brick or wood
+          const detail = src.map && grain(src.map); if (detail) { sm.map = detail; sm.color.setScalar(2); }
+        } catch { /* the set is not in the asset list */ }
       }
       mat = sm;
     }

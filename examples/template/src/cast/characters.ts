@@ -5,6 +5,7 @@ import { createRig, createFace } from "blockrig";
 import { hoodie, tee, jeans, shorts } from "./wardrobe";
 import { hair, baseballCap, glasses, outlined, AT, type HairStyle } from "./props";
 import { rng } from "../kit/rng";
+import { avatarAmbient } from "../kit/lighting";
 import type { RobloxCast, RobloxHead, RobloxHair } from "./roblox";
 
 export type Person = { rig: any; face: any; name: string; dynamic?: boolean; faceSets?: Record<string, THREE.Object3D[]> };
@@ -36,6 +37,7 @@ export function person(name: string, o: {
         return made.get(f)!;
       })]));
     }
+    avatarAmbient(rig.object);
     return { rig, face: null, name, dynamic: !!rb.head, faceSets };
   }
   const face = createFace({ expression: o.expression ?? "neutral", blink: false, seed: o.seed ?? 1 });
@@ -44,6 +46,7 @@ export function person(name: string, o: {
   if (o.hat) rig.attachTo(o.hat, "HatAttachment");
   if (o.face) rig.attachTo(o.face, "FaceFrontAttachment", AT([0, -0.1, 0]));
   if (o.back) rig.attachTo(o.back, "BodyBackAttachment", AT([0, 0, -0.32]));
+  avatarAmbient(rig.object);
   return { rig, face, name };
 }
 
@@ -64,7 +67,7 @@ export function buildCast(rb: RobloxCast | null = null): Cast {
   const girlFaces = () => ({ neutral: F("faceSparkle"), happy: F("faceSmile"), grin: F("faceSmile"), laugh: F("faceSmile"), smug: F("faceHearts"), wink: F("faceHearts"),
     embarrassed: F("faceHearts"), determined: F("faceSharpEyes"), angry: F("faceSharpEyes", "faceAngerVein"), furious: F("faceSharpEyes", "faceAngerVein"), shocked: F("faceChibi"), scared: F("faceChibi"), sad: F("faceCrying"), hurt: F("faceCrying") });
   const look = (who: "boy" | "girl", hair: string, shirt: string, pants: string): RobloxLook | undefined =>
-    rb ? { hair: rb.hair[hair], shirt: rb.clothing[shirt], pants: rb.clothing[pants], faces: who === "boy" ? boyFaces() : girlFaces(), skin: who === "boy" ? "#d9a877" : "#f4ece6" } : undefined;
+    rb ? { hair: rb.hair[hair], shirt: rb.clothing[shirt], pants: rb.clothing[pants], faces: who === "boy" ? boyFaces() : girlFaces(), skin: who === "boy" ? "#f0cdb0" : "#fcf3f0" } : undefined;
   const kid = { shape: "child", scale: { head: 1.15 } };
   const hero = person("hero", { ...kid, skin: "#f1c27d", shirt: hoodie("#1fa392", "#ffffff", "{ }"), pants: jeans("#2f4f7f", "#f2f2f2", "#19e3c4"), hair: hair("messy", "#5a3a22", { seed: 4 }), expression: "happy", seed: 2, roblox: look("boy", "heroHair", "heroShirt", "heroPants") });
   const sister = person("sister", { ...kid, shape: "child", skin: "#f5d0b5", shirt: tee("#ff7eb6", "★"), pants: shorts("#6a4c93"), hair: hair("pigtails", "#3b2414", { tie: "#ffd166", seed: 7 }), expression: "angry", seed: 8, roblox: look("girl", "sisterHair", "sisterShirt", "sisterPants") });

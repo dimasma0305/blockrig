@@ -181,7 +181,7 @@ export function applyWetness(m: THREE.MeshStandardMaterial, wet: number, dry: { 
 }
 
 /** Fog for the weather (exponential, coloured like the sky's horizon). */
-export function applyFog(scene: THREE.Scene, w: Weather, colour: THREE.ColorRepresentation, base = 0.004) {
+export function applyFog(scene: THREE.Scene, w: Weather, colour: THREE.ColorRepresentation, base = 0.001) {
   const density = base + w.fog * 0.03 + w.rain * 0.006 + w.snow * 0.01;
   if (!(scene.fog instanceof THREE.FogExp2)) scene.fog = new THREE.FogExp2(colour, density);
   (scene.fog as THREE.FogExp2).density = density; (scene.fog as THREE.FogExp2).color.set(colour);

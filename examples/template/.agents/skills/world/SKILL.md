@@ -54,6 +54,14 @@ Rules: no empty boxes. A street needs layers (road, curb, sidewalk, lawn, fence,
 at character height. A room needs a bed/sofa, a light source, a rug, something on the walls and a window. Put
 locations far apart (`LOCATIONS` in src/world/World.ts) so they never share a frame. New builders go in the kit.
 
+## The look (src/kit/lighting.ts; user's reference https://www.youtube.com/shorts/wVjP5B-94MM)
+
+A strong warm afternoon sun low enough for long, crisp shadows; a deep blue sky with big bright cumulus (Poly Haven
+`kloofendal_48d_partly_cloudy_puresky`); little flat fill, so shadows keep depth; saturated, contrasty colour
+(`applyLook(gl)`: ACES Filmic; AgX looked washed out); clear days crisp to the horizon (fog only with weather);
+surfaces with real grain and relief (Roblox maps take the PBR set's grain, tinted by the part colour). Every
+composition calls `applyLook(gl)`. The sky only shows when the camera looks level or up: shoot low (camera skill).
+
 ## Weather (src/kit/weather.ts)
 
 Per shot in docs/story.md: `weather: clear | overcast | fog | drizzle | rain | storm | snow | blizzard`, plus

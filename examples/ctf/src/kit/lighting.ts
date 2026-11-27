@@ -3,9 +3,26 @@
 import * as THREE from "three";
 
 export type Daylight = { top: string; horizon: string; ground: string; sun: string; sunIntensity: number; sunDir: [number, number, number]; fill: number; exposure: number; stars: number };
+// The look (from the user's reference shorts): a strong warm afternoon sun low enough for long crisp shadows, a deep
+// blue sky, little flat fill so shadows keep their depth, and ACES Filmic for saturated, contrasty colour (AgX
+// looked washed out next to them). Every composition calls applyLook(gl).
+export const LOOK = { toneMapping: THREE.ACESFilmicToneMapping, exposure: 0.9, shadowMap: THREE.PCFShadowMap };
+export function applyLook(gl: THREE.WebGLRenderer) { gl.toneMapping = LOOK.toneMapping; gl.toneMappingExposure = LOOK.exposure; gl.shadowMap.type = LOOK.shadowMap; }
+/** Roblox lights avatars with strong ambient light, so faces and clothes stay readable in shade (reference shorts):
+ *  a little of each material's own colour and texture as self-light. Call it on every character once it is dressed. */
+export function avatarAmbient(obj: THREE.Object3D, amount = 0.3) {
+  const done = new Set<THREE.Material>();
+  obj.traverse((o: any) => {
+    if (!o.isMesh) return;
+    for (const m of (Array.isArray(o.material) ? o.material : [o.material]) as any[]) {
+      if (!m || done.has(m) || !m.isMeshStandardMaterial || m.side === THREE.BackSide) continue; // BackSide: outlines
+      done.add(m); m.emissive.copy(m.color).multiplyScalar(amount); if (m.map) m.emissiveMap = m.map; m.needsUpdate = true;
+    }
+  });
+}
 export const TIMES: Record<string, Daylight> = {
-  day:    { top: "#4f8fe0", horizon: "#bfe0ff", ground: "#6d7f5a", sun: "#fff4e0", sunIntensity: 3.2, sunDir: [0.5, 0.9, 0.35], fill: 1.1, exposure: 1.0, stars: 0 },
-  golden: { top: "#5a7fc4", horizon: "#ffc38a", ground: "#7a6a4a", sun: "#ffc78a", sunIntensity: 3.0, sunDir: [0.8, 0.35, 0.3], fill: 0.9, exposure: 1.05, stars: 0 },
+  day:    { top: "#2f6fd6", horizon: "#a9d2ff", ground: "#6d7f5a", sun: "#ffe2b5", sunIntensity: 4.4, sunDir: [0.65, 0.55, 0.5], fill: 0.6, exposure: 1.0, stars: 0 },
+  golden: { top: "#4a72c4", horizon: "#ffc38a", ground: "#7a6a4a", sun: "#ffbf7a", sunIntensity: 4.0, sunDir: [0.8, 0.32, 0.3], fill: 0.55, exposure: 1.05, stars: 0 },
   dusk:   { top: "#26305e", horizon: "#e8875f", ground: "#3d3a44", sun: "#ff9e6e", sunIntensity: 1.6, sunDir: [0.85, 0.15, 0.2], fill: 0.7, exposure: 1.15, stars: 0.3 },
   night:  { top: "#060a1e", horizon: "#1c2850", ground: "#14161e", sun: "#a9b8ff", sunIntensity: 0.6, sunDir: [-0.4, 0.8, 0.3], fill: 0.45, exposure: 1.25, stars: 1 },
   storm:  { top: "#2b313d", horizon: "#56606e", ground: "#2e3238", sun: "#cfd8e6", sunIntensity: 0.9, sunDir: [0.3, 0.9, 0.2], fill: 0.9, exposure: 1.1, stars: 0 },
@@ -36,7 +53,7 @@ export type Lighting = {
   update(o: { time: Daylight; overcast?: number; flash?: number; focus?: THREE.Vector3 }): void;
 };
 
-export function createLighting({ shadowSize = 40, shadowMap = 2048, sky: showSky = true } = {}): Lighting {
+export function createLighting({ shadowSize = 40, shadowMap = 4096, sky: showSky = true } = {}): Lighting {
   const root = new THREE.Group(); root.name = "Lighting";
   const uniforms = { uTop: { value: new THREE.Color() }, uHorizon: { value: new THREE.Color() }, uGround: { value: new THREE.Color() }, uSun: { value: new THREE.Color() }, uSunDir: { value: new THREE.Vector3() }, uStars: { value: 0 }, uFlash: { value: 0 }, uOvercast: { value: 0 } };
   const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 32, 16), new THREE.ShaderMaterial({ uniforms, vertexShader: SKY_VS, fragmentShader: SKY_FS, side: THREE.BackSide, depthWrite: false, fog: false }));

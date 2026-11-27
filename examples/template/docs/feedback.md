@@ -18,6 +18,7 @@ undone later. One line per item: date, what they said, what we did, where.
 - Use visually attractive, good-quality assets, like popular Roblox story channels (girl and boy with anime faces, real hair, detailed houses and rooms). → local Roblox mode: anime face accessories, free Toolbox maps for the house and the bedroom (`buildRobloxMap`).
 - Roads must run along the street, not sideways. → road tiles turned π/2 in World.ts.
 - Every word of the narration must be clear (e.g. "in this town"). → voice takes need per-word clarity ≥0.45 and stricter word match.
+- Faces, hair and bodies like https://www.youtube.com/shorts/Xd_yEnAdiGo; shade, texture, lighting and sky like https://www.youtube.com/shorts/wVjP5B-94MM. → kit look: ACES Filmic, strong warm low sun, little fill, crisp clear-day fog, grain on map surfaces, pale skin, `avatarAmbient` on characters; low cameras show the sky (look, world, camera skills).
 - Town layout must be realistic: objects placed by rules, not overlapping. → 2D plan with Turf (kit/plan.ts): zones, lots, footprints, scatter/along; PlanLab shows it.
 - The narrator sounded like different people from line to line, and was hard to follow. → one voice sample for every mood (emotion = performance strength, tempo within 5%); hook calm at normal speed; stricter clarity bar. Never per-mood voice samples.
 - Commas must be heard ("In this town, it rains..."): the flat take ran through it. → the voice script enforces real silence at commas (0.22 s) and inner "..."/stops (0.4 s).

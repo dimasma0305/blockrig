@@ -34,3 +34,14 @@ Hair, heads, faces, clothing and bundles from the catalog can be worn (see the `
 
 - Distinct silhouette from neighbours (shape, hair, hat). One accent colour across hair, clothes, props.
 - Readable at 10 studs. `npm run stills -- --comp Lineup` and look before using a new character.
+
+## The reference look (user's references, 2026-11-27)
+
+Characters, from https://www.youtube.com/shorts/Xd_yEnAdiGo:
+- classic blocky bodies, very pale slightly pink skin (girls `#fcf3f0`, boys `#f0cdb0`), detailed layered outfits;
+- big fluffy anime hair with bangs and volume, never hiding the eyes;
+- 2D anime faces (big highlighted eyes, small mouth, blush) that change every line; shocked = blank white eyes and
+  an open mouth. Locally: face accessories per emotion (`faceSets`); the public version: drawn faces;
+- evenly lit, like Roblox's strong avatar ambient: `avatarAmbient()` (kit/lighting.ts) on every character, so faces
+  stay readable in shade.
+Light, sky and surfaces: see the world skill ("The look").
