@@ -62,7 +62,7 @@ The world, built in this project:
   - searchlights, drones and a live scoreboard;
   - a view-source terminal.
 
-For agents: [`AGENTS.md`](AGENTS.md) holds the rules. `.agents/skills/` has one skill per stage (shared with the template): viral-short, story, look, world, materials, voice, assets, camera, vfx, review, render.
+For agents: [`AGENTS.md`](AGENTS.md) points to the template's rules and skills ([`../template/AGENTS.md`](../template/AGENTS.md), [`../template/.agents/skills/`](../template/.agents/skills/): one per stage), kept in one place for every video, plus this video's own notes.
 
 ## Credits and licences
 

@@ -3,6 +3,8 @@
 This folder is a complete, self-contained video project: a narrated vertical short (YouTube Shorts / TikTok /
 Reels) with **BlockRig** characters (`../..`), a 3D world in **three.js** (React Three Fiber), rendered by
 **Remotion**. Start a new video with `npm run new -- ../my-video "Title"`, never by editing the template in place.
+This file and `.agents/skills/` are the one copy of the rules: videos in this repo (`../ctf`, `../sawit`, and
+new ones) point here from their own short AGENTS.md, so improve them here and every video gets it.
 
 ## Where things are
 
