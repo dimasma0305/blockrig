@@ -32,14 +32,14 @@ Each shot's `emotion:` in story.md picks how the narrator says it (see the voice
 
 ## Music
 
-- s01: memory
-- s04: memory-faded
-- s06: memory
+- s01: goofy-piano
+- s04: sneaky-piano
+- s06: goofy-piano
 
-A fading-memory arc: an original worn 1930s ballroom record far away (in the feel of "Everywhere at the End of
-Time", which is copyrighted, so nothing of it is used), further gone when the storm hits, back when he tells the truth.
+Bouncy original piano in the brainrot style (the user preferred it to the "memory" record sound): goofy for the
+town, sneaky when the lie catches up with him, goofy again for the twist.
 
-Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
+Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs), goofy-piano, sneaky-piano (scripts/music-piano.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
 
 ## Sound effects (planned)
 

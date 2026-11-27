@@ -2,6 +2,7 @@
 // compose(theme, seconds, seed) -> Float32Array (mono, 48 kHz); writeWav(path, samples)
 import fs from "node:fs";
 import { memory } from "./music-memory.mjs";
+import { piano } from "./music-piano.mjs";
 
 export const SR = 48000;
 const THEMES = {
@@ -17,13 +18,15 @@ const THEMES = {
 };
 /** The mood names docs/audio.md can use. */
 // memory / memory-faded: a worn 1930s ballroom record far away (scripts/music-memory.mjs)
-export const THEME_NAMES = [...Object.keys(THEMES), "memory", "memory-faded"];
+// goofy-piano / sneaky-piano: bouncy brainrot-style piano (scripts/music-piano.mjs)
+export const THEME_NAMES = [...Object.keys(THEMES), "memory", "memory-faded", "goofy-piano", "sneaky-piano"];
 
 const hz = (m) => 440 * 2 ** ((m - 69) / 12);
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
 export function compose(theme, seconds, seed = 1) {
   if (theme === "memory" || theme === "memory-faded") return memory(seconds, seed, theme === "memory-faded");
+  if (theme === "goofy-piano" || theme === "sneaky-piano") return piano(seconds, seed, theme.split("-")[0]);
   const T = THEMES[theme]; if (!T) throw new Error(`unknown theme ${theme}`);
   const n = Math.ceil(seconds * SR), out = new Float32Array(n), r = rng(seed * 7919 + theme.length);
   const beat = 60 / T.bpm, bar = beat * 4;

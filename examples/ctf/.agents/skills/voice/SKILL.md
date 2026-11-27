@@ -95,10 +95,11 @@ rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).
 
 ## Music
 
-Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post: mystery, suspense,
-happy, comedy, sad, action, chill, cyber, triumph, and `memory` / `memory-faded` (scripts/music-memory.mjs): a slow
-1930s ballroom piece (~72 bpm) heard from a worn 78 in another room, the feel users know from "Everywhere at the
-End of Time". That album is copyrighted (refused for reuse; Content ID claims it): never download or use it, or
-any chart song; the user adds trending sounds in the app. Pick themes per shot in docs/audio.md "Music", then
-`node scripts/voice.mjs --music-only` rebuilds the music without re-voicing. You cannot hear it: check loudness and
+Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default to the piano
+themes**: `goofy-piano` (bouncy major oom-pah piano with a catchy tune, pizzicato answers, snaps: the brainrot
+staple) and `sneaky-piano` (minor tiptoe staccato for "uh-oh" moments), from scripts/music-piano.mjs. Others:
+mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, and `memory` / `memory-faded` (a worn 1930s
+record far away; the user found it "not good" next to the piano, so only on request). Never download chart songs
+or copyrighted albums ("Everywhere at the End of Time" was refused for reuse; Content ID claims it); the user adds
+trending sounds in the app. Pick themes per shot in docs/audio.md "Music", then `node scripts/voice.mjs --music-only` rebuilds the music without re-voicing. You cannot hear it: check loudness and
 bands (`ffmpeg ... volumedetect` per band) and ask the user to listen.
