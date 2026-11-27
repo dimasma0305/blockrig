@@ -25,7 +25,7 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 | <img src="docs/wave.png" width="200" alt="wave clip"> | <img src="docs/run.png" width="200" alt="run clip"> | <img src="docs/card.png" width="200" alt="card throw clip"> | <img src="docs/victory.png" width="200" alt="victory jump clip"> |
 | `wave` | `run` | `card` | `victory` |
 
-## Made with BlockRig: a story short
+## Made with BlockRig: story shorts
 
 <table><tr>
 <td width="300"><a href="docs/story.mp4"><img src="docs/story-preview.gif" width="300" alt="The Ice Statue: a blocky kid touches a giant ice statue in a snowy park and it wakes up"></a></td>
@@ -34,6 +34,21 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 **"The Ice Statue"**: a 26-second vertical short in the viral *"In this town…"* format, made entirely in code. BlockRig plays the cast (a kid, a giant ice statue on the `buff` body, the townsfolk) with its Animator and drawn expressions. Remotion and three.js render it frame by frame over a CC0 town, with a narrated voice, an original score and word-timed captions.
 
 ▶ [**Watch it with sound**](docs/story.mp4) · [How it's made](examples/story/README.md)
+
+</td>
+</tr><tr>
+<td width="300"><a href="docs/ctf.mp4"><img src="docs/ctf-preview.gif" width="300" alt="Everybody Plays CTF: in a neon city where everyone hacks, the last-ranked player finds the flag in the page source"></a></td>
+<td>
+
+**"Everybody Plays CTF"**: a 20-second, fast-paced short. It's set in a world where everyone, from the baker to the schoolkids, plays capture-the-flag hacking contests. Every character is dressed in code:
+
+- drawn Shirt/Pants templates;
+- layered hair, headphones and visors on Roblox attachments;
+- laptops welded to their hands, and IK hands on a keyboard.
+
+They play in a neon city with custom shaders: a hex force-field dome, holograms, glyph rain, beams and particles. Nothing is downloaded.
+
+▶ [**Watch it with sound**](docs/ctf.mp4) · [How it's made](examples/ctf/README.md)
 
 </td>
 </tr></table>

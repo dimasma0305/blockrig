@@ -1,0 +1,10 @@
+node_modules
+dist
+out
+.browser-path
+.env
+# never commit downloaded third-party assets
+public/cc0/
+public/roblox/
+# generated audio (recreate with `npm run voice`)
+public/audio/

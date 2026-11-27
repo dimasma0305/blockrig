@@ -1,0 +1,348 @@
+{
+  "title": "Everybody Plays CTF",
+  "fps": 60,
+  "width": 1080,
+  "height": 1920,
+  "voice": {
+    "style": "boy",
+    "gapSeconds": 0.04
+  },
+  "music": [
+    {
+      "theme": "cyber",
+      "fromShot": "s01"
+    },
+    {
+      "theme": "suspense",
+      "fromShot": "s05"
+    },
+    {
+      "theme": "triumph",
+      "fromShot": "s12"
+    }
+  ],
+  "characters": {
+    "hero": {
+      "look": "the narrator: oversized charcoal hoodie with a cyan bracket logo and drawstrings, cargo joggers, high-top sneakers, messy layered dark hair with a teal streak, headphones round the neck, a beat-up laptop; a floating rank tag reads #8,000,000,000"
+    },
+    "baker": {
+      "look": "round baker: white jacket with a checked apron, tall chef hat, warm brown skin, moustache"
+    },
+    "kids": {
+      "look": "two small kids (child body): school uniforms, backpacks, one with pigtails, one with a cap"
+    },
+    "pros": {
+      "look": "elite team of four: matching black-and-magenta jackets with team numbers, visor glasses, spiky and slick hair, laptops held like weapons"
+    },
+    "crowd": {
+      "look": "a dozen townsfolk in varied colourful clothes, each with a floating rank tag"
+    }
+  },
+  "locations": {
+    "street": "neon city street at night: tall towers with lit windows, holographic signs, wet road reflecting colour, a bakery and a school front, glyph rain in the sky",
+    "plaza": "the Vault plaza: a monolith tower under a hexagonal firewall dome, searchlights, a crowd behind barriers, a giant sky scoreboard",
+    "terminal": "the small public terminal at the foot of the Vault door, screen glowing"
+  },
+  "shots": [
+    {
+      "id": "s01",
+      "narration": "In this world, everybody plays CTF.",
+      "captions": [
+        {
+          "text": "IN THIS WORLD,",
+          "highlight": "WORLD"
+        },
+        {
+          "text": "EVERYBODY PLAYS CTF.",
+          "highlight": "CTF"
+        }
+      ],
+      "location": "street",
+      "action": "crane down past the sky scoreboard into the busy neon street; people walk, rank tags floating over them",
+      "faces": {},
+      "camera": "high crane down from the scoreboard to street level"
+    },
+    {
+      "id": "s02",
+      "narration": "Even the bakery hides a flag in its receipts.",
+      "captions": [
+        {
+          "text": "EVEN THE BAKERY",
+          "highlight": "BAKERY"
+        },
+        {
+          "text": "HIDES A FLAG",
+          "highlight": "FLAG"
+        },
+        {
+          "text": "IN ITS RECEIPTS."
+        }
+      ],
+      "location": "street",
+      "action": "the baker hands over bread; a receipt hologram pops up with a glowing flag{...} line",
+      "faces": {
+        "baker": "happy"
+      },
+      "camera": "medium on the baker at the shop counter, slight push-in"
+    },
+    {
+      "id": "s03",
+      "narration": "Kids learn SQL injection before multiplication.",
+      "captions": [
+        {
+          "text": "KIDS LEARN",
+          "highlight": "KIDS"
+        },
+        {
+          "text": "SQL INJECTION",
+          "highlight": "SQL"
+        },
+        {
+          "text": "BEFORE MULTIPLICATION."
+        }
+      ],
+      "location": "street",
+      "action": "two kids outside the school cheer at a floating ' OR 1=1-- hologram; the school sign glitches",
+      "faces": {
+        "kids": "grin"
+      },
+      "camera": "low angle on the kids, school sign above"
+    },
+    {
+      "id": "s04",
+      "narration": "And me? Rank... last.",
+      "captions": [
+        {
+          "text": "AND ME?",
+          "highlight": "ME"
+        },
+        {
+          "text": "RANK... LAST.",
+          "highlight": "LAST"
+        }
+      ],
+      "location": "street",
+      "action": "the hero alone on the pavement, the rank tag above them flickers to #8,000,000,000; slump",
+      "faces": {
+        "hero": "sad"
+      },
+      "camera": "close on the hero, pull up to reveal the tag"
+    },
+    {
+      "id": "s05",
+      "narration": "Tonight is the World Final. One flag, locked inside the Vault.",
+      "captions": [
+        {
+          "text": "TONIGHT IS",
+          "highlight": "TONIGHT"
+        },
+        {
+          "text": "THE WORLD FINAL.",
+          "highlight": "FINAL"
+        },
+        {
+          "text": "ONE FLAG,",
+          "highlight": "FLAG"
+        },
+        {
+          "text": "LOCKED INSIDE THE VAULT.",
+          "highlight": "VAULT"
+        }
+      ],
+      "location": "plaza",
+      "action": "reveal the Vault tower under the hex firewall dome, searchlights sweeping, crowd behind barriers",
+      "faces": {},
+      "camera": "wide low orbit around the dome"
+    },
+    {
+      "id": "s06",
+      "narration": "The pros threw everything.",
+      "captions": [
+        {
+          "text": "THE PROS",
+          "highlight": "PROS"
+        },
+        {
+          "text": "THREW EVERYTHING.",
+          "highlight": "EVERYTHING"
+        }
+      ],
+      "location": "plaza",
+      "action": "the pro team steps forward in formation and raises their laptops",
+      "faces": {
+        "pros": "determined"
+      },
+      "camera": "low hero shot of the team, slow push"
+    },
+    {
+      "id": "s07",
+      "narration": "Zero-days. Rainbow tables. An actual botnet.",
+      "captions": [
+        {
+          "text": "ZERO-DAYS.",
+          "highlight": "ZERO-DAYS"
+        },
+        {
+          "text": "RAINBOW TABLES.",
+          "highlight": "RAINBOW"
+        },
+        {
+          "text": "AN ACTUAL BOTNET.",
+          "highlight": "BOTNET"
+        }
+      ],
+      "location": "plaza",
+      "action": "packet beams and a rainbow beam hit the dome, impacts ripple; a swarm of drones dives in; sparks",
+      "faces": {
+        "pros": "furious"
+      },
+      "camera": "fast side tracking along the beams, camera shake"
+    },
+    {
+      "id": "s08",
+      "narration": "Nothing worked.",
+      "captions": [
+        {
+          "text": "NOTHING WORKED.",
+          "highlight": "NOTHING"
+        }
+      ],
+      "location": "plaza",
+      "action": "dome flickers and holds; drones drop; the pros slump",
+      "faces": {
+        "pros": "sad"
+      },
+      "camera": "static wide, dome centred",
+      "minSeconds": 1
+    },
+    {
+      "id": "s09",
+      "narration": "So I tried the one thing nobody did.",
+      "captions": [
+        {
+          "text": "SO I TRIED",
+          "highlight": "TRIED"
+        },
+        {
+          "text": "THE ONE THING",
+          "highlight": "ONE"
+        },
+        {
+          "text": "NOBODY DID.",
+          "highlight": "NOBODY"
+        }
+      ],
+      "location": "terminal",
+      "action": "the hero walks through the crowd to the little terminal at the Vault door",
+      "faces": {
+        "hero": "determined"
+      },
+      "camera": "behind the hero, tracking forward"
+    },
+    {
+      "id": "s10",
+      "narration": "I viewed the page source.",
+      "captions": [
+        {
+          "text": "I VIEWED",
+          "highlight": "VIEWED"
+        },
+        {
+          "text": "THE PAGE SOURCE.",
+          "highlight": "SOURCE"
+        }
+      ],
+      "location": "terminal",
+      "action": "the hero's hand on the keyboard (IK), the screen fills with HTML",
+      "faces": {
+        "hero": "smug"
+      },
+      "camera": "over the shoulder onto the screen"
+    },
+    {
+      "id": "s11",
+      "narration": "",
+      "captions": [],
+      "location": "terminal",
+      "action": "silent beat: the screen scrolls and one green comment line lights up: <!-- flag{it_was_in_the_source} -->",
+      "faces": {
+        "hero": "shocked"
+      },
+      "camera": "screen close-up, slow push",
+      "minSeconds": 1.3
+    },
+    {
+      "id": "s12",
+      "narration": "The flag was in a comment.",
+      "captions": [
+        {
+          "text": "THE FLAG",
+          "highlight": "FLAG"
+        },
+        {
+          "text": "WAS IN A COMMENT.",
+          "highlight": "COMMENT"
+        }
+      ],
+      "location": "plaza",
+      "action": "the dome shatters into hexes, the Vault opens, glyph confetti bursts, the crowd's jaws drop",
+      "faces": {
+        "hero": "laugh",
+        "pros": "shocked",
+        "crowd": "shocked"
+      },
+      "camera": "wide pull-back from the opening Vault",
+      "minSeconds": 1.4
+    },
+    {
+      "id": "s13",
+      "narration": "Now I'm rank one.",
+      "captions": [
+        {
+          "text": "NOW I'M",
+          "highlight": "NOW"
+        },
+        {
+          "text": "RANK ONE.",
+          "highlight": "ONE"
+        }
+      ],
+      "location": "plaza",
+      "action": "the sky scoreboard flips; the hero's tag spins to #1; victory jump",
+      "faces": {
+        "hero": "grin"
+      },
+      "camera": "low angle on the hero, scoreboard behind",
+      "minSeconds": 1.2
+    },
+    {
+      "id": "s14",
+      "narration": "And everybody in this world checks the source first.",
+      "captions": [
+        {
+          "text": "AND EVERYBODY",
+          "highlight": "EVERYBODY"
+        },
+        {
+          "text": "IN THIS WORLD",
+          "highlight": "WORLD"
+        },
+        {
+          "text": "CHECKS THE SOURCE",
+          "highlight": "SOURCE"
+        },
+        {
+          "text": "FIRST."
+        }
+      ],
+      "location": "street",
+      "action": "back on the street: everyone, the baker and kids included, types view-source; screens glow green",
+      "faces": {
+        "baker": "smug",
+        "kids": "grin"
+      },
+      "camera": "crane up from the street back to the scoreboard",
+      "minSeconds": 2.2
+    }
+  ]
+}
