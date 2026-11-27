@@ -59,6 +59,11 @@ npm run preview          # small MP4 + GIF for sharing
 9. **Licences.** Commit only original or CC0 content. Roblox catalog items are for local use only (`assets/roblox/`, git-ignored) and never appear in a published or committed video. Posting is the user's job.
 10. **You cannot hear audio.** Use `npm run check` (speech recognition of every take), measure pace, and ask the user to listen.
 11. **Plan, place, check.** Lay every location out on a 2D plan first (`src/kit/plan.ts`, Turf: zones, lots, a stage for each shot, footprints that may not overlap; `world` skill), put characters on surfaces by how those behave (`restOn`: a bed gives way, a floor does not; `materials` skill), and run `npm run collide` before rendering (cameras in walls, hidden faces, characters in props, floating, sunk or stiff; `review` skill).
+12. **The quality bar is the standard for every video.** Match the user's reference shorts (docs/references.md:
+    faces, hair and bodies like Xd_yEnAdiGo; light, sky and surfaces like wVjP5B-94MM) and pass the `viral-short`
+    skill's quality bar before every full render. When the user points at a new reference, measure or look at it
+    (voice: `analyze_ref.py`; look: stills side by side), write what to take into docs/references.md and the skill it
+    belongs to, so the next video starts from it.
 
 ## This video
 

@@ -14,25 +14,52 @@ every 1–3 s, and 2–4 words of caption are always on screen. One twist at the
 ## Order (each stage has a skill)
 
 1. **story** → `docs/story.md`. Show the user the hook and one-line plot before anything else.
-2. **look / world / materials** → `docs/visuals.md`, then `src/cast`, `src/world`. Check `Lineup`, `MaterialBoard`, `WeatherLab`.
+2. **look / world / materials** → `docs/visuals.md`, then `src/cast`, `src/world`. Lay each location out on the 2D
+   plan first (`world` skill: zones, a stage per shot, footprints). Check `Lineup`, `PlanLab`, `MaterialBoard`, `WeatherLab`.
 3. **voice** → `docs/audio.md`, `npm run voice`, `npm run check`.
-4. **camera / vfx** → `src/direction`, effects. Stills after every change.
-5. **review / render** → contact sheet, full render, frame sheet from the MP4, report.
+4. **camera / vfx** → `src/direction`, effects. Stills after every change, then `npm run collide` until it finds nothing.
+5. **review / render** → the quality bar below, contact sheet, full render, frame sheet from the MP4, report.
 
 For a first version, shrink everything (5–7 shots, ~15 s) rather than skip a stage. The user's reaction to a real
 video is worth more than questions up front.
 
-## Defaults users asked for (keep them unless told otherwise)
+## The standard (what users asked for again and again; keep it unless told otherwise)
 
-- **Assets first, don't reinvent:** Before building anything in code (a model, texture, sky, cloud, animal, prop, face, clothing, hair, animation), look for a downloadable asset: the source list in the `assets` skill, listed in `assets/manifest.json`, fetched by `npm run assets` / `npm run roblox`. Code-built kit pieces (`src/kit/structures.ts`, `textures.ts`, procedural hair/clothes) are only a fallback when no asset fits, and the reason goes in `docs/visuals.md`. Every visual item in `docs/visuals.md` names its source.
+Reference shorts in docs/references.md: https://www.youtube.com/shorts/Xd_yEnAdiGo (faces, hair, bodies),
+https://www.youtube.com/shorts/wVjP5B-94MM (shade, texture, light, sky). Open them and compare stills side by side.
 
-- **Voice:** expressive young male narrator (Kokoro `am_adam` pitched ×1.35, performed by Chatterbox). ~160 wpm overall, short gaps, never rushed. Every line performed with the emotion its meaning calls for (`emotion:` per shot: sad lines sad, reveals shocked, punchlines smug).
-- **Characters:** classic blocky Roblox look, but never plain: drawn clothes, hair or hat, an accent colour, accessories. Expressive faces that change with the story.
-- **Places:** suburban houses with few windows set back behind lawns; real structure (roofs, porches, fences, trees, lamps, power lines, cars); people in the street.
-- **Surfaces:** every surface textured (road, sidewalk, grass, walls, roofs, wood, fabric, carpet, lamp shades).
-- **Atmosphere:** weather and time of day per shot (rain, storm with lightning, snow, fog, golden hour, night).
-- **Framing:** faces never under captions or floating tags; nothing blocking the hero.
-- **Assets:** original or CC0 in anything committed or published; Roblox catalog items only locally.
+- **Assets first, don't reinvent:** models, textures, skies, clouds, animals, props, faces, clothes, hair and
+  animations come from downloadable assets (`assets` skill, `assets/manifest.json`; local Roblox catalog items and
+  Toolbox maps with `--roblox`). Code-built pieces are a fallback, with the reason in `docs/visuals.md`.
+- **Characters** (`look` skill): classic blocky bodies, very pale slightly pink skin, big fluffy hair with bangs that
+  never hides the eyes, 2D anime faces that change with every line, layered detailed outfits, an accent each; evenly
+  lit (`avatarAmbient`). Girl and boy leads that look like they belong in a popular Roblox story channel.
+- **Light and sky** (`world` skill, "The look"): warm low afternoon sun, long crisp shadows, little flat fill, deep
+  blue sky with big cumulus, saturated contrast (`applyLook`), clear days crisp to the horizon. Low cameras show the sky.
+- **Surfaces** (`materials` skill): everything textured at its real size with visible grain and relief; soft things
+  give way (`restOn`: beds, sofas), floors do not.
+- **Places** (`world` skill): planned, not scattered: houses set back behind lawns facing the road, roads along the
+  street, paths, fences with gaps, trees in yards, lamps, cars at the kerb, people walking in lanes; detailed rooms
+  (Toolbox maps locally). Weather and time of day per shot.
+- **Voice** (`voice` skill): ONE narrator on every line (one voice sample; emotion from performance, never per-mood
+  samples or pitch shifts), every word clear, the hook calm and plain, "!" lines lively, a breath at every comma and a
+  beat at "...", ~150–190 wpm overall with 0.35–0.45 s between lines.
+- **Staging** (`camera` skill): faces never under captions; nobody inside walls, props or each other; seated people
+  sink into soft seats; the camera never inside anything. `npm run collide` proves it.
+- **Licences:** original or CC0 in anything committed or published; Roblox catalog items and maps only locally.
+
+## Quality bar (every item, before every full render)
+
+Look at stills next to the reference shorts and tick each line; anything that fails is fixed first.
+
+1. `npm run check` passes: every take says its words clearly, one narrator (pitch within the limits), pace in range.
+2. `npm run collide` (and `-- --roblox` for the local version) says "nothing found".
+3. `PlanLab` shows no overlaps; every shot's spot is a clear stage.
+4. Lineup: every character has hair, a face that reads at phone size, a detailed outfit, pale skin, even light.
+5. Contact sheet: no frame is washed out, blank, or a wall; sky visible in outdoor shots that look level or up;
+   every surface textured; weather matches the line.
+6. Captions clear of faces and app buttons on every shot (`DEBUG=1 npm run stills`).
+7. The user's latest feedback (docs/feedback.md) is visibly addressed.
 
 ## Hand-over
 
