@@ -1,6 +1,8 @@
 import type * as THREE from "three";
 
 export type CFrame = { rot: number[]; pos: number[] };
+/** A parsed mesh (parseMesh) or a three.js BufferGeometry. */
+export type MeshInput = Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount"> | THREE.BufferGeometry;
 export interface MeshBone { name: string; parent: number; lodParent: number; culling: number; cframe: CFrame }
 export interface ParsedMesh {
   version: string; vertexCount: number; faceCount: number;
@@ -66,10 +68,10 @@ export interface Rig {
   addLayeredClothing(mesh: ParsedMesh, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; lod?: number; side?: THREE.Side; wrap?: WrapLayerSpec | null }): THREE.SkinnedMesh;
   /** The body's WrapTarget cages in character space (template UV key -> position). */
   readonly bodyCage: Map<string, number[]>;
-  addAccessory(mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o: { attachment: { name: string; cframe: CFrame }; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
+  addAccessory(mesh: MeshInput, o: { attachment: { name: string; cframe: CFrame }; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
   setFace(image: CanvasImageSource): void;
   readonly headAttachments: Record<string, number[]>;
-  setHead(mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o?: { scale?: number[]; offset?: number[]; attachments?: Record<string, number[]>; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
+  setHead(mesh: MeshInput, o?: { scale?: number[]; offset?: number[]; attachments?: Record<string, number[]>; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
   headBounds(): THREE.Box3;
   readonly face: Face | null;
   setExpression(nameOrParams: ExpressionName | string | Partial<FaceParams>, o?: { fade?: number }): Rig;
@@ -88,6 +90,14 @@ export interface Rig {
   readonly welds: Map<THREE.Object3D, string>;
   /** A body part's bind-pose CFrame in character space (its centre), like Part.CFrame. */
   partCFrame(name: string): CFrame;
+  /** Cast and/or receive shadows on every mesh (outlines never cast), now and for parts added later. */
+  setShadows(cast?: boolean, receive?: boolean): Rig;
+  /** Advance faces and IK without an Animator. */
+  update(dt?: number): Rig;
+  /** A new rig built the same way (welded objects cloned); pass options to change some, e.g. { face }. */
+  clone(over?: Parameters<typeof createRig>[0]): Rig;
+  /** Free the rig's geometries, materials and own textures, and take it out of the scene. */
+  dispose(o?: { welds?: boolean }): void;
   /** Humanoid.HipHeight: the root part's bottom above the ground when standing (R6: above its legs). Settable. */
   hipHeight: number;
   /** Add an IKControl (solved after the Animator on every update). */
@@ -106,7 +116,7 @@ export interface Rig {
   setBodyColors(c: BodyColors): Rig;
   refreshAvatar(): Rig;
   readonly avatar: { bodyColors: Record<BodyRegion, string>; clothing: Clothing } | null;
-  setBodyPart(partName: string, mesh: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; scale?: number[] }): THREE.Mesh;
+  setBodyPart(partName: string, mesh: MeshInput, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; scale?: number[] }): THREE.Mesh;
 }
 export type RigType = "R15" | "R6";
 export type ShapeName = "classic" | "slender" | "buff" | "tall" | "child";
@@ -145,7 +155,7 @@ export type AttachmentPos = [number, number, number] | number[] | CFrame;
 export interface CageMesh { positions: ArrayLike<number>; uvs: ArrayLike<number> }
 export interface WrapLayerSpec { inner: CageMesh; innerOrigin?: number[]; outer?: CageMesh; outerOrigin?: number[]; order?: number }
 export interface BodyPartSpec {
-  mesh?: Pick<ParsedMesh, "positions" | "normals" | "uvs" | "indices" | "lods" | "faceCount">;
+  mesh?: MeshInput;
   /** The part's WrapTarget cage (CageMeshId) and CageOrigin, for fitting layered clothing. */
   cage?: { mesh: CageMesh; origin?: number[] } | null;
   size?: number[]; attachments?: Record<string, AttachmentPos>; map?: ClothingImage | null;
@@ -161,6 +171,8 @@ export function createRig(o?: {
   bodyParts?: Record<string, BodyPartSpec>;
   bodyColors?: BodyColors;
   clothing?: Clothing;
+  /** cast and receive shadows (outlines never cast) */
+  shadows?: boolean | { cast?: boolean; receive?: boolean };
   shape?: ShapeName | Partial<ShapeSpec>;
   scale?: BodyScale;
   skeleton?: BindBone[];
@@ -317,4 +329,7 @@ export function solvePosition(chain: THREE.Bone[], effector: () => THREE.Vector3
 export function applyPole(chain: THREE.Bone[], effector: () => THREE.Vector3, pole: THREE.Vector3): void;
 export function solveRotation(bone: THREE.Object3D, worldQ: THREE.Quaternion): void;
 export function solveLookAt(chain: THREE.Object3D[], origin: () => THREE.Vector3, forward: () => THREE.Vector3, target: THREE.Vector3): void;
+export function meshFromGeometry(geometry: THREE.BufferGeometry): ParsedMesh;
+export const BRICK_COLORS: Record<number, [string, number, number, number]>;
+export function brickColorHex(n: number): string | null;
 export const VERSION: string;

@@ -4,7 +4,7 @@ export { parseRbxm, findInstance, describeAccessory, describeHead, describeTool,
 export { parseRbxmx } from "./rbxmx.js";
 export { cframeToMatrix, matrixToCFrame, motor6D, accessoryWeld } from "./cframe.js";
 export { R15_BIND, R15_JOINTS, R15_FLOOR, R15_NECK_Y, HEAD_ATTACHMENTS } from "./skeleton.js";
-export { createRig, headGeometry, faceTexture, createFaceDecal, loadRobloxTexture, setSRGB } from "./rig.js";
+export { createRig, meshFromGeometry, headGeometry, faceTexture, createFaceDecal, loadRobloxTexture, setSRGB } from "./rig.js";
 export { createFace, drawFace, expression, mixFace, EXPRESSIONS, FACE_DEFAULTS } from "./face.js";
 export { Animator, AnimationTrack, Signal, ease, PRIORITY } from "./animator.js";
 export { clips } from "./clips.js";
@@ -13,6 +13,7 @@ export { buildBody, R15_SHAPES, jointsOf } from "./body.js";
 export { ATTACHMENT_ROT, buildBodyFromParts, defaultR15Parts, defaultBodyAttachments, describeBodyParts, describeBodyColors, describeClothing, templateUVs, regionSlices, paintRegion, clothingLayers, TEMPLATE, TEMPLATE_SIZE, T_SHIRT_RECT, R15_JOINT_OF, BODY_REGION, BODY_COLOR_KEYS } from "./avatar.js";
 export { toR6, toR15, retargetAll } from "./retarget.js";
 export { fitLayer, cageMap, cageKey } from "./wrap.js";
+export { BRICK_COLORS, brickColorHex } from "./brickcolor.js";
 export { solvePosition, applyPole, solveRotation, solveLookAt } from "./ik.js";
 export { curveAnimationToClip, decodeFloatCurve, decodeRotationCurve, decodeMarkerCurve, evalFloatCurve, evalRotationCurve, KEY_INTERPOLATION, ROTATION_ORDER, TICKS_PER_SECOND } from "./curves.js";
 export { parseFacs, facsWeights, facsBoneOffsets, FACS_CODES, FACE_CONTROLS } from "./facs.js";

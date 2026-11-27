@@ -35,7 +35,7 @@ function propValue(p) {
     case "string": case "ProtectedString": return p.text;
     case "BinaryString": { const s = (p.text || "").replace(/s+/g, ""); if (!s) return ""; const bin = atob(s), out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; } // base64
     case "bool": return txt === "true";
-    case "int": case "int64": case "token": return parseInt(txt, 10);
+    case "int": case "int64": case "token": case "BrickColor": return parseInt(txt, 10);
     case "float": case "double": return parseFloat(txt);
     case "Vector3": return [num(p, "X"), num(p, "Y"), num(p, "Z")];
     case "Vector2": return [num(p, "X"), num(p, "Y")];

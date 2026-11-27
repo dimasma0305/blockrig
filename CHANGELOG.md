@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Smaller things**: `createRig({ shadows })` / `rig.setShadows(cast, receive)` (outlines never cast; later parts follow); `rig.clone(over)` rebuilds a rig the same way (welded objects cloned, live face shared unless given); `rig.dispose()` frees what the rig made and leaves your textures and welded props; `rig.update(dt)` runs faces and IK without an Animator; three.js `BufferGeometry` is accepted wherever a parsed mesh is (`meshFromGeometry`); legacy BrickColor BodyColors are read (`BRICK_COLORS`, `brickColorHex`, palette from rbx-dom, MIT).
+
 - **HipHeight**: `rig.hipHeight` measures Humanoid.HipHeight from the body (R6: 0) and can be set to raise or lower the body.
 - **IKControl**: `rig.addIKControl({ type, chainRoot, endEffector, target, pole, weight, priority, offset })` for Position, Rotation, Transform and LookAt chains, with part or attachment end effectors; solved after the Animator (`rig.solveIK()`). `examples/ik.html`, `docs/ik.png`.
 
@@ -30,7 +32,7 @@
 - `examples/clothing.html` and `docs/clothing.png`; `ONLY=name npm run screenshots`.
 - The story example (`examples/story`): a 26-second short made with BlockRig, Remotion and three.js.
 - Bundlers: version-specific three.js colour-space constants are read at run time.
-- 128 tests.
+- 134 tests.
 
 ## 0.2.0
 

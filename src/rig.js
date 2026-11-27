@@ -39,7 +39,7 @@ function material(opts, skinned) {
 function outlineMaterial(width, skinned) {
   const o = { color: 0x0b0708, side: THREE.BackSide };
   if (skinned && LEGACY_SKINNING_FLAG) o.skinning = true;
-  const m = new THREE.MeshBasicMaterial(o);
+  const m = new THREE.MeshBasicMaterial(o); m.userData.blockrigOutline = true;
   m.onBeforeCompile = (s) => { s.vertexShader = s.vertexShader.replace("#include <begin_vertex>", `vec3 transformed = position + normal * ${width.toFixed(4)};`); };
   m.customProgramCacheKey = () => `blockrig-outline-${width}-${skinned}`;
   return m;
@@ -71,7 +71,7 @@ export function faceTexture(image, skin = "#f6dcc0", target = null) {
     }
   }
   if (target) return null;
-  const t = new THREE.CanvasTexture(cv); t.anisotropy = 8; return setSRGB(t);
+  const t = new THREE.CanvasTexture(cv); t.anisotropy = 8; t.userData.blockrigOwned = true; return setSRGB(t);
 }
 
 /**
@@ -83,14 +83,23 @@ export function faceTexture(image, skin = "#f6dcc0", target = null) {
 export function createFaceDecal(face, { radius = 0.63, height = 1.2, arc = Math.PI * 0.95, y = 0.6, segments = 24 } = {}) {
   const g = new THREE.CylinderGeometry(radius, radius, height, segments, 1, true, Math.PI - arc / 2, arc);
   g.translate(0, y, 0);
-  const tex = new THREE.CanvasTexture(face.canvas); setSRGB(tex); tex.anisotropy = 8;
+  const tex = new THREE.CanvasTexture(face.canvas); setSRGB(tex); tex.anisotropy = 8; tex.userData.blockrigOwned = true;
   const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.04, depthWrite: false, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2 });
   const mesh = new THREE.Mesh(g, mat); mesh.name = "FaceDecal"; mesh.renderOrder = 2;
   face.onChange(() => { tex.needsUpdate = true; });
   return mesh;
 }
 
+// a three.js BufferGeometry as the parsed-mesh shape BlockRig builds from
+export function meshFromGeometry(geometry) {
+  const g = geometry, n = g.attributes.position.count;
+  if (!g.attributes.normal) g.computeVertexNormals();
+  const indices = g.index ? Uint32Array.from(g.index.array) : Uint32Array.from({ length: n }, (_, i) => i);
+  return { positions: Float32Array.from(g.attributes.position.array), normals: Float32Array.from(g.attributes.normal.array),
+    uvs: g.attributes.uv ? Float32Array.from(g.attributes.uv.array) : new Float32Array(n * 2), indices, vertexCount: n, faceCount: indices.length / 3, lods: [0, indices.length / 3] };
+}
 function geometryFromMesh(mesh, { lod = 0, skinned = false } = {}) {
+  if (mesh && mesh.isBufferGeometry) mesh = meshFromGeometry(mesh);
   const g = new THREE.BufferGeometry();
   // copies: geometry is scaled, moved and (for dynamic heads) deformed in place, and a parsed mesh may be
   // shared by several rigs
@@ -123,6 +132,7 @@ function partMesh(p, mats) {
 // a body MeshPart: the mesh is fitted to the part's Size by its bounding box and centred on the part, as
 // MeshParts render
 function fittedGeometry(mesh, size) {
+  if (mesh && mesh.isBufferGeometry) mesh = meshFromGeometry(mesh);
   const g = geometryFromMesh(mesh); g.computeBoundingBox();
   const c = g.boundingBox.getCenter(new THREE.Vector3()), e = g.boundingBox.getSize(new THREE.Vector3());
   g.translate(-c.x, -c.y, -c.z);
@@ -279,7 +289,7 @@ export function createRig(o = {}) {
     if (!partMap && avatar.layers[region]) return avatar.layers[region];
     const k = 2, canvas = makeCanvas(TEMPLATE_SIZE[0] * k, TEMPLATE_SIZE[1] * k), L = { region, partMap, ctx: null, tex: null, mat: null };
     const ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
-    if (ctx) { L.ctx = ctx; L.tex = setSRGB(new THREE.CanvasTexture(canvas)); L.tex.flipY = false; L.mat = material({ map: L.tex }); }
+    if (ctx) { L.ctx = ctx; L.tex = setSRGB(new THREE.CanvasTexture(canvas)); L.tex.flipY = false; L.tex.userData.blockrigOwned = true; L.mat = material({ map: L.tex }); }
     else L.mat = material({ color: avatar.colors[region] }); // no 2D canvas (e.g. Node): body colours only
     if (partMap) avatar.extra.push(L); else avatar.layers[region] = L;
     return L;
@@ -347,6 +357,10 @@ export function createRig(o = {}) {
     if (src.mesh) { const e = fittedGeometry(src.mesh, null).extent; sc = [0, 1, 2].map((k) => (e.getComponent(k) > 1e-6 ? p.size[k] / e.getComponent(k) : 1)); }
     cageMap(src.cage.mesh, { origin: src.cage.origin || [0, 0, 0], at: p.center, scale: sc, into: bodyCage });
   }
+
+  // ---- clone() replays these; shadows apply to meshes added later too ----
+  const history = []; let shadowCast = false, shadowReceive = false;
+  const shade = (root) => root.traverse((o) => { if (!o.isMesh) return; const ol = o.material && o.material.userData && o.material.userData.blockrigOutline; o.castShadow = shadowCast && !ol; o.receiveShadow = shadowReceive && !ol; });
 
   // ---- welds and tools: objects placed in the bind pose, parented to the bone of their part ----
   const welds = new Map(); let equipped = null, headCentre = [0, HEAD_H / 2, 0];
@@ -581,6 +595,46 @@ export function createRig(o = {}) {
         model.updateMatrixWorld(true);
       }
     },
+    /** Cast and/or receive shadows on every mesh of the rig, now and for parts added later (outlines never cast). */
+    setShadows(cast = true, receive = cast) { shadowCast = !!cast; shadowReceive = !!receive; shade(model); return rig; },
+    /**
+     * Advance faces and IK without an Animator (the Animator does this itself): blends and blinks the live face,
+     * poses a dynamic head from faceControls, and solves the IKControls.
+     */
+    update(dt = 0) { rig.solveIK(); rig.updateFace(dt); return rig; },
+    /**
+     * A new rig built the same way: same options, then the same setHead / setBodyPart / addAccessory /
+     * addLayeredClothing / clothing / body colours / welds (welded objects are cloned) / IKControls / hipHeight.
+     * Pass options to change some, e.g. { face } for a face of its own (a live face is otherwise shared).
+     */
+    clone(over = {}) {
+      const c = createRig(Object.assign({}, o, over));
+      for (const [method, args] of history) {
+        if (method === "weld" || method === "attachTo" || method === "equipTool") { const [obj, ...rest] = args; c[method](obj.clone(), ...rest); }
+        else if (method === "hipHeight") c.hipHeight = args[0];
+        else if (method === "addIKControl") c.addIKControl(Object.assign({}, args[0]));
+        else c[method](...args);
+      }
+      if (shadowCast || shadowReceive) c.setShadows(shadowCast, shadowReceive);
+      return c;
+    },
+    /**
+     * Free the GPU resources the rig made (geometries, materials, its own canvas textures) and take it out of the
+     * scene. Textures you passed in, and objects you welded on, are left alone unless { welds: true }.
+     */
+    dispose({ welds: disposeWelds = false } = {}) {
+      if (model.parent) model.parent.remove(model);
+      const skip = disposeWelds ? new Set() : new Set(welds.keys());
+      const seen = new Set();
+      const free = (m) => { if (!m || seen.has(m)) return; seen.add(m); for (const k of ["map", "normalMap", "alphaMap", "emissiveMap"]) if (m[k] && m[k].userData && m[k].userData.blockrigOwned) m[k].dispose(); m.dispose(); };
+      const walk = (o) => {
+        if (skip.has(o)) return;
+        if (o.isMesh || o.isSkinnedMesh) { if (o.geometry && !seen.has(o.geometry)) { seen.add(o.geometry); o.geometry.dispose(); } (Array.isArray(o.material) ? o.material : [o.material]).forEach(free); if (o.isSkinnedMesh && o.skeleton && o.skeleton.boneTexture) o.skeleton.boneTexture.dispose(); }
+        o.children.forEach(walk);
+      };
+      walk(model);
+      ikControls.length = 0; welds.clear(); equipped = null;
+    },
     /** Remove a welded object from the rig. */
     unweld(object) { if (object.parent) object.parent.remove(object); welds.delete(object); return object; },
     /** Objects welded to the rig: Map(object -> part name). */
@@ -740,6 +794,15 @@ export function createRig(o = {}) {
     setFace(image) { if (!headMaterial) return; const t = faceTexture(image, headMaterial.color.getStyle()); if (t) { headMaterial.map = t; headMaterial.color.set(0xffffff); headMaterial.needsUpdate = true; } },
   };
 
+  // record the calls clone() replays (after the body package head below, which createRig itself redoes)
+  for (const m of ["setHead", "setBodyPart", "addAccessory", "addLayeredClothing", "addFaceDecal", "setFace", "setClothing", "setBodyColors", "weld", "attachTo", "equipTool", "addIKControl"]) {
+    const fn = rig[m];
+    rig[m] = function (...args) { const r = fn.apply(rig, args); if (!building) history.push([m, args]); if (r && r.isObject3D && (shadowCast || shadowReceive)) shade(r); return r; }; // leave your objects' shadow flags alone unless shadows are on
+  }
+  const hipDesc = Object.getOwnPropertyDescriptor(rig, "hipHeight");
+  Object.defineProperty(rig, "hipHeight", { get: hipDesc.get, set(v) { hipDesc.set.call(rig, v); if (!building) history.push(["hipHeight", [v]]); }, enumerable: true, configurable: true });
+  let building = true;
+
   // a body package's head: a MeshPart fitted to its Size and placed by its NeckRigAttachment
   const headPart = opts.bodyParts && opts.bodyParts.Head;
   if (headPart && headPart.mesh && opts.body !== false) {
@@ -748,5 +811,7 @@ export function createRig(o = {}) {
     const sc = [extent.x > 1e-6 ? sz[0] / extent.x : 1, extent.y > 1e-6 ? sz[1] / extent.y : 1, extent.z > 1e-6 ? sz[2] / extent.z : 1];
     rig.setHead(headPart.mesh, { scale: sc, offset: [-centre.x * sc[0], -centre.y * sc[1], -centre.z * sc[2]], attachments: atts, map: headPart.map && headPart.map.isTexture ? headPart.map : null });
   }
+  building = false;
+  if (opts.shadows) rig.setShadows(opts.shadows === true || opts.shadows.cast !== false, opts.shadows === true || !!opts.shadows.receive);
   return rig;
 }

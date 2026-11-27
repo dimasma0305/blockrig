@@ -45,7 +45,7 @@ function encodeValues(type, vals) {
       }));
       return Buffer.concat([rot, f32s(vals.map((v) => v.pos[0])), f32s(vals.map((v) => v.pos[1])), f32s(vals.map((v) => v.pos[2]))]);
     }
-    case 0x12: return interleave(vals.map((v) => be32(v)), 4);
+    case 0x0b: case 0x12: return interleave(vals.map((v) => be32(v)), 4); // BrickColor, Enum
     default: throw new Error(`writer: type ${type}`);
   }
 }

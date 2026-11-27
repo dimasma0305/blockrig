@@ -8,6 +8,7 @@
 // then Shirt (the shirt is drawn over the pants on the torso), then the T-shirt on the torso front.
 import { findInstance, assetId } from "./rbxm.js";
 import { buildBody } from "./body.js";
+import { brickColorHex } from "./brickcolor.js";
 
 /** R15 joint name for each part (the Motor6D that connects the part to its parent). */
 export const R15_JOINT_OF = {
@@ -147,7 +148,8 @@ export function describeBodyColors(roots) {
   const bc = findInstance(roots, (x) => x.className === "BodyColors");
   if (!bc) throw new Error("blockrig: no BodyColors in model");
   const out = {};
-  for (const k of BODY_COLOR_KEYS) { const v = colorHex(bc.props[k]); if (v) out[k] = v; }
+  // modern Color3 properties, or the legacy BrickColor numbers (HeadColor, TorsoColor, ...) older avatars carry
+  for (const k of BODY_COLOR_KEYS) { const v = colorHex(bc.props[k]) ?? brickColorHex(bc.props[k.replace(/3$/, "")]); if (v) out[k] = v; }
   return out;
 }
 

@@ -60,7 +60,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` and `CurveAnimation` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **128 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **134 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -229,6 +229,17 @@ rig.unequipTool();
 ```
 
 Welded objects follow their part. `equipTool` builds Roblox's RightGrip weld: Part0 is the right hand (R6: Right Arm), C0 the RightGripAttachment (turned -90° about X, as on the standard bodies) and C1 the tool's `Grip`. Roblox's own Linked Sword stands upright in the arm-forward tool hold, the way it does in-game. `rig.partCFrame(name)` gives a part's bind-pose CFrame (like `Part.CFrame`) to measure C0 from.
+
+## Crowds, shadows and plain three.js meshes
+
+```js
+const rig = createRig({ bodyColors, shadows: true });   // cast + receive (outlines never cast); rig.setShadows(cast, receive)
+const twin = rig.clone();                               // same options, accessories, clothing, welds, IK, hipHeight
+const other = rig.clone({ face: createFace() });        // ...with a face of its own
+rig.addAccessory(new THREE.BoxGeometry(1, 0.3, 1), { attachment });  // a three.js geometry works wherever a parsed mesh does
+rig.update(dt);                                         // faces + IK without an Animator
+rig.dispose();                                          // free what the rig made (not your textures or welded props)
+```
 
 ## HipHeight and IKControl
 
