@@ -17,6 +17,8 @@ const HEAD_H = 1.2, HEAD_R = 0.6; // Roblox classic head: 1.2 studs across (face
 // accessories made as shells around it (three creators agree: r = 0.60 at the middle, 0.56 at |y| = 0.45, 0.49 at
 // |y| = 0.55). A tighter rounding makes the head poke through those shells near the edges.
 export const HEAD_CORNER = 0.29;
+/** How far face accessories (FaceCenterAttachment shells) are lifted off the head, in studs, so their flat facets never dip into it. */
+export const FACE_LIFT = 0.03;
 // textures BlockRig made itself (dispose() frees only these); a WeakSet because old three.js textures have no userData
 const OWN_TEXTURES = new WeakSet();
 
@@ -133,6 +135,10 @@ function geometryFromMesh(mesh, { lod = 0, skinned = false } = {}) {
   const n = mesh.normals;
   let any = false; for (let i = 0; i < n.length && !any; i++) if (n[i] !== 0) any = true;
   if (!any) g.computeVertexNormals();
+  else { // some exports store unit-less normals (lengths 0.3..1.7): Roblox shades with normalised ones, so do the same
+    const na = g.attributes.normal.array;
+    for (let i = 0; i < na.length; i += 3) { const l = Math.hypot(na[i], na[i + 1], na[i + 2]); if (l > 1e-8 && Math.abs(l - 1) > 1e-4) { na[i] /= l; na[i + 1] /= l; na[i + 2] /= l; } }
+  }
   return g;
 }
 
@@ -714,13 +720,51 @@ export function createRig(o = {}) {
     /** Objects welded to the rig: Map(object -> part name). */
     get welds() { return welds; },
 
-    addAccessory(mesh, { attachment, map = null, color = 0xffffff } = {}) {
+    addAccessory(mesh, { attachment, map = null, color = 0xffffff, scale = null, offset = null } = {}) {
       if (!attachment) throw new Error("blockrig: addAccessory needs the handle attachment");
       const body = headAtt[attachment.name], onBody = !body && bodyAtt[attachment.name];
       if (!body && !onBody) throw new Error(`blockrig: unsupported attachment ${attachment.name}`);
       // textures with transparent areas (face accessories, hair strands) cut out like Roblox draws them, instead of black
-      const m = new THREE.Mesh(geometryFromMesh(mesh), material({ map, color, side: THREE.DoubleSide, roughness: 1, alphaTest: map ? 0.5 : 0 }));
-      m.name = attachment.name;
+      const geo = geometryFromMesh(mesh); let m_lift = 0;
+      // the mesh as the handle draws it (describeAccessory's scale / offset: SpecialMesh.Scale and Offset, or a
+      // MeshPart's Size / InitialSize); without them an old beard is drawn up to twice its size, over the eyes
+      if (scale && (scale[0] !== 1 || scale[1] !== 1 || scale[2] !== 1)) { geo.scale(scale[0], scale[1], scale[2]); if (scale.some((x) => x < 0)) geo.computeVertexNormals(); }
+      if (offset && (offset[0] || offset[1] || offset[2])) geo.translate(offset[0], offset[1], offset[2]);
+      // face shells are low-poly: between their vertices the flat facets dip up to ~0.02 studs inside our smooth head,
+      // and the head shows through in triangles (a mouth cut in two). Push the shell out from the head's centre (the
+      // FaceCenterAttachment point, in the handle's space) by FACE_LIFT so every facet clears the head
+      if (attachment.name === "FaceCenterAttachment") {
+        const c = attachment.cframe.pos, pa = geo.attributes.position, ix = geo.index;
+        const r = (x, y, z) => Math.hypot(x - c[0], y - c[1], z - c[2]);
+        // how deep the flattest facet dips: its centre's distance from the head centre vs its corners' (a coarser
+        // shell dips more, so it is lifted more: the head can never show through, whatever the model)
+        let dip = 0;
+        if (ix) for (let t = 0; t < ix.count; t += 3) {
+          const a = ix.getX(t), b = ix.getX(t + 1), d = ix.getX(t + 2);
+          const corners = (r(pa.getX(a), pa.getY(a), pa.getZ(a)) + r(pa.getX(b), pa.getY(b), pa.getZ(b)) + r(pa.getX(d), pa.getY(d), pa.getZ(d))) / 3;
+          const mid = r((pa.getX(a) + pa.getX(b) + pa.getX(d)) / 3, (pa.getY(a) + pa.getY(b) + pa.getY(d)) / 3, (pa.getZ(a) + pa.getZ(b) + pa.getZ(d)) / 3);
+          if (corners >= 1.2 || mid < 1e-6) continue; // only facets around the head (not far-out parts)
+          // lifting each corner outward moves the facet centre by lift * |mean of the corner directions| (< 1 on a
+          // wide facet): solve for the lift that puts the centre 0.01 outside the corners' sphere
+          let ux = 0, uy = 0, uz = 0;
+          for (const k of [a, b, d]) { const x = pa.getX(k) - c[0], y = pa.getY(k) - c[1], z = pa.getZ(k) - c[2], l = Math.hypot(x, y, z) || 1; ux += x / l / 3; uy += y / l / 3; uz += z / l / 3; }
+          const reach = Math.hypot(ux, uy, uz) || 1;
+          dip = Math.max(dip, (corners - mid + 0.01) / reach);
+        }
+        const lift = Math.max(FACE_LIFT, dip);
+        for (let i = 0; i < pa.count; i++) {
+          const dx = pa.getX(i) - c[0], dy = pa.getY(i) - c[1], dz = pa.getZ(i) - c[2], l = Math.hypot(dx, dy, dz);
+          if (l > 1e-6) pa.setXYZ(i, pa.getX(i) + (dx / l) * lift, pa.getY(i) + (dy / l) * lift, pa.getZ(i) + (dz / l) * lift);
+        }
+        pa.needsUpdate = true; geo.computeBoundingSphere(); m_lift = lift;
+      }
+      const mat = material({ map, color, side: THREE.DoubleSide, roughness: 1, alphaTest: map ? 0.5 : 0 });
+      // face accessories are shells only ~0.01 studs off the head: at a distance the depth buffer can't tell them apart
+      // and the head shows through in triangles (a mouth broken in two). Roblox draws them over the head; pull them
+      // towards the camera in depth (not in space) so they always win
+      if (/^Face(Center|Front)Attachment$/.test(attachment.name)) { mat.polygonOffset = true; mat.polygonOffsetFactor = -2; mat.polygonOffsetUnits = -8; }
+      const m = new THREE.Mesh(geo, mat);
+      m.name = attachment.name; if (m_lift) m.userData.faceLift = m_lift;
       if (onBody) { // weld to the body part that carries the attachment (bind-pose character space)
         const [x, y, z] = onBody.pos, i = index.get(onBody.part);
         m.applyMatrix4(new THREE.Matrix4().copy(bindWorld[i]).invert().multiply(new THREE.Matrix4().makeTranslation(x, y, z)).multiply(cframeToMatrix(attachment.cframe).invert()));

@@ -97,6 +97,55 @@ test("addAccessory: textured accessories cut out transparent texels (alphaTest),
   assert.equal(plain.material.alphaTest, 0);
 });
 
+test("addAccessory: the handle's scale and offset size and move the mesh before the weld", () => {
+  const rig = createRig({}), att = { name: "FaceFrontAttachment", cframe: { rot: I3, pos: [0, 0.2, -0.3] } };
+  const box = () => new THREE.BoxGeometry(2, 2, 2);
+  const big = rig.addAccessory(box(), { attachment: att }), small = rig.addAccessory(box(), { attachment: att, scale: [0.55, 0.55, 0.55], offset: [0, -0.1, 0] });
+  for (const m of [big, small]) m.geometry.computeBoundingBox();
+  assert.ok(Math.abs(big.geometry.boundingBox.max.x - 1) < 1e-6);
+  assert.ok(Math.abs(small.geometry.boundingBox.max.x - 0.55) < 1e-6, "drawn at the SpecialMesh scale");
+  assert.ok(Math.abs(small.geometry.boundingBox.max.y - 0.45) < 1e-6, "moved by the offset (in the handle's space)");
+  assert.ok(small.position.equals(big.position), "the weld (attachment) is the same");
+});
+
+test("face accessories win the depth test against the head (no z-fighting through a mouth); hats don't need to", () => {
+  const rig = createRig({}), I = [1, 0, 0, 0, 1, 0, 0, 0, 1], box = () => new THREE.BoxGeometry(1, 1, 1);
+  const face = rig.addAccessory(box(), { attachment: { name: "FaceCenterAttachment", cframe: { rot: I, pos: [0, 0, 0] } } });
+  const beard = rig.addAccessory(box(), { attachment: { name: "FaceFrontAttachment", cframe: { rot: I, pos: [0, 0, 0] } } });
+  const hat = rig.addAccessory(box(), { attachment: { name: "HatAttachment", cframe: { rot: I, pos: [0, 0, 0] } } });
+  for (const m of [face, beard]) { assert.equal(m.material.polygonOffset, true); assert.ok(m.material.polygonOffsetFactor < 0 && m.material.polygonOffsetUnits < 0); }
+  assert.equal(hat.material.polygonOffset, false);
+});
+
+test("face shells are lifted off the head (their flat facets dipped into it at the mouth)", async () => {
+  const { FACE_LIFT } = await import("../src/index.js");
+  const rig = createRig({}), I = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+  // one vertex 0.6 in front of the face centre: it moves FACE_LIFT further out; a beard (FaceFront) is left alone
+  const tri = () => ({ positions: new Float32Array([0, 0, -0.6, 0.1, 0, -0.6, 0, 0.1, -0.6]), normals: new Float32Array(9), uvs: new Float32Array(6), indices: new Uint32Array([0, 1, 2]), vertexCount: 3, faceCount: 1, lods: [0, 1] });
+  const face = rig.addAccessory(tri(), { attachment: { name: "FaceCenterAttachment", cframe: { rot: I, pos: [0, 0, 0] } } });
+  const beard = rig.addAccessory(tri(), { attachment: { name: "FaceFrontAttachment", cframe: { rot: I, pos: [0, 0, 0] } } });
+  assert.ok(Math.abs(face.geometry.attributes.position.getZ(0) - (-0.6 - FACE_LIFT)) < 1e-6);
+  assert.ok(Math.abs(beard.geometry.attributes.position.getZ(0) + 0.6) < 1e-6);
+});
+
+test("a coarse face shell is lifted by its deepest facet dip, so the head never shows through", () => {
+  const rig = createRig({}), I = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+  // a very coarse shell: one big flat triangle whose corners sit on a 0.6 sphere; its centre dips to ~0.3 from it
+  const R = 0.6, a = [0, R, 0], b = [R * Math.sin(2.1), R * Math.cos(2.1), 0], d = [0, R * Math.cos(2.1), -R * Math.sin(2.1)];
+  const tri = { positions: new Float32Array([...a, ...b, ...d]), normals: new Float32Array(9), uvs: new Float32Array(6), indices: new Uint32Array([0, 1, 2]), vertexCount: 3, faceCount: 1, lods: [0, 1] };
+  const m = rig.addAccessory(tri, { attachment: { name: "FaceCenterAttachment", cframe: { rot: I, pos: [0, 0, 0] } } });
+  const p = m.geometry.attributes.position, cx = (p.getX(0) + p.getX(1) + p.getX(2)) / 3, cy = (p.getY(0) + p.getY(1) + p.getY(2)) / 3, cz = (p.getZ(0) + p.getZ(1) + p.getZ(2)) / 3;
+  assert.ok(Math.hypot(cx, cy, cz) > R, `the facet centre clears the head surface (${Math.hypot(cx, cy, cz).toFixed(3)} > ${R})`);
+  assert.ok(m.userData.faceLift > 0.03);
+});
+
+test("unnormalised mesh normals are normalised (a beard shipped with 0.3..1.7 lengths rendered black)", () => {
+  const rig = createRig({});
+  const tri = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), normals: new Float32Array([0, 0, 0.3, 0, 0, 1.7, 0, 0, 1]), uvs: new Float32Array(6), indices: new Uint32Array([0, 1, 2]), vertexCount: 3, faceCount: 1, lods: [0, 1] };
+  const m = rig.addAccessory(tri, { attachment: { name: "FaceCenterAttachment", cframe: { rot: I3, pos: [0, 0, 0] } } }), n = m.geometry.attributes.normal;
+  for (let i = 0; i < 3; i++) assert.ok(Math.abs(n.getZ(i) - 1) < 1e-6, `normal ${i}: ${n.getZ(i)}`);
+});
+
 test("meshes without normals (all zero) get computed normals, so they don't render black", () => {
   const rig = createRig({});
   const tri = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), normals: new Float32Array(9), uvs: new Float32Array(6), indices: new Uint32Array([0, 1, 2]), vertexCount: 3, faceCount: 1, lods: [0, 1] };
@@ -127,4 +176,14 @@ test("meshes with non-finite vertices: their triangles are dropped, bounds stay 
   assert.equal(geo.index.count, 3); // only the good triangle
   geo.computeBoundingSphere();
   assert.ok(Number.isFinite(geo.boundingSphere.radius));
+});
+
+test("a held tool stands upright: equipTool (Roblox grip) + the toolHold pose keeps a +Y-up handle pointing up", async () => {
+  const { Animator, clips } = await import("../src/index.js");
+  const rig = createRig({}), torch = new THREE.Object3D();
+  rig.equipTool(torch, { grip: { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, 0, 0] } });
+  const up = () => { rig.object.updateMatrixWorld(true); return new THREE.Vector3(0, 1, 0).applyQuaternion(torch.getWorldQuaternion(new THREE.Quaternion())); };
+  assert.ok(up().y < 0.2, "with the arm hanging a Roblox-gripped handle does NOT point up (why toolHold exists)");
+  const an = new Animator(rig), tr = an.loadAnimation(clips.toolHold); tr.play(0, 1, 0); tr.timePosition = 0.5; an.update(0);
+  assert.ok(up().y > 0.95, `in toolHold the handle's +Y is up (${up().toArray().map((x) => x.toFixed(2))})`);
 });

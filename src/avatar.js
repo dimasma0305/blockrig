@@ -209,8 +209,13 @@ export function regionSlices(parts) {
   for (const p of parts) { const r = BODY_REGION[p.bone]; if (!r || r === "Head") continue; (by[r] ||= []).push(p); }
   const out = {};
   for (const list of Object.values(by)) {
-    const top = Math.max(...list.map((p) => p.center[1] + p.size[1] / 2)), bot = Math.min(...list.map((p) => p.center[1] - p.size[1] / 2)), h = top - bot || 1;
-    for (const p of list) out[p.bone] = [(top - (p.center[1] + p.size[1] / 2)) / h, p.size[1] / h];
+    // top to bottom; R15 limb parts overlap at their joints (as in Roblox), so each pair splits the template where
+    // they meet: halfway through their overlap, which is at the joint
+    const sorted = list.slice().sort((a, b) => b.center[1] - a.center[1]);
+    const tops = sorted.map((p) => p.center[1] + p.size[1] / 2), bots = sorted.map((p) => p.center[1] - p.size[1] / 2);
+    const edges = [tops[0]]; for (let i = 0; i + 1 < sorted.length; i++) edges.push((bots[i] + tops[i + 1]) / 2); edges.push(bots[bots.length - 1]);
+    const h = edges[0] - edges[edges.length - 1] || 1;
+    sorted.forEach((p, i) => { out[p.bone] = [(edges[0] - edges[i]) / h, (edges[i] - edges[i + 1]) / h]; });
   }
   return out;
 }

@@ -198,3 +198,16 @@ test("describeBodyParts / describeBodyColors / describeClothing read avatar item
   assert.deepEqual(describeBodyColors(roots), { HeadColor3: "#f5cc30", TorsoColor3: "#0d69ab", LeftArmColor3: "#ffffff", RightArmColor3: "#000000", LeftLegColor3: "#a3bd47", RightLegColor3: "#a3bd47" });
   assert.deepEqual(describeClothing(roots), { shirt: 555, pants: 666, tshirt: null });
 });
+
+test("R15 limb parts overlap at their joints like Roblox's R15 block rig (a bent elbow shows no gap)", async () => {
+  const { R15_OVERLAP } = await import("../src/body.js");
+  const body = buildBody({ shape: "classic" }), part = (n) => body.parts.find((p) => p.bone === n), joint = (n) => body.bind.find((b) => b.name === n).pos[1];
+  const top = (p) => p.center[1] + p.size[1] / 2, bot = (p) => p.center[1] - p.size[1] / 2, near = (a, b) => Math.abs(a - b) < 1e-6;
+  // measured from Roblox's R15 block rig: UpperArm 1.169 tall, elbow 0.334 below its centre -> 0.251 past the elbow
+  assert.ok(near(joint("RightLowerArm") - bot(part("RightUpperArm")), R15_OVERLAP.elbowDown) && near(R15_OVERLAP.elbowDown, 0.251));
+  assert.ok(near(top(part("RightLowerArm")) - joint("RightLowerArm"), R15_OVERLAP.elbowUp) && near(R15_OVERLAP.elbowUp, 0.267));
+  assert.ok(near(joint("RightLowerLeg") - bot(part("RightUpperLeg")), R15_OVERLAP.kneeDown));
+  assert.ok(near(top(part("RightLowerLeg")) - joint("RightLowerLeg"), R15_OVERLAP.kneeUp));
+  // and the upper arm is Roblox's height
+  assert.ok(Math.abs(part("RightUpperArm").size[1] - 1.169) < 0.01, `upper arm ${part("RightUpperArm").size[1]}`);
+});

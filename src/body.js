@@ -22,6 +22,9 @@ export const R15_SHAPES = {
 
 // classic R15 segment lengths (studs) measured from the standard clothing skeleton
 const SEG = { foot: 0.3, lowerLeg: 0.926, upperLeg: 0.822, lowerTorso: 0.4, upperTorso: 1.6, shoulderDrop: 0.237, upperArm: 0.728, lowerArm: 0.76, hand: 0.3, root: 1.0 };
+/** How far each R15 limb part reaches past its joints (studs at limb scale 1), from Roblox's R15 block rig. */
+export const R15_OVERLAP = { shoulderUp: 0.191, elbowDown: 0.251, elbowUp: 0.267, wristDown: 0.025, wristUp: 0.025, hipUp: 0.188, kneeDown: 0.208, kneeUp: 0.218, ankleDown: 0.05 };
+const OVER = R15_OVERLAP;
 const FLOOR = -2.232; // feet of the classic body, relative to the skinning origin
 
 /**
@@ -73,14 +76,21 @@ function r15(sh) {
     { bone: "LowerTorso", size: [sh.waist, waist - hip, d], center: [0, (waist + hip) / 2, 0], kind: "shirt" },
     { bone: "UpperTorso", size: [sh.top, neckY - waist, d], center: [0, (neckY + waist) / 2, 0], kind: "shirt", taper: sh.waist / sh.top },
   ];
+  // Limb parts reach past their joints and overlap, as in Roblox's R15 block rig (measured from it: UpperArm 1.169
+  // tall with the elbow 0.251 above its bottom, LowerArm 1.052 reaching 0.267 above the elbow...). So a bent elbow or
+  // knee shows two blocks crossing, never a gap. (Parts cut exactly at the joints opened a wedge on every bend.)
+  const span = (top, bottom) => ({ h: top - bottom, c: (top + bottom) / 2 });
   for (const side of ["Left", "Right"]) {
     const k = side === "Left" ? -1 : 1, x = k * ax, xl = k * lx;
+    const ua = span(shoulder + OVER.shoulderUp * L, elbow - OVER.elbowDown * L), la = span(elbow + OVER.elbowUp * L, wrist - OVER.wristDown * L);
+    const hd = span(wrist + OVER.wristUp * L, wrist + OVER.wristUp * L - SEG.hand * L);
+    const ul = span(hip + OVER.hipUp * L, knee - OVER.kneeDown * L), ll = span(knee + OVER.kneeUp * L, ankle - OVER.ankleDown * L);
     parts.push(
-      { bone: side + "UpperArm", size: [sh.arm, neckY - elbow, sh.arm], center: [x, (neckY + elbow) / 2, 0], kind: "shirt" },
-      { bone: side + "LowerArm", size: [sh.arm * 0.98, elbow - wrist, sh.arm * 0.98], center: [x, (elbow + wrist) / 2, 0], kind: "shirt" },
-      { bone: side + "Hand", size: [sh.arm * 0.98, SEG.hand * L, sh.arm * 0.98], center: [x, wrist - (SEG.hand * L) / 2, 0], kind: "skin" },
-      { bone: side + "UpperLeg", size: [sh.leg, hip - knee, sh.leg], center: [xl, (hip + knee) / 2, 0], kind: "pants" },
-      { bone: side + "LowerLeg", size: [sh.leg * 0.98, knee - ankle, sh.leg * 0.98], center: [xl, (knee + ankle) / 2, 0], kind: "pants" },
+      { bone: side + "UpperArm", size: [sh.arm, ua.h, sh.arm], center: [x, ua.c, 0], kind: "shirt" },
+      { bone: side + "LowerArm", size: [sh.arm * 0.98, la.h, sh.arm * 0.98], center: [x, la.c, 0], kind: "shirt" },
+      { bone: side + "Hand", size: [sh.arm * 0.98, hd.h, sh.arm * 0.98], center: [x, hd.c, 0], kind: "skin" },
+      { bone: side + "UpperLeg", size: [sh.leg, ul.h, sh.leg], center: [xl, ul.c, 0], kind: "pants" },
+      { bone: side + "LowerLeg", size: [sh.leg * 0.98, ll.h, sh.leg * 0.98], center: [xl, ll.c, 0], kind: "pants" },
       { bone: side + "Foot", size: [sh.leg, ankle - FLOOR, sh.leg], center: [xl, (ankle + FLOOR) / 2, 0], kind: "shoes" },
     );
   }

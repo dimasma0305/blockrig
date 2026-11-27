@@ -81,5 +81,13 @@ const victory = {
   keyframes: [k(0, crouch, C, "Out"), k(0.4, air, C, "In"), k(0.85, crouch, "Bounce", "Out"), k(1.3, crouch, C, IO)],
 };
 
-export const clips = { idle, wave, showtime, run, card, victory };
-export { idle, wave, showtime, run, card, victory };
+// holding a tool, like Roblox's "toolnone": the right arm straight forward (only that arm is keyed, so walk or run
+// keeps playing under it). With Humanoid:EquipTool's grip (rig.equipTool), a handle modelled the Roblox way (+Y up,
+// -Z forward: torches, flags, swords upright) stands upright in this pose; with the arm hanging it points backwards
+const toolHold = {
+  name: "toolHold", priority: "Action", loop: true, length: 1,
+  keyframes: [k(0, { RightUpperArm: [PI / 2, 0, 0.04], RightLowerArm: [0, 0, 0], RightHand: [0, 0, 0] }, "Linear"), k(1, { RightUpperArm: [PI / 2, 0, 0.04], RightLowerArm: [0, 0, 0], RightHand: [0, 0, 0] }, "Linear")],
+};
+
+export const clips = { idle, wave, showtime, run, card, victory, toolHold };
+export { idle, wave, showtime, run, card, victory, toolHold };

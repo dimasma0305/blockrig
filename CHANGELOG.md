@@ -4,6 +4,11 @@
 
 - **Head shape matches Roblox's classic head**: the top and bottom edges are rounded with a 0.29-stud radius (`HEAD_CORNER`), measured from catalog face accessories built as shells around that head. With the old, tighter rounding the head poked through those shells near the edges and showed as a two-tone "mask". `headGeometry(height, radius, corner)`.
 - Meshes with non-finite vertices load safely: the triangles using them are dropped (one old v3 hair carried a NaN vertex).
+- **Accessories are drawn at the size their handle draws them**: `describeAccessory` returns `scale` and `offset` (SpecialMesh.Scale / Offset, or a MeshPart's Size / InitialSize) and `addAccessory(mesh, { attachment, map, scale, offset })` applies them before the weld. Old beards, hats and hair were drawn at the mesh file's own size: Andrew's Beard (Scale 0.55) came out nearly twice as big, its mustache over the eyes.
+- **Elbows and knees bend like Roblox's R15 block rig**: limb parts now reach past their joints and overlap, with the sizes measured from Roblox's R15 block rig (UpperArm 1.169 tall, 0.251 past the elbow; LowerArm 0.267 above it; legs likewise: `R15_OVERLAP`). Parts used to end exactly at each joint, so every bend opened a wedge-shaped gap. Classic clothing templates still split at the joints. Tested.
+- **`clips.toolHold`**: Roblox's "toolnone" hold (right arm forward, only that arm keyed). With `rig.equipTool` (Roblox's grip), a handle modelled +Y up stands upright in it; with the arm hanging it points backwards, which is how torches came out reversed. Tested.
+- Mesh normals are normalised on load (one beard shipped normals 0.3 to 1.7 long).
+- **The head never shows through a face accessory any more** (a mouth cut into two triangles): face shells are low-poly, and between their vertices the flat facets dipped up to 0.02 studs inside the smooth head. `addAccessory` now lifts every FaceCenterAttachment shell off the head by its own deepest facet dip plus 0.01 (at least `FACE_LIFT`, 0.03; real catalog faces: 0.03 to 0.08), solved so each facet's centre clears the head, and face accessories (FaceCenter/FaceFront) also draw with a depth offset towards the camera.
 
 - Removed the "Ice Statue" story example (`examples/story`, `docs/story.mp4`); "Everybody Plays CTF" and the video template remain.
 

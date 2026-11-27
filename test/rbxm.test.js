@@ -64,7 +64,7 @@ test("rbxm: every axis-aligned rotation id is a proper rotation matrix", () => {
 
 test("describeAccessory: rigid and layered", () => {
   const [h, j] = parseRbxm(writeRbxm([hair, jacket]));
-  assert.deepEqual(describeAccessory([h]), { name: "Test Hair", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: ROT90Y, pos: [0.25, -0.5, 0.125] } }, layered: null, colorMapId: null });
+  assert.deepEqual(describeAccessory([h]), { name: "Test Hair", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: ROT90Y, pos: [0.25, -0.5, 0.125] } }, scale: [1, 1, 1], offset: [0, 0, 0], layered: null, colorMapId: null });
   const d = describeAccessory([j]);
   assert.equal(d.meshId, 333); assert.equal(d.textureId, 444);
   assert.deepEqual(d.layered, { order: 3, cageMeshId: 555, referenceMeshId: 666, cageOrigin: [0, 0, 0], referenceOrigin: [0, 0, 0] });
@@ -111,7 +111,7 @@ test("rbxmx (XML): same instance tree as the binary reader, auto-detected by par
     assert.equal(roots[0].children[0].props.CanCollide, false);
     assert.equal(roots[0].children[0].parent, roots[0]);
   }
-  assert.deepEqual(describeAccessory(viaText), { name: "Spiky & Blue", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: [0, 0, 1, 0, 1, 0, -1, 0, 0], pos: [0, 0.15, -0.5] } }, layered: null, colorMapId: null });
+  assert.deepEqual(describeAccessory(viaText), { name: "Spiky & Blue", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: [0, 0, 1, 0, 1, 0, -1, 0, 0], pos: [0, 0.15, -0.5] } }, scale: [1, 1, 1], offset: [0, 0, 0], layered: null, colorMapId: null });
   assert.throws(() => parseRbxmx("<notroblox/>"), /not an XML Roblox model/);
 });
 
@@ -132,4 +132,17 @@ test("rbxm: Content properties (type 0x22, 2024+) are read and fill the old id n
   const d = describeAccessory([acc]);
   assert.equal(d.meshId, 72095094369673); assert.equal(d.textureId, 108114516458433);
   assert.equal(d.attachment.name, "FaceFrontAttachment");
+});
+
+test("describeAccessory: the SpecialMesh's Scale and Offset (an old beard is drawn at 0.55)", () => {
+  const V3 = 0x0e;
+  const beard = {
+    className: "Accessory", props: { Name: [S, "Beard"] },
+    children: [{ className: "Part", props: { Name: [S, "Handle"] }, children: [
+      { className: "SpecialMesh", props: { Name: [S, "Mesh"], MeshType: [E, 5], MeshId: [S, "rbxassetid://1"], TextureId: [S, "rbxassetid://2"], Scale: [V3, [0.55, 0.55, 0.55]], Offset: [V3, [0, -0.1, 0.05]] } },
+      { className: "Attachment", props: { Name: [S, "FaceFrontAttachment"], CFrame: [CF, { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, 0.2, -0.3] }] } },
+    ] }],
+  };
+  const d = describeAccessory(parseRbxm(writeRbxm([beard])));
+  for (const [a, b] of [[d.scale, [0.55, 0.55, 0.55]], [d.offset, [0, -0.1, 0.05]]]) a.forEach((x, i) => assert.ok(Math.abs(x - b[i]) < 1e-6, `${a} vs ${b}`));
 });

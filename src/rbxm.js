@@ -186,11 +186,22 @@ export function describeAccessory(roots) {
   const meshSrc = special || handle;
   const att = handle && handle.children.find((x) => x.className === "Attachment");
   const wrap = handle && handle.children.find((x) => x.className === "WrapLayer");
+  // how big the mesh is drawn, in the handle's space: a SpecialMesh multiplies the mesh file by its Scale and moves
+  // it by its Offset (older hats, beards, hair: Andrew's Beard is drawn at 0.55); a MeshPart stretches its mesh from
+  // the size it was uploaded at (InitialSize) to its Size
+  const v3 = (v, d) => (v && v.length === 3 ? v.slice() : d);
+  let scale = [1, 1, 1], offset = [0, 0, 0];
+  if (special) { scale = v3(special.props.Scale, scale); offset = v3(special.props.Offset, offset); }
+  else if (handle && handle.className === "MeshPart") {
+    const size = v3(handle.props.size ?? handle.props.Size, null), initial = v3(handle.props.InitialSize, null);
+    if (size && initial && initial.every((x) => x > 1e-6)) scale = size.map((x, i) => x / initial[i]);
+  }
   return {
     name: acc.props.Name,
     meshId: assetId(meshSrc.props.MeshId),
     textureId: assetId(special ? special.props.TextureId : handle.props.TextureID),
     attachment: att ? { name: att.props.Name, cframe: att.props.CFrame } : null,
+    scale, offset,
     layered: wrap ? {
       order: wrap.props.Order ?? 1, cageMeshId: assetId(wrap.props.CageMeshId), referenceMeshId: assetId(wrap.props.ReferenceMeshId),
       cageOrigin: wrap.props.CageOrigin ? wrap.props.CageOrigin.pos.slice() : [0, 0, 0], referenceOrigin: wrap.props.ReferenceOrigin ? wrap.props.ReferenceOrigin.pos.slice() : [0, 0, 0],

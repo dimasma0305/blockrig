@@ -26,6 +26,8 @@ export function describeHead(roots: RbxInstance[]): { meshId: number | null; tex
 export function describeAccessory(roots: RbxInstance[]): {
   name: string; meshId: number | null; textureId: number | null;
   attachment: { name: string; cframe: CFrame } | null;
+  /** How the handle draws its mesh: SpecialMesh.Scale / Offset, or a MeshPart's Size / InitialSize (pass both to addAccessory). */
+  scale: number[]; offset: number[];
   layered: { order: number; cageMeshId: number | null; referenceMeshId: number | null; cageOrigin: number[]; referenceOrigin: number[] } | null;
   /** SurfaceAppearance.ColorMap, where modern layered clothing keeps its colour texture. */
   colorMapId: number | null;
@@ -68,7 +70,8 @@ export interface Rig {
   addLayeredClothing(mesh: ParsedMesh, o?: { map?: THREE.Texture | null; color?: THREE.ColorRepresentation; lod?: number; side?: THREE.Side; wrap?: WrapLayerSpec | null }): THREE.SkinnedMesh;
   /** The body's WrapTarget cages in character space (template UV key -> position). */
   readonly bodyCage: Map<string, number[]>;
-  addAccessory(mesh: MeshInput, o: { attachment: { name: string; cframe: CFrame }; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
+  /** `scale` / `offset`: how the handle draws its mesh (from describeAccessory): SpecialMesh.Scale / Offset, or a MeshPart's Size / InitialSize. */
+  addAccessory(mesh: MeshInput, o: { attachment: { name: string; cframe: CFrame }; map?: THREE.Texture | null; color?: THREE.ColorRepresentation; scale?: number[] | null; offset?: number[] | null }): THREE.Mesh;
   setFace(image: CanvasImageSource): void;
   readonly headAttachments: Record<string, number[]>;
   setHead(mesh: MeshInput, o?: { scale?: number[]; offset?: number[]; attachments?: Record<string, number[]>; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
@@ -182,6 +185,8 @@ export function createRig(o?: {
 }): Rig;
 /** Roblox classic head edge rounding (studs). */
 export const HEAD_CORNER: number;
+/** How far face accessories are lifted off the head (studs), so their low-poly facets never dip into it. */
+export const FACE_LIFT: number;
 export function headGeometry(height?: number, radius?: number, corner?: number): THREE.BufferGeometry;
 export function faceTexture(image: CanvasImageSource | null, skin?: string): THREE.CanvasTexture | null;
 export function loadRobloxTexture(url: string, loader?: THREE.TextureLoader): THREE.Texture;
@@ -242,7 +247,8 @@ export class Animator {
 }
 export function ease(style: EasingStyle, dir: EasingDirection, t: number): number;
 export const PRIORITY: Record<Priority, number>;
-export const clips: Record<"idle" | "wave" | "showtime" | "run" | "card" | "victory", Clip>;
+/** toolHold: Roblox's "toolnone" (right arm forward) for a tool from rig.equipTool: a +Y-up handle stands upright. */
+export const clips: Record<"idle" | "wave" | "showtime" | "run" | "card" | "victory" | "toolHold", Clip>;
 export function makeCoat(o?: { slices?: number; length?: number; puff?: number; tails?: boolean }): ParsedMesh;
 export function lz4Block(src: Uint8Array, outLen: number): Uint8Array;
 export type FaceParams = {
