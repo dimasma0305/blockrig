@@ -3,6 +3,7 @@
 //   PoseLab       the hero playing every clip in src/cast/clips.ts, 1.5 s each, with the clip's name
 //   MaterialBoard every texture in src/kit/textures.ts as a swatch with its name
 //   WeatherLab    the street cycling through every weather preset and time of day
+//   PlanLab       the town's 2D plan (zones, lots, footprints) over the street from above (frame 0: all, 1: hero's block)
 //   MapLab        each local Roblox map (assets/roblox, --roblox only): orbit outside, then a look inside
 // The Shot composition (Root.tsx) plays one shot of the real video with the debug overlay.
 import { useMemo } from "react";
@@ -17,6 +18,8 @@ import { act, place } from "../direction/performance";
 import { useRobloxCast, type RobloxCast } from "../cast/roblox";
 import { useAssetLibrary, type AssetLibrary } from "../kit/assets";
 import { buildRobloxMap } from "../kit/robloxMap";
+import { points as planPoints } from "../kit/plan";
+import { buildWorld } from "../world/World";
 import { ASSETS } from "../world/assets";
 
 const label: React.CSSProperties = { position: "absolute", color: "#fff", font: "800 44px sans-serif", WebkitTextStroke: "8px #000", paintOrder: "stroke fill" };
@@ -159,4 +162,36 @@ export const MapLab: React.FC<{ roblox?: boolean }> = () => {
       <div style={{ ...label, top: 160, left: 60 }}>{names[Math.min(names.length - 1, Math.floor(frame / fps / MAP_SECONDS))] ?? ""}</div>
     </AbsoluteFill>
   );
+};
+
+// ---------------------------------------------------------------- PlanLab
+// The town's 2D plan (src/kit/plan.ts) over the real 3D street, from above: grey road and sidewalks, yellow stage,
+// beige paths, blue houses, purple Roblox lots, green trees, brown fences, orange cars. Overlaps print as errors.
+function PlanScene({ lib, rb }: { lib: AssetLibrary; rb: RobloxCast | null }) {
+  const frame = useCurrentFrame(), { camera, gl, scene } = useThree() as any;
+  const world = useMemo(() => {
+    gl.toneMapping = THREE.AgXToneMapping;
+    const w = buildWorld(gl, scene, lib, rb), overlay = new THREE.Group();
+    for (const it of w.plan.items) {
+      const pts = planPoints(it.shape).map(([x, z]) => new THREE.Vector2(x, -z));
+      const shape = new THREE.Shape(pts), y = it.kind === "area" ? 1 : it.kind === "zone" ? 1.5 : 2;
+      const fill = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshBasicMaterial({ color: it.color ?? "#fff", transparent: true, opacity: it.kind === "area" ? 0.12 : 0.5, depthTest: false, side: THREE.DoubleSide }));
+      fill.rotation.x = -Math.PI / 2; fill.position.y = y; fill.renderOrder = 10; overlay.add(fill);
+      const line = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts.map((p) => new THREE.Vector3(p.x, p.y, 0))), new THREE.LineBasicMaterial({ color: it.color ?? "#fff", depthTest: false }));
+      line.rotation.x = -Math.PI / 2; line.position.y = y + 0.1; line.renderOrder = 11; overlay.add(line);
+    }
+    scene.add(overlay);
+    for (const c of w.plan.conflicts()) console.error(`plan: ${c}`);
+    return w;
+  }, [gl, scene, lib, rb]);
+  // frame 0: the whole street; later frames: the hero's block
+  const close = frame > 0, c = world.lawn;
+  applyCamera(camera, { pos: close ? V(c.x + 10, 120, c.z + 1) : V(0, 330, 1), target: close ? V(c.x + 10, 0, c.z) : V(0, 0, 0), fov: 50, shake: 0 }, frame);
+  world.update({ location: "street", weather: WEATHER.clear, daylight: TIMES.day, time: 0, local: 0, camera });
+  scene.fog = null; // a plan is read from far above
+  return null;
+}
+export const PlanLab: React.FC<{ roblox?: boolean }> = ({ roblox }) => {
+  const lib = useAssetLibrary(ASSETS), rb = useRobloxCast(!!roblox);
+  return <AbsoluteFill style={{ background: "#222" }}>{lib && rb !== undefined && <Canvas><PlanScene lib={lib} rb={rb} /></Canvas>}<div style={{ ...label, top: 160, left: 60 }}>plan{roblox ? " · roblox" : ""}</div></AbsoluteFill>;
 };

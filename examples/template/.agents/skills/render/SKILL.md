@@ -5,7 +5,7 @@ description: Render the final video and its share copies - npm run render (out/<
 
 # Render
 
-1. Run the review skill's checks first (a full render takes minutes; a still takes seconds).
+1. Run the review skill's checks first, including `npm run collide` (a full render takes minutes; a still takes seconds).
 2. `npm run render` → `out/<slug>.mp4` (1080×1920, 60 fps, H.264 CRF 18). Run it in the background. It prints an ffprobe summary; a missing audio stream means no voice yet.
 3. `node scripts/render.mjs --debug` → `out/<slug>-debug.mp4` with the overlay burned in, for reviewing framing with the user (never for posting).
 4. `npm run preview -- --to <dir> [--start s --len s]` → a 720p MP4 and a short GIF (GitHub shows GIFs inline, not MP4s from a repo).

@@ -14,7 +14,16 @@ description: Check a video before and after rendering - docs and voice checks, s
    - every surface textured, every outdoor shot with its weather and time of day;
    - characters on the ground (not floating, not sunk), seated ones on the seat;
    - expressions match the line.
-3. Debug compositions when relevant: `--comp Lineup`, `PoseLab`, `MaterialBoard`, `WeatherLab`, and `MapLab` (with `ROBLOX=1`, several frames: `--comp MapLab 480 510 540 570`).
+3. `npm run collide` (add `-- --roblox` for the local version): Rapier checks every 6th frame of the real render
+   (src/kit/collide.ts) and prints each problem with its shot and frames:
+   - camera inside a wall or prop (blank or wall-back frames);
+   - a character's face hidden from the camera by something solid;
+   - a character inside a wall, prop or furniture; feet (or seated hips) floating above or sunk into what is below;
+   - two characters inside each other.
+   Fix the staging (World.ts spots, performance.ts, camera.ts) and run it again until it says "nothing found".
+   Things that move (clouds, birds, the dog, weather) carry `userData.noCollide`; a Roblox map collides with
+   one solid box per part, like in Roblox.
+4. Debug compositions when relevant: `--comp Lineup`, `PoseLab`, `MaterialBoard`, `WeatherLab`, `MapLab` (with `ROBLOX=1`, several frames: `--comp MapLab 480 510 540 570`), and `PlanLab 0 1` for the layout.
 
 ## After rendering
 

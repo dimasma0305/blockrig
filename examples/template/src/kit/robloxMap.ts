@@ -123,7 +123,7 @@ const toLinear = (c: number[]) => new THREE.Color().setRGB(c[0], c[1], c[2], THR
 
 export function buildRobloxMap(data: MapData, assets: MapAssets, o: MapOpts = {}) {
   const group = new THREE.Group(); group.name = "roblox-map";
-  const shadows = o.shadows ?? true, m4 = new THREE.Matrix4(), boxes: { box: THREE.Box3; part: MapPart }[] = [];
+  const shadows = o.shadows ?? true, boxes: { box: THREE.Box3; part: MapPart }[] = [], colliders: { size: number[]; matrix: THREE.Matrix4; name: string }[] = [];
   const buckets = new Map<string, { geoms: THREE.BufferGeometry[]; look: Look; opacity: number }>();
   const texCache = new Map<string, THREE.Texture>();
   const texture = (id: number | undefined, mesh: boolean) => {
@@ -177,6 +177,8 @@ export function buildRobloxMap(data: MapData, assets: MapAssets, o: MapOpts = {}
     }
     const bb = new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(), new THREE.Vector3(...p.size)).applyMatrix4(matrix);
     boxes.push({ box: bb, part: p });
+    // solid boxes for the collision check (kit/collide.ts), like Roblox's own collisions: one per visible part
+    if (p.transparency <= 0.3) colliders.push({ size: p.size, matrix, name: p.model && p.model !== "Model" ? `${p.model}/${p.name ?? "part"}` : p.name ?? p.cls });
   }
 
   // one mesh per material bucket
@@ -210,7 +212,7 @@ export function buildRobloxMap(data: MapData, assets: MapAssets, o: MapOpts = {}
   }
 
   const all = new THREE.Box3(); for (const b of boxes) all.union(b.box);
-  group.userData.box = all;
+  group.userData.box = all; group.userData.colliders = colliders;
   return {
     group, box: all,
     /** Box around every part whose name or model name matches. */

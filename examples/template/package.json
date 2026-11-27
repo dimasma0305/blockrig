@@ -19,7 +19,8 @@
     "stills": "node scripts/docs.mjs && node scripts/stills.mjs",
     "check": "node scripts/docs.mjs && node scripts/check.mjs && tsc --noEmit",
     "render": "node scripts/docs.mjs && node scripts/render.mjs",
-    "preview": "node scripts/preview.mjs"
+    "preview": "node scripts/preview.mjs",
+    "collide": "node scripts/collide.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "9.8.2",
@@ -36,6 +37,8 @@
     "three": "0.184.0"
   },
   "devDependencies": {
+    "@dimforge/rapier3d-compat": "^0.21.0",
+    "@turf/turf": "^7.4.0",
     "@types/react": "19.3.0",
     "@types/three": "0.184.0",
     "draco3d": "^1.5.7",

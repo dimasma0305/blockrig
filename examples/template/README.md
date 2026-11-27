@@ -16,7 +16,8 @@ Then write `docs/story.md`, `docs/visuals.md` and `docs/audio.md`, and:
 ```sh
 npm run voice     # narration + timings + music
 npm run check     # the voice says the right words, pace, captions
-npm run studio    # preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab
+npm run collide   # Rapier staging check: cameras in walls, hidden faces, characters in props or floating
+npm run studio    # preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab, PlanLab
 npm run stills    # out/contact-sheet.jpg
 npm run render    # out/<slug>.mp4
 ```

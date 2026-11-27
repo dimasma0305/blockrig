@@ -18,6 +18,8 @@ undone later. One line per item: date, what they said, what we did, where.
 - Use visually attractive, good-quality assets, like popular Roblox story channels (girl and boy with anime faces, real hair, detailed houses and rooms). → local Roblox mode: anime face accessories, free Toolbox maps for the house and the bedroom (`buildRobloxMap`).
 - Roads must run along the street, not sideways. → road tiles turned π/2 in World.ts.
 - Every word of the narration must be clear (e.g. "in this town"). → voice takes need per-word clarity ≥0.45 and stricter word match.
+- Town layout must be realistic: objects placed by rules, not overlapping. → 2D plan with Turf (kit/plan.ts): zones, lots, footprints, scatter/along; PlanLab shows it.
+- Staging mistakes (camera in a wall, hidden faces, floating or sunk characters) must be caught before rendering. → `npm run collide` (Rapier, kit/collide.ts).
 - Captions or floating tags must not cover faces. → camera skill, debug overlay.
 
 ## This video

@@ -10,11 +10,11 @@ Reels) with **BlockRig** characters (`../..`), a 3D world in **three.js** (React
 |---|---|---|
 | `docs/` | **Source of truth.** `story.md` (shots), `visuals.md` (look bible), `audio.md` (voice, music), `feedback.md` (what the user asked for), `references.md` | you, first, for any change |
 | `src/generated/story.json` | compiled from docs by `npm run docs` | never by hand |
-| `src/kit/` | generic building blocks: timeline, captions, soundtrack, posing, camera recipes, weather, lighting, textures, structures, Roblox map renderer, overlays, debug overlay | improve when a fix helps every video |
+| `src/kit/` | generic building blocks: timeline, captions, soundtrack, posing, camera recipes, weather, lighting, textures, structures, Roblox map renderer, 2D layout plan (Turf), collision probe (Rapier), overlays, debug overlay | improve when a fix helps every video |
 | `src/cast/` | characters, wardrobe (Shirt/Pants drawn in code), hair and props, pose clips | per video |
 | `src/world/` | locations, their props, and how weather and daylight apply | per video |
 | `src/direction/` | `performance.ts` (who does what per shot), `camera.ts` (one recipe per shot) | per video |
-| `src/debug/` | Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab (local Roblox maps) compositions | when adding cast, clips, textures, weather, maps |
+| `src/debug/` | Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab (local Roblox maps), PlanLab (layout from above) compositions | when adding cast, clips, textures, weather, maps, layout |
 | `assets/` | Remotion's public folder: `audio/` (generated), `cc0/`, `textures/`, `roblox/` (downloaded, git-ignored), `manifest.json` | via scripts |
 | `scripts/` | docs compiler, voice, setup, asset fetchers, stills, render, preview, checks, new-video | |
 | `.agents/skills/` | how to do each stage well | read the one for the stage you are in |
@@ -37,7 +37,8 @@ npm run setup-voice      # once per machine: offline voices (Kokoro, Chatterbox 
 npm run docs             # compile + check docs/ (every other command runs it first)
 npm run voice            # narration clips, word timings, music
 npm run check            # voice says the right words, pace, captions, types
-npm run studio           # live preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab
+npm run collide          # Rapier: cameras in walls, hidden faces, characters in props / floating (-- --roblox)
+npm run studio           # live preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab, PlanLab
 npm run stills           # one still per shot -> out/contact-sheet.jpg (DEBUG=1 for the overlay)
 npm run render           # out/<slug>.mp4
 npm run preview          # small MP4 + GIF for sharing

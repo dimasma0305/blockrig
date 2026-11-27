@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { createLighting, createWeather, applyFog, rng, type AssetLibrary, type Weather, type Daylight } from "../kit";
 import { HOUSES } from "./assets";
 import { buildRobloxMap } from "../kit/robloxMap";
+import { Plan, rect, circle } from "../kit/plan";
 import type { RobloxCast } from "../cast/roblox";
 
 // LOCAL --roblox only: a free Toolbox room replaces the Kenney bedroom. Numbers are in the map's own studs (read
@@ -16,7 +17,7 @@ import type { RobloxCast } from "../cast/roblox";
 // driveway, level with the middle of the house), `door` the middle of its facade, `faces` the way its front looks
 // (+Z here), `span` its width along the street around `edge`, `depth` from the street edge to the back fence.
 const ROBLOX_HOUSE = { map: "mapHouseA", edge: new THREE.Vector3(-15.8, 0.1, 136), door: new THREE.Vector3(-15.8, 0.1, 92), faces: new THREE.Vector3(0, 0, 1), span: [-36, 70], depth: 140 };
-const ROBLOX_ROOM = { map: "mapBedroomA", floor: new THREE.Vector3(80.7, 1.25, 192.4), bed: /^BigBed$/, view: { from: new THREE.Vector3(88.5, 8.2, 184.5), to: new THREE.Vector3(75.5, 3.6, 196) },
+const ROBLOX_ROOM = { map: "mapBedroomA", floor: new THREE.Vector3(80.7, 1.25, 192.4), bed: /^BigBed$/, blanket: /^Blanket$/, view: { from: new THREE.Vector3(88.5, 8.2, 184.5), to: new THREE.Vector3(75.5, 3.6, 196) },
   inner: new THREE.Box3(new THREE.Vector3(69.1, 1.25, 181.3), new THREE.Vector3(92.4, 13.5, 203.6)) }; // the walls' inner faces: cameras stay inside
 
 export const LOCATIONS = { street: new THREE.Vector3(0, 0, 0), bedroom: new THREE.Vector3(600, 0, 0) };
@@ -31,7 +32,7 @@ const at = <T extends THREE.Object3D>(o: T, x: number, y: number, z: number, ry 
 /** Ground strips with a PBR texture repeated at its real size (`studs` per texture tile). */
 function strip(lib: Lib, tex: string, w: number, d: number, studs: number, y = 0, h = 0.2) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), lib.pbr(tex, { repeat: [w / studs, d / studs] }));
-  m.position.y = y - h / 2; m.receiveShadow = true; return m;
+  m.position.y = y - h / 2; m.receiveShadow = true; m.userData.label = tex === "concrete" ? "sidewalk" : tex === "grass" ? "lawn" : tex; return m;
 }
 
 export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib, rb: RobloxCast | null = null) {
@@ -53,47 +54,79 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   }
   const far = strip(lib, "grass", 1200, 1200, 10, 0.05); far.position.y -= 0.01; root.add(far);
 
-  // houses set back behind lawns, facing the road, with a front path, fences either side of it, trees
+  // ---- the 2D plan first (src/kit/plan.ts, Turf): keep-out zones, then footprints, then what fills the gaps.
+  // Nothing may overlap the road, the sidewalks, a path or the "stage" where the hero acts and the cameras look;
+  // houses, fences, trees, planters and cars are placed only where they fit. PlanLab draws it from above.
+  const plan = new Plan(), perSide = 6, spacing = length / perSide, setback = sidewalkHalf + 16, depth = 70;
+  plan.zone("road", rect(0, 0, CITY, length + 15), "#555");
+  plan.zone("crossing", rect(0, 15, CITY, CITY), "#888"); // no parked cars on the crosswalk
+  for (const s of [-1, 1]) plan.zone(`sidewalk${s > 0 ? "R" : "L"}`, rect(s * (roadHalf + walk / 2), 0, walk, length + 15), "#bbb");
+  const lotZ = (s: number, i: number) => -length / 2 + spacing * (i + 0.5) + (s > 0 ? 0.8 : -1.3) * ((i * 7) % 5 - 2); // gentle irregularity
+  const heroZ = lotZ(1, 2), heroDoor = new THREE.Vector3(setback, 0.2, heroZ);
+  const lawn = heroDoor.clone().add(new THREE.Vector3(-8, 0, 0)); lawn.y = 0.2;
+  // the stage: the hero's lawn and the ground between it and the road, where the s04-s07 cameras stand
+  plan.zone("stage", rect((sidewalkHalf + lawn.x + 5) / 2, lawn.z - 3, lawn.x + 5 - sidewalkHalf, 26), "#f2c94c");
+
   const houses: { door: THREE.Vector3; facing: number; object: THREE.Object3D }[] = [];
-  const perSide = 6, spacing = length / perSide;
-  for (const s of [-1, 1]) for (let i = 0; i < perSide; i++) {
-    const z = -length / 2 + spacing * (i + 0.5) + (r() - 0.5) * 4, setback = sidewalkHalf + 16;
-    const h = lib.model(HOUSES[Math.floor(r() * HOUSES.length)], { scale: CITY });
-    const size = h.userData.size as THREE.Vector3, facing = s > 0 ? -Math.PI / 2 : Math.PI / 2;
-    street.add(at(h, s * (setback + size.z / 2), 0.2, z, facing));
-    const door = new THREE.Vector3(s * setback, 0.2, z);
-    houses.push({ door, facing, object: h });
-    const path = strip(lib, "concrete", setback - sidewalkHalf, 3.2, 4, 0.3, 0.12); path.position.set(s * (sidewalkHalf + (setback - sidewalkHalf) / 2), 0, z); street.add(path);
-    // a low picket fence along the lawn edge (Kenney segments at their own size), open where the path is
-    const heroLot = s > 0 && i === 2; // the hero's own front yard stays open so lawn shots can see him
-    if (!heroLot) for (const dz of [-1, 1]) for (let f = 2.6; f < spacing / 2 - 2; f += 4.8) street.add(at(lib.model("fence", { scale: 10 }), s * (sidewalkHalf + 0.6), 0.2, z + dz * (f + 2.4), Math.PI / 2));
-    if (r() < 0.85) street.add(at(lib.model(r() < 0.5 ? "treeLarge" : "treeSmall", { scale: CITY * (0.9 + r() * 0.3) }), s * (sidewalkHalf + 5 + r() * 7), 0.2, z + (r() < 0.5 ? -1 : 1) * (7 + r() * 5), r() * 6));
-    if (r() < 0.6) street.add(at(lib.model("planter", { scale: CITY * 0.7 }), s * (setback - 2), 0.2, z + 5, facing));
-    if (r() < 0.4) street.add(at(lib.model(["sedan", "suv", "taxi"][Math.floor(r() * 3)], { scale: CAR }), s * (roadHalf - 2.6), 0.02, z + 9, r() < 0.5 ? 0 : Math.PI));
-  }
-  for (let z = -length / 2 + 10, k = 0; z < length / 2; z += 30, k++) for (const s of [-1, 1]) street.add(at(lib.model("streetLight", { scale: CITY }), s * (roadHalf + 0.6), 0.35, z + (s > 0 ? 15 : 0), s > 0 ? Math.PI : 0));
-  street.add(at(lib.model("stopSign", { scale: CITY }), roadHalf + 1.2, 0.35, 4, Math.PI));
-  const heroHouse = houses.filter((h) => h.door.x > 0).sort((a, b) => a.door.z - b.door.z)[2];
-  const lawn = heroHouse.door.clone().add(new THREE.Vector3(-8, 0, 0)); lawn.y = 0.2;
+  let heroHouse: { door: THREE.Vector3; facing: number; object: THREE.Object3D } | null = null;
   const houseMap = rb?.maps[ROBLOX_HOUSE.map];
   if (houseMap) {
-    // the Toolbox house replaces the hero's Kenney house: turned so its front looks at the road, its facade on the
-    // setback line; every downloaded model inside its footprint (houses, trees, fences, planters) makes room
+    // the Toolbox house on the hero's lot: turned so its front looks at the road, its driveway end on the sidewalk
+    // edge; its whole footprint (with its own yard) is reserved, so the kit houses and trees around it make room
     const m = buildRobloxMap(houseMap.data, { ...houseMap, pbr: (n) => lib.pbr(n) }, { maxLights: 2 });
     const toRoad = new THREE.Vector3(-1, 0, 0), turn = Math.atan2(toRoad.x, toRoad.z) - Math.atan2(ROBLOX_HOUSE.faces.x, ROBLOX_HOUSE.faces.z);
+    const Y = new THREE.Vector3(0, 1, 0);
     m.group.rotation.y = turn;
-    const Y = new THREE.Vector3(0, 1, 0), z = heroHouse.door.z;
-    m.group.position.set(sidewalkHalf + 0.3, 0.1, z).sub(ROBLOX_HOUSE.edge.clone().applyAxisAngle(Y, turn));
-    const z0 = z + ROBLOX_HOUSE.span[0], z1 = z + ROBLOX_HOUSE.span[1], x0 = sidewalkHalf + 1, x1 = sidewalkHalf + ROBLOX_HOUSE.depth;
-    for (const c of [...street.children]) if (c.userData.asset && c.position.x > x0 && c.position.x < x1 && c.position.z > z0 && c.position.z < z1) street.remove(c);
-    street.add(m.group); heroHouse.object = m.group;
-    heroHouse.door.copy(ROBLOX_HOUSE.door).applyAxisAngle(Y, turn).add(m.group.position); // the camera looks up at the real door
+    m.group.position.set(sidewalkHalf + 0.3, 0.1, heroZ).sub(ROBLOX_HOUSE.edge.clone().applyAxisAngle(Y, turn));
+    m.group.updateMatrix();
+    const fp = m.box.clone().applyMatrix4(m.group.matrix), c = fp.getCenter(new THREE.Vector3()), size = fp.getSize(new THREE.Vector3());
+    plan.place("robloxHouse", rect(c.x, c.z, size.x, size.z), { force: true, except: ["stage", "sidewalkR"], color: "#9b59b6" }); // its front yard is the stage
+    street.add(m.group);
+    heroHouse = { door: ROBLOX_HOUSE.door.clone().applyAxisAngle(Y, turn).add(m.group.position), facing: -Math.PI / 2, object: m.group }; // the camera looks up at the real door
   }
 
+  // lots: a house set back behind its lawn facing the road, a path to the door, a fence along the front, trees
+  for (const s of [-1, 1]) for (let i = 0; i < perSide; i++) {
+    const z = lotZ(s, i), side = s > 0 ? "R" : "L", facing = s > 0 ? -Math.PI / 2 : Math.PI / 2, isHero = s > 0 && i === 2;
+    plan.area(`lot${side}${i}`, rect(s * (sidewalkHalf + depth / 2), z, depth, spacing - 1));
+    if (!(isHero && heroHouse)) {
+      const h = lib.model(HOUSES[Math.floor(r() * HOUSES.length)], { scale: CITY }), size = h.userData.size as THREE.Vector3;
+      const hx = s * (setback + size.z / 2);
+      if (plan.place(`house${side}${i}`, rect(hx, z, size.x, size.z, facing), { except: isHero ? ["stage"] : [] })) {
+        street.add(at(h, hx, 0.2, z, facing));
+        const door = new THREE.Vector3(s * setback, 0.2, z), house = { door, facing, object: h };
+        houses.push(house); if (isHero) heroHouse = house;
+        const pathShape = rect(s * (sidewalkHalf + (setback - sidewalkHalf - 0.4) / 2), z, setback - sidewalkHalf - 0.4, 3.2); // stops just short of the house
+        plan.zone(`path${side}${i}`, pathShape, "#d9d0c1");
+        const path = strip(lib, "concrete", setback - sidewalkHalf, 3.2, 4, 0.3, 0.12); path.position.set(s * (sidewalkHalf + (setback - sidewalkHalf) / 2), 0, z); street.add(path);
+      }
+    }
+    // a low picket fence along the lawn edge (Kenney segments at their own size); gaps appear wherever a path,
+    // the stage or a Roblox lot is, because a segment is only placed where it fits
+    for (const [fx, fz] of plan.along([s * (sidewalkHalf + 0.8), z - spacing / 2 + 2.6], [s * (sidewalkHalf + 0.8), z + spacing / 2 - 2.6], 4.8, 0.4))
+      if (plan.place(`fence${side}${i}-${fz.toFixed(0)}`, rect(fx, fz, 0.5, 4.4), { color: "#b07a4f" })) street.add(at(lib.model("fence", { scale: 10 }), fx, 0.2, fz, Math.PI / 2));
+    // trees in the front yard and a planter by the door, where they fit
+    const yard = rect(s * (sidewalkHalf + 3 + (setback - sidewalkHalf - 4) / 2), z, setback - sidewalkHalf - 4, spacing - 6);
+    for (const [tx, tz] of plan.scatter(yard, { count: r() < 0.5 ? 2 : 1, radius: 2.4, gap: 11, rng: r, name: `tree${side}${i}` }))
+      street.add(at(lib.model(r() < 0.5 ? "treeLarge" : "treeSmall", { scale: CITY * (0.9 + r() * 0.3) }), tx, 0.2, tz, r() * 6));
+    if (r() < 0.6 && plan.place(`planter${side}${i}`, rect(s * (setback - 2), z + 5, 2.6, 2.6))) street.add(at(lib.model("planter", { scale: CITY * 0.7 }), s * (setback - 2), 0.2, z + 5, facing));
+    // a parked car at the kerb, clear of the crossing and the other cars
+    const cz = z + 9, carShape = rect(s * (roadHalf - 2.6), cz, 4.4, 9.5);
+    if (r() < 0.4 && plan.place(`car${side}${i}`, carShape, { except: ["road"], color: "#e67e22" }))
+      street.add(at(lib.model(["sedan", "suv", "taxi"][Math.floor(r() * 3)], { scale: CAR }), s * (roadHalf - 2.6), 0.02, cz, r() < 0.5 ? 0 : Math.PI));
+  }
+  // street lights and the stop sign stand on the sidewalk
+  for (let z = -length / 2 + 10; z < length / 2; z += 30) for (const s of [-1, 1]) {
+    const lz = z + (s > 0 ? 15 : 0), lx = s * (roadHalf + 0.6);
+    if (plan.place(`light${s > 0 ? "R" : "L"}${lz}`, circle(lx, lz, 0.6, 8), { except: [`sidewalk${s > 0 ? "R" : "L"}`], color: "#f1c40f" })) street.add(at(lib.model("streetLight", { scale: CITY }), lx, 0.35, lz, s > 0 ? Math.PI : 0));
+  }
+  if (plan.place("stopSign", circle(roadHalf + 1.2, 4, 0.6, 8), { except: ["sidewalkR"] })) street.add(at(lib.model("stopSign", { scale: CITY }), roadHalf + 1.2, 0.35, 4, Math.PI));
+  if (!heroHouse) throw new Error("the hero's lot has no house: see the plan (PlanLab)");
+
   // clouds drifting high up, and birds gliding in loops
-  const clouds = Array.from({ length: 14 }, (_, i) => { const c = lib.model("cloud", { scale: 10 + r() * 12, shadows: false }); c.userData.home = new THREE.Vector3((r() - 0.5) * 360, 70 + r() * 45, (r() - 0.5) * 360); root.add(c); return c; });
-  const birds = Array.from({ length: 5 }, (_, i) => { const b = lib.model("bird", { width: 2.6, shadows: false }); b.userData.phase = i * 1.3; root.add(b); return b; });
-  const dog = lib.model("dog", { height: 2.6 }); root.add(dog);
+  const clouds = Array.from({ length: 14 }, (_, i) => { const c = lib.model("cloud", { scale: 10 + r() * 12, shadows: false }); c.userData.home = new THREE.Vector3((r() - 0.5) * 360, 70 + r() * 45, (r() - 0.5) * 360); c.userData.noCollide = true; root.add(c); return c; });
+  const birds = Array.from({ length: 5 }, (_, i) => { const b = lib.model("bird", { width: 2.6, shadows: false }); b.userData.phase = i * 1.3; b.userData.noCollide = true; root.add(b); return b; });
+  const dog = lib.model("dog", { height: 2.6 }); dog.userData.noCollide = true; root.add(dog); // moving things: not colliders
 
   // ---------------------------------------------------------------- bedroom
   const B = LOCATIONS.bedroom, V3 = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
@@ -105,8 +138,9 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     m.group.position.copy(shift); root.add(m.group);
     const bed = m.find(ROBLOX_ROOM.bed).translate(shift), bc = bed.getCenter(new THREE.Vector3());
     // sit on the long side that faces the room's centre, a little below the blanket top
-    const side = Math.sign(B.x - bc.x) || 1;
-    bedSpot = { seat: V3(side > 0 ? bed.max.x + 0.3 : bed.min.x - 0.3, 0, bc.z - 1), top: B.y + (bed.max.y - B.y) * 0.62 };
+    // (hips over the mattress, on top of the blanket: npm run collide checks both)
+    const side = Math.sign(B.x - bc.x) || 1, blanket = m.find(ROBLOX_ROOM.blanket).translate(shift);
+    bedSpot = { seat: V3(side > 0 ? bed.max.x - 0.9 : bed.min.x + 0.9, 0, bc.z - 1), top: blanket.isEmpty() ? B.y + (bed.max.y - B.y) * 0.62 : blanket.max.y - 0.2 };
     bedView = { from: ROBLOX_ROOM.view.from.clone().add(shift), to: ROBLOX_ROOM.view.to.clone().add(shift) };
     roomBox = ROBLOX_ROOM.inner.clone().translate(shift).expandByScalar(-0.8);
     const fill = new THREE.PointLight("#fff1dc", 22, 40, 1.3); fill.position.set(B.x, B.y + 9.5, B.z); root.add(fill);
@@ -125,23 +159,23 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     room.add(at(lib.model("rug", { scale: FURN }), 0.5, 0.06, 1.5), at(lib.model("plant", { scale: FURN }), half - 1.5, 0.05, half - 3));
     const lampLight = new THREE.PointLight("#ffcf8a", 14, 22, 1.6); lampLight.position.set(-half + 8.6, 3.6, -half + 1.6); room.add(lampLight);
     const ceiling = new THREE.PointLight("#fff3dc", 26, 40, 1.4); ceiling.position.set(0, 8.5, 0); room.add(ceiling);
-    bedSpot = { seat: new THREE.Vector3(B.x - half + 3.4 + bedSize.x / 2 - 0.3, 0, B.z - half + 5.4), top: 0.05 + bedSize.y * 0.92 };
+    bedSpot = { seat: new THREE.Vector3(B.x - half + 3.4 + bedSize.x / 2 - 0.3, 0, B.z - half + 5.4), top: 0.05 + bedSize.y - 0.7 }; // the mattress is 0.7 below the headboard top (measured: npm run collide)
     bedView = { from: V3(B.x - 4.2, 7.4, B.z + 14), to: V3(B.x - 3.2, 2.6, B.z - 4) };
 
   }
 
   // ---------------------------------------------------------------- sky, sun, weather
-  const lighting = createLighting({ shadowSize: 45, sky: false }); root.add(lighting.root);
-  const weather = createWeather(); root.add(weather.root);
-  const cloudRain = createWeather({ area: 3.2, top: 8, drops: 500, splashes: 120, flakes: 1 }); root.add(cloudRain.root);
-  const rainCloud = lib.model("cloud", { scale: 6, shadows: false }); rainCloud.visible = false; root.add(rainCloud);
+  const lighting = createLighting({ shadowSize: 45, sky: false }); root.add(lighting.root); lighting.root.userData.noCollide = true;
+  const weather = createWeather(); root.add(weather.root); weather.root.userData.noCollide = true;
+  const cloudRain = createWeather({ area: 3.2, top: 8, drops: 500, splashes: 120, flakes: 1 }); root.add(cloudRain.root); cloudRain.root.userData.noCollide = true;
+  const rainCloud = lib.model("cloud", { scale: 6, shadows: false }); rainCloud.visible = false; rainCloud.userData.noCollide = true; root.add(rainCloud);
   const pmrem = new THREE.PMREMGenerator(gl), envs: Record<string, THREE.Texture> = {};
   const env = (name: string) => (envs[name] ??= pmrem.fromEquirectangular(lib.sky(name)).texture);
 
   scene.add(root);
   const focus = new THREE.Vector3(), skyFor = (d: Daylight) => (d.stars > 0.6 ? "night" : d.sunIntensity < 1.2 ? "storm" : d.sunDir[1] < 0.5 ? "golden" : "day");
   return {
-    root, lib, lawn, heroHouse, houses, bedSpot, bedView, roomBox, roadHalf, sidewalkHalf, dog, sidewalkY: 0.35,
+    root, lib, lawn, heroHouse: heroHouse!, houses, bedSpot, bedView, roomBox, plan, roadHalf, sidewalkHalf, dog, sidewalkY: 0.35,
     update(o: { location: string; weather: Weather; daylight: Daylight; time: number; local: number; camera: THREE.Camera; cloudAt?: THREE.Vector3 | null }) {
       const inside = o.location === "bedroom";
       focus.copy((LOCATIONS as any)[o.location] ?? LOCATIONS.street);
