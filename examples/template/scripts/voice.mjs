@@ -64,7 +64,13 @@ if (musicOnly) {
     const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
     fs.writeFileSync(`${outDir}/lines.json`, JSON.stringify(lines));
     execFileSync(voicePy, ["scripts/voice/make_voice_chatterbox.py", "--lines", `${outDir}/lines.json`, "--config", JSON.stringify(story.voice?.chatterbox || {})], { stdio: ["ignore", "inherit", "ignore"] });
+  }  // the same voice in plain Node, no Python (scripts/voice-js): Chatterbox via onnxruntime-node, Whisper via Transformers.js
+  if (engine === "chatterbox-js") {
+    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
+    fs.writeFileSync(`${outDir}/lines.json`, JSON.stringify(lines));
+    execFileSync(process.execPath, ["scripts/voice-js/make_voice.mjs", "--lines", `${outDir}/lines.json`, "--config", JSON.stringify(story.voice?.chatterbox || {})], { stdio: "inherit" });
   }
+
   for (const s of story.shots) {
     if (!s.narration) continue;
     const out = `${outDir}/${s.id}.wav`;
@@ -72,7 +78,7 @@ if (musicOnly) {
       execFileSync(py, ["scripts/voice/make_voice_neural.py", "--text", s.narration, "--out", out, "--style", story.voice?.style || "boy", ...(story.voice?.rate ? [`--rate=${story.voice.rate}`] : []), "--fps", String(story.fps)], { stdio: "inherit" });
       const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
       timings.clips[s.id] = { duration: info.duration, words: (info.words || []).map((w) => ({ word: w.word ?? w.text, start: w.start, end: w.end })) };
-    } else if (engine === "chatterbox") {
+    } else if (engine === "chatterbox" || engine === "chatterbox-js") {
       const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
       timings.clips[s.id] = { duration: info.duration, words: info.words, voice: info.engine };
     } else if (engine === "kokoro") {

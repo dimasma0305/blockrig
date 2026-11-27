@@ -16,7 +16,7 @@ Made from [`examples/template`](../template/README.md), so it works the same way
 cd examples/ctf
 npm install            # also links the library from ../.. (blockrig: file:../..)
 npm run assets         # Kenney kits and Poly Haven textures (CC0) listed in assets/manifest.json
-npm run setup-voice    # once per machine: Kokoro + Chatterbox voices (needs an NVIDIA GPU for Chatterbox)
+# voice: plain Node, no Python (chatterbox-js; first run downloads ~1.6 GB of models)
 npm run voice          # narration from docs/story.md + docs/audio.md, timings, music
 npm run check          # every take says its line, pace, captions
 npm run collide        # Rapier staging check: cameras in walls, hidden faces, people in props or in each other

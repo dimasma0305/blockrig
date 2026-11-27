@@ -33,7 +33,7 @@ Reels) with **BlockRig** characters (`../..`), a 3D world in **three.js** (React
 
 ```bash
 npm install
-npm run setup-voice      # once per machine: offline voices (Kokoro, Chatterbox on an NVIDIA GPU)
+# the voice is plain Node (chatterbox-js, first run downloads ~1.6 GB of models); npm run setup-voice only for the Python engines
 npm run docs             # compile + check docs/ (every other command runs it first)
 npm run voice            # narration clips, word timings, music
 # compare the narration with reference shorts (tempo, pauses, pitch, expression): docs/references.md, voice skill

@@ -8,7 +8,7 @@ cd examples/template
 npm run new -- ../my-video "My Video"
 cd ../my-video && npm install
 npm run assets        # download the models, skies and textures in assets/manifest.json (Kenney, Poly Haven, ambientCG, poly.pizza)
-npm run setup-voice   # once per machine: offline voices (Kokoro; Chatterbox with an NVIDIA GPU)
+# voice: plain Node, no Python (chatterbox-js; first run downloads ~1.6 GB of models)
 ```
 
 Then write `docs/story.md`, `docs/visuals.md` and `docs/audio.md`, and:

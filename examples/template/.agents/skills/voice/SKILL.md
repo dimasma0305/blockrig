@@ -14,17 +14,21 @@ A young, slightly high male voice with real intonation, ~160 wpm overall (measur
 2.7 words/s including pauses), short gaps. 300 wpm was "too fast"; a flat read was "not good enough"; "!" lines
 should sound panicked.
 
-Default (docs/audio.md): `engine: chatterbox`, `voice: am_adam`, `pitch: 1.35`, `exaggeration: 0.9`, `cfg: 0.35`,
-`tempo: 1.1`, `gap: 0.2`, `panic: exaggeration 1.4, cfg 0.3, lift 1.05, gain 2.5`.
+Default (docs/audio.md): `engine: chatterbox-js`, `voice: am_adam`, `pitch: 1.35`, `exaggeration: 0.9`, `cfg: 0.35`,
+`tempo: 1.0`, `gap: 0.45`, `commaPause: 0.22`, `stopPause: 0.4`.
 
 | Engine | How | Notes |
 |---|---|---|
-| chatterbox | expressive TTS (MIT) on an NVIDIA GPU, voice copied from a Kokoro sample reading our own text | best intonation; garbles 1–2 word lines (those fall back to Kokoro automatically); adds an inaudible AI watermark |
+| **chatterbox-js** (default) | plain Node, no Python, CPU: Chatterbox (MIT, ONNX via onnxruntime-node) with classifier-free guidance, voice copied from a kokoro-js `am_adam` sample pitched ×1.35; every take checked by Whisper (Transformers.js) | same voice as the Python engine; ~10–15 s per take on a laptop CPU; first run downloads ~1.6 GB of models to `~/.cache` (tell the user) |
+| chatterbox | the same model in Python on an NVIDIA GPU (`npm run setup-voice`) | faster with a GPU; adds per-word clarity scores |
 | kokoro | open model (Apache 2.0), offline, fast | clean but flat; male voices are adult, so pitch up ×1.3–1.4 with formant shift |
 | edge | Microsoft neural (edge-tts) | needs the user's OK: the text goes to Microsoft |
 | sapi | Windows voice | placeholder only |
 
-`npm run setup-voice` installs Kokoro, faster-whisper and (with a GPU) Chatterbox into `~/.venvs/blockrig-voice`.
+chatterbox-js needs only `npm install` (`scripts/voice-js/`). Each line gets up to 8 seeded takes and keeps the first
+that Whisper hears word for word *and* whose pitch is within the check's limits of the other lines' median (so
+`VOICE_ONLY=s04 npm run voice` re-voices one line to match the rest). CFG matters: without it 1 in 4 takes slurred
+or babbled; with it every CTF line passed in 1–3 takes. Per-emotion `cfg` is in `EMOTIONS`.
 
 ## Emotion: say each line the way it means
 
@@ -63,7 +67,7 @@ emotions in `docs/audio.md` (`- emotions: ...` is passed to the script as `emoti
 
 ## You cannot hear it
 
-Every Chatterbox take is transcribed (faster-whisper) and retried until it says the script; the match is saved next
+Every Chatterbox take is transcribed (Whisper: Transformers.js in chatterbox-js, faster-whisper in Python) and retried until it says the script; the match is saved next
 to each clip and `npm run check` flags anything below 85%. Still: tell the user you can't hear, and when they
 dislike the voice, make numbered samples of the same line (vary voice, pitch, exaggeration, tempo) and let them
 pick. To compare with a reference video, put its script in out/ref (git-ignored) and render it with each option at

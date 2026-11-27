@@ -8,7 +8,7 @@ fast (200-330 wpm) with a 0.35-0.65 s beat between them; matter-of-fact lines fl
 and very fast; hooks and reactions lively (5-15 st), excited lines jumping 30-50% higher. Here: one narrator on every
 line (one voice sample), the hook `flat` (calm, normal speed), every word clear first.
 
-- engine: chatterbox
+- engine: chatterbox-js
 - voice: am_adam
 - pitch: 1.35
 - exaggeration: 0.9

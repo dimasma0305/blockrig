@@ -4,13 +4,13 @@ Expressive narrator: every line has the emotion of its meaning (`emotion:` in st
 
 ## Voice
 
-- engine: chatterbox
+- engine: chatterbox-js
 - voice: am_adam
 - pitch: 1.35
 - exaggeration: 0.9
 - cfg: 0.35
 - tempo: 1.05
-- gap: 0.35
+- gap: 0.3
 - commaPause: 0.22
 - stopPause: 0.4
 - panic: exaggeration 1.4, cfg 0.3, gain 2

@@ -37,7 +37,7 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 - layered hair, headphones and visors on Roblox attachments;
 - laptops welded to their hands, and IK hands on a keyboard.
 
-They play in a rainy neon city with custom shaders: dressed towers, a lightning storm, a hex force-field dome, holograms, glyph rain, beams and particles. The expressive narrator runs offline (Chatterbox + Kokoro).
+They play in a rainy neon city with custom shaders: dressed towers, a lightning storm, a hex force-field dome, holograms, glyph rain, beams and particles. The expressive narrator runs offline in plain Node (Chatterbox ONNX + Kokoro + Whisper, no Python).
 
 ▶ [**Watch it with sound**](docs/ctf.mp4) · [How it's made](examples/ctf/README.md)
 
