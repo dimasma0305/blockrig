@@ -92,3 +92,13 @@ inner "..."/"."/"!"/"?" at least `stopPause` (0.4 s) of real silence (measured f
 gaps), cut at the quietest point between the words, and re-times the words for captions. The voice log shows
 "+N pause". Write the pause you want into the line: "In this town, it rains..." gets its breath; "In this town it
 rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).
+
+## Music
+
+Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post: mystery, suspense,
+happy, comedy, sad, action, chill, cyber, triumph, and `memory` / `memory-faded` (scripts/music-memory.mjs): a slow
+1930s ballroom piece (~72 bpm) heard from a worn 78 in another room, the feel users know from "Everywhere at the
+End of Time". That album is copyrighted (refused for reuse; Content ID claims it): never download or use it, or
+any chart song; the user adds trending sounds in the app. Pick themes per shot in docs/audio.md "Music", then
+`node scripts/voice.mjs --music-only` rebuilds the music without re-voicing. You cannot hear it: check loudness and
+bands (`ffmpeg ... volumedetect` per band) and ask the user to listen.

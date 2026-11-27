@@ -32,11 +32,14 @@ Each shot's `emotion:` in story.md picks how the narrator says it (see the voice
 
 ## Music
 
-- s01: comedy
-- s04: suspense
-- s06: happy
+- s01: memory
+- s04: memory-faded
+- s06: memory
 
-Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph. Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
+A fading-memory arc: an original worn 1930s ballroom record far away (in the feel of "Everywhere at the End of
+Time", which is copyrighted, so nothing of it is used), further gone when the storm hits, back when he tells the truth.
+
+Themes are synthesized in code (scripts/music.mjs): mystery, suspense, happy, comedy, sad, action, chill, cyber, triumph, memory, memory-faded (scripts/music-memory.mjs). Mixed at 0.2 under the voice. No chart songs; the user adds trending sounds in the app.
 
 ## Sound effects (planned)
 

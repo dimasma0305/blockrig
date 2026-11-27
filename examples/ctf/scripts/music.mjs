@@ -1,6 +1,7 @@
 // Tiny music composer: original, synthesised background tracks for a mood (no samples, nothing to credit).
 // compose(theme, seconds, seed) -> Float32Array (mono, 48 kHz); writeWav(path, samples)
 import fs from "node:fs";
+import { memory } from "./music-memory.mjs";
 
 export const SR = 48000;
 const THEMES = {
@@ -15,12 +16,14 @@ const THEMES = {
   chill: { bpm: 84, key: 58, scale: [0, 2, 4, 7, 9, 11, 14], prog: [0, 3, 5, 4], lead: "pluck", drums: "soft", swing: 0.18 },
 };
 /** The mood names docs/audio.md can use. */
-export const THEME_NAMES = Object.keys(THEMES);
+// memory / memory-faded: a worn 1930s ballroom record far away (scripts/music-memory.mjs)
+export const THEME_NAMES = [...Object.keys(THEMES), "memory", "memory-faded"];
 
 const hz = (m) => 440 * 2 ** ((m - 69) / 12);
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
 export function compose(theme, seconds, seed = 1) {
+  if (theme === "memory" || theme === "memory-faded") return memory(seconds, seed, theme === "memory-faded");
   const T = THEMES[theme]; if (!T) throw new Error(`unknown theme ${theme}`);
   const n = Math.ceil(seconds * SR), out = new Float32Array(n), r = rng(seed * 7919 + theme.length);
   const beat = 60 / T.bpm, bar = beat * 4;

@@ -1,4 +1,5 @@
 // Narration (one clip per shot) + word timings + music sections, from story.json.
+//   node scripts/voice.mjs --music-only   keep the narration, rebuild the music (after changing docs/audio.md "Music")
 //   VOICE_ENGINE=chatterbox (expressive, offline on a GPU; see make_voice_chatterbox.py) | kokoro (open model, offline) | edge (Microsoft neural voice, online;
 //   ask the user first) | sapi (Windows' built-in voice, offline placeholder). Default: story.voice.engine, else sapi.
 import fs from "node:fs";
@@ -52,35 +53,42 @@ function estimateWords(text, phrases, duration) {
 }
 
 const timings = { engine, fps: story.fps, clips: {} };
-// Chatterbox loads a large model, so every line is voiced in one run of its own Python environment
-if (engine === "chatterbox") {
-  const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
-  fs.writeFileSync(`${outDir}/lines.json`, JSON.stringify(lines));
-  execFileSync(voicePy, ["scripts/voice/make_voice_chatterbox.py", "--lines", `${outDir}/lines.json`, "--config", JSON.stringify(story.voice?.chatterbox || {})], { stdio: ["ignore", "inherit", "ignore"] });
-}
-for (const s of story.shots) {
-  if (!s.narration) continue;
-  const out = `${outDir}/${s.id}.wav`;
-  if (engine === "edge") {
-    execFileSync(py, ["scripts/voice/make_voice_neural.py", "--text", s.narration, "--out", out, "--style", story.voice?.style || "boy", ...(story.voice?.rate ? [`--rate=${story.voice.rate}`] : []), "--fps", String(story.fps)], { stdio: "inherit" });
-    const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
-    timings.clips[s.id] = { duration: info.duration, words: (info.words || []).map((w) => ({ word: w.word ?? w.text, start: w.start, end: w.end })) };
-  } else if (engine === "chatterbox") {
-    const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
-    timings.clips[s.id] = { duration: info.duration, words: info.words, voice: info.engine };
-  } else if (engine === "kokoro") {
-    const kv = story.voice?.kokoro || {};
-    execFileSync(voicePy, ["scripts/voice/make_voice_kokoro.py", "--text", s.narration, "--out", out, "--fps", String(story.fps),
-      ...(kv.voice ? ["--voice", kv.voice] : []), ...(kv.speed ? ["--speed", String(kv.speed)] : []), ...(kv.pitch ? ["--pitch", String(kv.pitch)] : [])], { stdio: ["ignore", "ignore", "inherit"] });
-    const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
-    timings.clips[s.id] = { duration: info.duration, words: estimateWords(s.narration, info.phrases, info.duration), estimated: true };
-  } else {
-    execFileSync(py, ["scripts/voice/make_voice.py", "--text", s.narration, "--out", out, "--fps", String(story.fps), "--pitch", "1.5", "--rate", "4"], { stdio: ["ignore", "ignore", "inherit"] });
-    const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
-    timings.clips[s.id] = { duration: info.duration, words: estimateWords(s.narration, info.phrases, info.duration), estimated: true };
+// --music-only: keep the voiced lines and their timings (assets/audio/timings.json), rebuild only the music
+const musicOnly = process.argv.includes("--music-only");
+if (musicOnly) {
+  if (!fs.existsSync(`${outDir}/timings.json`)) throw new Error("no voice yet: run npm run voice first");
+  timings.clips = JSON.parse(fs.readFileSync(`${outDir}/timings.json`, "utf8")).clips;
+} else {
+  // Chatterbox loads a large model, so every line is voiced in one run of its own Python environment
+  if (engine === "chatterbox") {
+    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
+    fs.writeFileSync(`${outDir}/lines.json`, JSON.stringify(lines));
+    execFileSync(voicePy, ["scripts/voice/make_voice_chatterbox.py", "--lines", `${outDir}/lines.json`, "--config", JSON.stringify(story.voice?.chatterbox || {})], { stdio: ["ignore", "inherit", "ignore"] });
   }
-  Object.assign(timings.clips[s.id], trimClip(out, timings.clips[s.id].words));
-  console.log(`${s.id}  ${timings.clips[s.id].duration.toFixed(2)}s  ${s.narration}`);
+  for (const s of story.shots) {
+    if (!s.narration) continue;
+    const out = `${outDir}/${s.id}.wav`;
+    if (engine === "edge") {
+      execFileSync(py, ["scripts/voice/make_voice_neural.py", "--text", s.narration, "--out", out, "--style", story.voice?.style || "boy", ...(story.voice?.rate ? [`--rate=${story.voice.rate}`] : []), "--fps", String(story.fps)], { stdio: "inherit" });
+      const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
+      timings.clips[s.id] = { duration: info.duration, words: (info.words || []).map((w) => ({ word: w.word ?? w.text, start: w.start, end: w.end })) };
+    } else if (engine === "chatterbox") {
+      const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
+      timings.clips[s.id] = { duration: info.duration, words: info.words, voice: info.engine };
+    } else if (engine === "kokoro") {
+      const kv = story.voice?.kokoro || {};
+      execFileSync(voicePy, ["scripts/voice/make_voice_kokoro.py", "--text", s.narration, "--out", out, "--fps", String(story.fps),
+        ...(kv.voice ? ["--voice", kv.voice] : []), ...(kv.speed ? ["--speed", String(kv.speed)] : []), ...(kv.pitch ? ["--pitch", String(kv.pitch)] : [])], { stdio: ["ignore", "ignore", "inherit"] });
+      const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
+      timings.clips[s.id] = { duration: info.duration, words: estimateWords(s.narration, info.phrases, info.duration), estimated: true };
+    } else {
+      execFileSync(py, ["scripts/voice/make_voice.py", "--text", s.narration, "--out", out, "--fps", String(story.fps), "--pitch", "1.5", "--rate", "4"], { stdio: ["ignore", "ignore", "inherit"] });
+      const info = JSON.parse(fs.readFileSync(out + ".json", "utf8"));
+      timings.clips[s.id] = { duration: info.duration, words: estimateWords(s.narration, info.phrases, info.duration), estimated: true };
+    }
+    Object.assign(timings.clips[s.id], trimClip(out, timings.clips[s.id].words));
+    console.log(`${s.id}  ${timings.clips[s.id].duration.toFixed(2)}s  ${s.narration}`);
+  }
 }
 
 // total length -> music sections
