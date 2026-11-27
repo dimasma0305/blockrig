@@ -6,6 +6,7 @@ import { buildBody } from "./body.js";
 import { lodIndices } from "./mesh.js";
 import { parseFacs, facsBoneOffsets, FACE_CONTROLS } from "./facs.js";
 import { fitLayer, cageMap } from "./wrap.js";
+import { occluder, mergeOccluders, triangleCoverage } from "./hsr.js";
 import { solvePosition, applyPole, solveRotation, solveLookAt } from "./ik.js";
 import { buildBodyFromParts, defaultBodyAttachments, templateUVs, regionSlices, paintRegion, colorHex, BODY_REGION, TEMPLATE_SIZE } from "./avatar.js";
 
@@ -437,6 +438,54 @@ export function createRig(o = {}) {
   const faceControls = Object.fromEntries(FACE_CONTROLS.map((n) => [n, 0]));
   let dyn = null;
 
+  // ---- Hidden Surface Removal: body triangles covered by layered clothing are not drawn (as in Roblox) ----
+  const garmentBinds = [];
+  function hideCoveredSurfaces() {
+    const occs = [];
+    for (const g of garmentBinds) {
+      if (!g.hide) continue;
+      const geo = g.sm.geometry, P = geo.attributes.position.array, SI = geo.attributes.skinIndex.array, SW = geo.attributes.skinWeight.array;
+      const out = new Float32Array(P.length), v = new THREE.Vector3(), acc = new THREE.Vector3();
+      for (let i = 0; i < P.length / 3; i++) {
+        acc.set(0, 0, 0);
+        for (let k = 0; k < 4; k++) { const w = SW[i * 4 + k]; if (w > 0) acc.addScaledVector(v.fromArray(P, i * 3).applyMatrix4(g.M[SI[i * 4 + k]]), w); }
+        acc.toArray(out, i * 3);
+      }
+      occs.push(occluder(out, geo.index ? geo.index.array : null));
+    }
+    const occ = mergeOccluders(occs), M = new THREE.Matrix4();
+    for (const [bone, m] of Object.entries(parts)) {
+      if (!m || !m.isMesh || !m.geometry || index.get(bone) === undefined) continue;
+      const geo = m.geometry;
+      // keep the part's own triangles; every refit starts again from them
+      if (!m.userData.hsrSource) { const src = geo.index ? geo.toNonIndexed() : geo.clone(); m.userData.hsrSource = Object.fromEntries(Object.entries(src.attributes).map(([k, at]) => [k, { array: at.array.slice(), size: at.itemSize }])); }
+      const src = m.userData.hsrSource, names = Object.keys(src), P = src.position.array;
+      m.updateMatrix(); M.copy(bindWorld[index.get(bone)]).multiply(m.matrix);
+      const out = Object.fromEntries(names.map((k) => [k, []]));
+      const cs = (x) => new THREE.Vector3(x[0], x[1], x[2]).applyMatrix4(M).toArray();
+      let hidden = 0;
+      // a triangle as 3 vertices of every attribute; split partly covered ones, drop covered pieces
+      // returns the visible pieces; a split that hides nothing is undone
+      const visit = (tri, depth) => {
+        const cover = occ.count ? triangleCoverage(cs(tri[0].position), cs(tri[1].position), cs(tri[2].position), occ) : 0;
+        if (cover === 4) { hidden++; return []; }
+        if (cover > 0 && depth < 3) {
+          const mid = (x, y) => Object.fromEntries(names.map((k) => [k, x[k].map((q, i) => (q + y[k][i]) / 2)]));
+          const [A, B, C] = tri, ab = mid(A, B), bc = mid(B, C), ca = mid(C, A), h0 = hidden;
+          const kept = [[A, ab, ca], [ab, B, bc], [ca, bc, C], [ab, bc, ca]].flatMap((t) => visit(t, depth + 1));
+          return hidden > h0 ? kept : [tri];
+        }
+        return [tri];
+      };
+      const emit = (tris) => { for (const tri of tris) for (const v of tri) for (const k of names) out[k].push(...v[k]); };
+      for (let t = 0; t < P.length / 9; t++) emit(visit([0, 1, 2].map((j) => Object.fromEntries(names.map((k) => { const n = src[k].size, i = (t * 3 + j) * n; return [k, Array.from(src[k].array.slice(i, i + n))]; }))), 0));
+      geo.setIndex(null); geo.clearGroups();
+      for (const k of names) geo.setAttribute(k, new THREE.BufferAttribute(new Float32Array(out[k]), src[k].size));
+      geo.computeBoundingSphere();
+      m.userData.hiddenTriangles = hidden;
+    }
+  }
+
   const rig = {
     object: model, stage, bones, neck, head, parts, rigType, body: spec, joints: def.map((b) => b.name).concat("Neck"), garments: [], accessories: [],
     /** Rotate a joint by quaternion q (character axes) relative to its bind pose. */
@@ -472,7 +521,7 @@ export function createRig(o = {}) {
      * Dress the rig in a skinned layered-clothing mesh (from parseMesh). The garment keeps its own bind
      * pose, so it deforms correctly even if its skeleton differs slightly from the rig's.
      */
-    addLayeredClothing(mesh, { map = null, color = 0xffffff, lod = 0, side = THREE.DoubleSide, wrap = null } = {}) {
+    addLayeredClothing(mesh, { map = null, color = 0xffffff, lod = 0, side = THREE.DoubleSide, wrap = null, hideCovered = true } = {}) {
       if (rigType !== "R15") throw new Error("blockrig: layered clothing needs an R15 rig");
       if (!mesh.skinIndex || !mesh.bones.length) throw new Error("blockrig: mesh has no skinning data (need .mesh v4+)");
       const fit = !!(wrap && wrap.inner && bodyCage.size);
@@ -492,6 +541,9 @@ export function createRig(o = {}) {
       }
       const skeleton = new THREE.Skeleton(skBones, inverses);
       sm.bind(skeleton, sm.matrixWorld.clone());
+      // bind-pose skinning matrices in character space, for Hidden Surface Removal
+      const stageInv = new THREE.Matrix4().copy(stage.matrixWorld).invert();
+      garmentBinds.push({ sm, hide: hideCovered, M: skBones.map((b, i) => new THREE.Matrix4().multiplyMatrices(stageInv, b.matrixWorld).multiply(inverses[i]).multiply(sm.matrixWorld)) });
       if (outline) { const ol = new THREE.SkinnedMesh(geo, outlineMaterial(opts.outline, true)); ol.frustumCulled = false; stage.add(ol); ol.updateMatrixWorld(true); ol.bind(skeleton, sm.bindMatrix.clone()); }
       list.forEach((b, i) => { b.quaternion.copy(saved[i][0]); b.position.copy(saved[i][1]); }); neck.quaternion.copy(neckSaved[0]); neck.position.copy(neckSaved[1]);
       rig.garments.push(sm);
@@ -509,6 +561,7 @@ export function createRig(o = {}) {
         }
         sm.userData.wrap = { matched: layers.find((L) => L.sm === sm).matched };
       }
+      hideCoveredSurfaces();
       return sm;
     },
     /** The body's WrapTarget cages in character space (template UV -> position); empty without body-part cages. */
@@ -679,6 +732,7 @@ export function createRig(o = {}) {
       }
       if (old) { old.visible = false; if (old.userData.outline) old.userData.outline.visible = false; }
       parts[partName] = m;
+      if (partName !== "Head" && garmentBinds.length) hideCoveredSurfaces();
       return m;
     },
 

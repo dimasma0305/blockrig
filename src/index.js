@@ -13,6 +13,7 @@ export { buildBody, R15_SHAPES, jointsOf } from "./body.js";
 export { ATTACHMENT_ROT, buildBodyFromParts, defaultR15Parts, defaultBodyAttachments, describeBodyParts, describeBodyColors, describeClothing, templateUVs, regionSlices, paintRegion, clothingLayers, TEMPLATE, TEMPLATE_SIZE, T_SHIRT_RECT, R15_JOINT_OF, BODY_REGION, BODY_COLOR_KEYS } from "./avatar.js";
 export { toR6, toR15, retargetAll } from "./retarget.js";
 export { fitLayer, cageMap, cageKey } from "./wrap.js";
+export { occluder, mergeOccluders, triangleCoverage, coveredTriangles } from "./hsr.js";
 export { BRICK_COLORS, brickColorHex } from "./brickcolor.js";
 export { solvePosition, applyPole, solveRotation, solveLookAt } from "./ik.js";
 export { curveAnimationToClip, decodeFloatCurve, decodeRotationCurve, decodeMarkerCurve, evalFloatCurve, evalRotationCurve, KEY_INTERPOLATION, ROTATION_ORDER, TICKS_PER_SECOND } from "./curves.js";

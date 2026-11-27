@@ -68,7 +68,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 🧍 **Every classic body**: **R6** (six parts, classic pivots) and **R15** in five shapes (`classic`, `slender`, `buff`, `tall`, `child`) or your own proportions, with Roblox-style `height / width / depth / head` scaling, swappable body-part meshes, and R15 ⇄ R6 clip retargeting.
 - 😃 **Live facial expressions**: 17 built-in expressions drawn from 21 blendable parameters (brows, eye shape, look direction, wink, `><` and `x` eyes, mouth curve/open/skew, teeth, tongue, blush, tears, sweat), with automatic blinking, talking, smooth fades and `face:` markers inside clips. Works on BlockRig heads or as a decal on any head.
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
-- 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, **fitted to the body through its WrapLayer/WrapTarget cages** (matched by template UV, like Roblox) and stacked by `Order`.
+- 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, **fitted to the body through its WrapLayer/WrapTarget cages** (matched by template UV, like Roblox) and stacked by `Order`. **Hidden Surface Removal** stops the body poking through it.
 - 🎩 **Rigid accessories, welds and tools**: attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`), `Weld`-style C0/C1 welds, and `Humanoid:EquipTool`'s RightGrip with `Tool.Grip`.
 - 🦵 **HipHeight and IKControl**: Roblox-style `hipHeight`, and IK chains (Position, Rotation, Transform, LookAt, with pole and weight) solved on top of animation.
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion, and Roblox-style `AnimationTrack`s (seek, speed, weight, looped, priority, marker and keyframe signals, Stopped/Ended/DidLoop).
@@ -132,6 +132,13 @@ rig.addLayeredClothing(parseMesh(hoodieMeshBytes), {
 ```
 
 Checked with Roblox's own Zip Hoodie, Knit Sweater and Casual Sweats on the official ROBLOX Boy and Woman bodies. The same garments fit both bodies, the sweater layers under the hoodie, and the clothes follow animation. Without body cages, garments are skinned as they come, which fits bodies close to Roblox's reference body. Download layered accessories with the `Roblox-AssetFormat: avatar_meshpart_accessory` header to get the MeshPart version with its `WrapLayer`.
+
+**Hidden Surface Removal.** As in Roblox, the parts of the body a garment covers are not drawn, so rigid body parts can't poke through the clothing when joints bend.
+
+- A body triangle is hidden when the garment lies just outside it, along its outward normal, from every sample point.
+- Partly covered triangles are split, up to three times, and only the covered pieces are dropped.
+- The part's cartoon outline shares its geometry, so it is trimmed too.
+- Pass `hideCovered: false` to keep the whole body. `part.userData.hiddenTriangles` says how much was hidden.
 
 ### Read an accessory file
 
@@ -423,7 +430,7 @@ anim.play(salute, { fade: 0.15 });
 | `EXPRESSIONS` · `FACE_DEFAULTS` · `expression()` · `mixFace()` · `drawFace()` · `createFaceDecal()` | Expression data and drawing. |
 | `rig.setPose(pose)` / `rig.resetPose()` | `{ Joint: [x, y, z], rootOffset: [x, y, z] }` in radians and studs. |
 | `rig.setJoint(name, x, y, z)` · `setJointQuat(name, q)` · `nudgeJoint(name, x, y, z)` | Set one joint, or add on top of the current pose (good for look-at). |
-| `rig.addLayeredClothing(mesh, { map?, color?, lod?, wrap? })` | Skinned garment from `parseMesh` (v4+) or `makeCoat()`; with `wrap` cages and a caged body, fitted to the body and stacked by Order. |
+| `rig.addLayeredClothing(mesh, { map?, color?, lod?, wrap?, hideCovered? })` | Skinned garment from `parseMesh` (v4+) or `makeCoat()`; with `wrap` cages and a caged body, fitted to the body and stacked by Order. Body surfaces it covers are hidden (HSR) unless `hideCovered: false`. |
 | `rig.addAccessory(mesh, { attachment, map?, color? })` | Rigid accessory welded by attachment name (`HairAttachment`, `HatAttachment`, `FaceFrontAttachment`, `FaceCenterAttachment`). |
 | `new Animator(rig)` | `.play(clip, { fade, weight, speed })` · `.loadAnimation(clip)` · `.stop(clipOrName, fade)` · `.update(dt)` · `.getPlayingAnimationTracks()` · `.onMarker(fn)` · `.isPlaying(name)` |
 | `AnimationTrack` | `.play(fade, weight, speed)` · `.stop(fade)` · `.adjustSpeed()` · `.adjustWeight()` · `.timePosition` · `.looped` · `.priority` · `.getMarkerReachedSignal()` · `.getTimeOfKeyframe()` · events `stopped` `ended` `didLoop` `keyframeReached` |
