@@ -1,52 +1,40 @@
 ---
 name: story
-description: Write the story, narration and shot list (story.json) for a short made with this project. Use first, before any audio or 3D work, whenever the user wants a new video, a new story, or changes to the plot or script.
+description: Write the story, narration, captions and shot list in docs/story.md for a viral Roblox-style short - the hook, escalation, twist, silent reaction beats, and per-shot action, camera, faces, weather and time of day. Use first for a new video, and whenever the plot, script or shots change.
 ---
 
 # Story
 
-The format is the viral narrated Roblox-style short: 20–60 seconds, first person, an ordinary place with one strange rule. The narration never stops, the picture changes every one to three seconds, and short captions are always on screen.
-
 ## Shape
 
-1. **Hook in the first line**, stated as a rule of the world: "In this town, …" / "In this world, …". No greeting first.
-2. **Make it personal:** who the narrator is and why they break the rule.
-3. **Three escalating beats**, each one clear action in one place.
-4. **A silent reaction beat** (a held close-up, no narration) right after the biggest surprise.
-5. **A twist that echoes the hook**, so the video loops. Leave one question unanswered for the comments.
+1. **Hook in the first line (2 s)**, a rule of the world: "In this town, …", "In this world, …", "Never …". No greeting.
+2. **Make it personal:** one line on who the narrator is and why they break the rule.
+3. **Escalate in threes:** each beat one clear action in one place, stakes rising.
+4. **Silent reaction beat** right after the biggest surprise: no narration, `min: 1.2–1.6`, a face or the world reacting (storm, crowd turning).
+5. **Twist that echoes the hook**, so the video loops. Leave one question for the comments.
 
-Original stories and characters only. Use popular videos for the format, never their plots or characters.
+Original stories and characters only. Use popular videos for format and pace, never their plots, characters or lines.
 
 ## Budget
 
-At the narrator's speed, plan about 2.7 words per second: 30 s ≈ 80 words and 14–18 shots. Three locations at most.
+Plan ~2.7 words a second overall (≈160 wpm, measured on popular shorts): 15 s ≈ 40 words / 7 shots; 30 s ≈ 80 words
+/ 14 shots. Two or three locations; each costs build time.
 
-## story.json
+## Writing shots in docs/story.md
 
-```jsonc
-{
-  "title": "The Ice Statue",
-  "fps": 60, "width": 1080, "height": 1920,
-  "voice": { "style": "boy" },
-  "music": [{ "theme": "mystery", "from": 0 }, { "theme": "happy", "fromShot": 11 }],
-  "characters": { "kid": { ... }, "statue": { ... } },
-  "shots": [
-    {
-      "id": "s01",
-      "narration": "In this town, nobody touches the ice statue in the park.",
-      "captions": [{ "text": "IN THIS TOWN", "highlight": "TOWN" }, ...],   // 2–4 words each, cover the narration
-      "location": "park",                    // from a short list
-      "action": "statue stands frozen on its plinth; kids play around it",
-      "faces": { "kid": "neutral" },         // BlockRig expressions or face-image names
-      "camera": "slow aerial push-in to the statue",
-      "minSeconds": 2.2                       // optional: hold longer than the narration (reaction beats)
-    }
-  ]
-}
-```
+The comment at the top of `docs/story.md` is the format. Per shot:
 
-- **One action per shot**, using what the rig can do: stand, walk, run, wave, point, jump, kneel, reach, fall, look. Show emotion as a pose plus an expression.
-- **A silent shot** has `"narration": ""` and a `minSeconds`.
-- **Every shot gets a camera note** (position, how tight, at most one move), varied from shot to shot.
+- `> narration` — one or two short sentences. End with "!" when the line should be performed with panic/energy (the voice does it). Use "..." for a beat inside a line.
+- `captions:` 2–4 words each, separated by `|`, covering the narration in order; one `*word*` highlighted per caption at most.
+- `action:` one action the rig can do (clips in `src/cast/clips.ts`: walk, run, sit, point, shrug, armsCrossed, lookUp, gasp, panic, slump, cheer, celebrate…). Emotion = pose + face.
+- `camera:` position, tightness, at most one move; vary it every shot (wide, close, low, top-down, over-shoulder).
+- `faces:` BlockRig expressions (neutral happy grin laugh smug wink determined angry furious roar shocked scared sad hurt sleepy embarrassed dazed).
+- `weather:` and `time:` for every outdoor shot; `a -> b` changes across the shot (storm -> golden for relief).
+- `mood:` one word, for music and colour.
 
-Show the user the hook and a one-line plot before handing off to the voice stage.
+`npm run docs` checks all of this (captions cover narration, faces exist, weather/time known) and fails loudly.
+
+## Before handing off
+
+Read the narration at speed and count words against the budget. Show the user the hook and one-line plot; let them
+redirect before voicing.

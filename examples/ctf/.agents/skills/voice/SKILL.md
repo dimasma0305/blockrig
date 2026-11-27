@@ -1,35 +1,47 @@
 ---
 name: voice
-description: Make the narration (one clip per story sentence, with word timings) and the background music for this project, from story.json. Use after the story is approved, whenever the voice, pace, pitch, timings or music need to change.
+description: Make the narration (one clip per shot, word timings) and music from docs/audio.md - engines (Chatterbox, Kokoro, Edge, SAPI), pitch, pace, panic lines, checking takes you cannot hear. Use after the story is approved, and whenever the voice, pace, pitch, emotion or music need to change.
 ---
 
 # Voice and music
 
-`npm run voice` runs `scripts/make-audio.mjs`. It reads `story.json` and writes:
+`npm run voice` compiles docs, then `scripts/voice.mjs` writes `assets/audio/<shot>.wav`, per-word timings and the
+music into `assets/audio/timings.json`. Shot lengths and captions follow it.
 
-- **Narration:** `public/audio/s01.wav` …, one clip per shot that has narration. Each clip is trimmed to the speech (ffmpeg `silencedetect` at −40 dB, keeping 0.03 s before and 0.06 s after) and its word times are shifted to match.
-- **Music:** `public/audio/music-<n>.wav`, one track per `music` entry, each long enough for its section.
-- **Timings:** `public/audio/timings.json`, holding each clip's duration and its words' start and end times.
+## The narrator users want
 
-The scene reads `timings.json`, so shot lengths and caption timing always match the audio.
+A young, slightly high male voice with real intonation, ~160 wpm overall (measured on a popular short: 161 wpm,
+2.7 words/s including pauses), short gaps. 300 wpm was "too fast"; a flat read was "not good enough"; "!" lines
+should sound panicked.
 
-## Narrator
+Default (docs/audio.md): `engine: chatterbox`, `voice: am_adam`, `pitch: 1.35`, `exaggeration: 0.9`, `cfg: 0.35`,
+`tempo: 1.1`, `gap: 0.2`, `panic: exaggeration 1.4, cfg 0.3, lift 1.05, gain 2.5`.
 
-The style of these shorts is a fast, high-pitched young narrator.
-
-| Engine | When | Notes |
+| Engine | How | Notes |
 |---|---|---|
-| `edge` (default when allowed) | Natural Microsoft neural voice through the `edge-tts` Python package; returns exact word times | **Ask the user first**: it needs `pip install edge-tts` and sends the narration text to Microsoft's online service. Style `boy` = Brian, +70% rate, pitched up 1.6×. |
-| `sapi` (fallback) | Windows' built-in offline speech, sped up and pitched with ffmpeg | No network or install, but plainly robotic. Word times are estimated from syllables, so treat it as a placeholder. |
+| chatterbox | expressive TTS (MIT) on an NVIDIA GPU, voice copied from a Kokoro sample reading our own text | best intonation; garbles 1–2 word lines (those fall back to Kokoro automatically); adds an inaudible AI watermark |
+| kokoro | open model (Apache 2.0), offline, fast | clean but flat; male voices are adult, so pitch up ×1.3–1.4 with formant shift |
+| edge | Microsoft neural (edge-tts) | needs the user's OK: the text goes to Microsoft |
+| sapi | Windows voice | placeholder only |
 
-**Pace:** these shorts never leave dead air. `story.json` sets `voice.rate` (edge-tts, "+12%" here, about 3.4 words a second) and `voice.gapSeconds` (0.1) between clips. Aim for 3.2-3.6 words a second; at 5 it sounds rushed, and only silent reaction shots hold longer, through `minSeconds`. If the voice feels slow, raise the rate before adding gaps.
+`npm run setup-voice` installs Kokoro, faster-whisper and (with a GPU) Chatterbox into `~/.venvs/blockrig-voice`.
 
-Choose with `VOICE_ENGINE=edge` or `VOICE_ENGINE=sapi` (default `sapi` until the user agrees to edge).
+## Pace and emotion
 
-You can't hear the result. Check durations and timings, then tell the user to listen. If they say it sounds off, render a few numbered samples that vary rate and pitch, and let them pick.
+- Pace is set by `tempo` (time-stretch, same pitch) and `gap`; `npm run check` reports wpm overall. Aim 150–170.
+- Panic/energy: end the line with "!". Put only the panicked sentence in its own shot or line, or the whole line rises.
+- Each clip is trimmed to the speech; pauses inside a line ("Rank... last!") stay.
+
+## You cannot hear it
+
+Every Chatterbox take is transcribed (faster-whisper) and retried until it says the script; the match is saved next
+to each clip and `npm run check` flags anything below 85%. Still: tell the user you can't hear, and when they
+dislike the voice, make numbered samples of the same line (vary voice, pitch, exaggeration, tempo) and let them
+pick. To compare with a reference video, put its script in out/ref (local only) and render it with each option at
+the reference's length.
 
 ## Music
 
-The music is composed in code: simple synthesized tracks for a mood, with nothing to download and nothing to credit. Themes: `mystery`, `sneaky`, `suspense`, `happy`, `chill`, `comedy`, `sad`, `action`, `epic`, `cyber`, `triumph`. Switch theme at the twist if the mood turns. Mix the music at about 0.25 volume under the voice.
-
-Never use chart songs or trending sounds; the user adds those in the posting app if they want.
+Synthesized in `scripts/music.mjs` (no downloads, nothing to credit): mystery, suspense, happy, comedy, sad, action,
+chill, cyber, triumph (add a mood by adding a line to `THEMES`). Set sections in docs/audio.md (`- s04: suspense`). Mixed at 0.2. Never
+chart songs; the user adds trending sounds when posting.

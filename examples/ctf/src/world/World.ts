@@ -3,7 +3,8 @@
 import * as THREE from "three";
 import { towerMaterial, domeMaterial, hologramMaterial, glyphAtlas, glyphRainMaterial, beam, burst, glow, searchlight, tick, setFog } from "./vfx";
 import { STREET, BAKERY, SCHOOL, PX, VAULT, TERMINAL, BARRIER_Z } from "./layout";
-import { rng } from "./lib/rng";
+import { rng } from "../kit/rng";
+import { Materials, dressTower, vendingMachine, bench, hydrant, trashBin, car, wires, createWeather, type Weather } from "../kit";
 
 export type WorldState = {
   receipt: number; sql: number; schoolGlitch: number;
@@ -43,7 +44,12 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), std("#0a0c16", { roughness: 0.22, metalness: 0.55 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; root.add(ground);
   const street = new THREE.Group(); root.add(street);
-  for (const s of [-1, 1]) boxAt(street, STREET.walkHalf - STREET.roadHalf, 0.25, 260, s * (STREET.roadHalf + STREET.walkHalf) / 2, 0.12, -60, std("#2a2c38", { roughness: 0.5, metalness: 0.2 }));
+  // textured, rain-wet road and sidewalks (UVs in studs, so the asphalt and slabs are at real scale)
+  const M = new Materials();
+  const asphalt = M.surface("asphalt", { base: "#23252e" }); asphalt.roughness = 0.18; asphalt.metalness = 0.35; asphalt.envMapIntensity = 1.6;
+  const slabs = M.surface("sidewalk", { base: "#4a4d5a" }); slabs.roughness = 0.3; slabs.metalness = 0.2;
+  const roadMesh = new THREE.Mesh(new THREE.BoxGeometry(STREET.roadHalf * 2, 0.04, 260), asphalt); roadMesh.position.set(0, 0.005, -60); roadMesh.receiveShadow = true; studUVs(roadMesh.geometry); street.add(roadMesh);
+  for (const s of [-1, 1]) { const pv = boxAt(street, STREET.walkHalf - STREET.roadHalf, 0.25, 260, s * (STREET.roadHalf + STREET.walkHalf) / 2, 0.12, -60, slabs); studUVs(pv.geometry); }
   for (let z = 30; z > -190; z -= 6) boxAt(street, 0.25, 0.03, 2.6, 0, 0.02, z, neon("#ffd166"), false);
   for (const s of [-1, 1]) boxAt(street, 0.12, 0.04, 260, s * (STREET.roadHalf - 0.3), 0.03, -60, neon(s < 0 ? "#19e3c4" : "#ff2e88"), false);
 
@@ -59,6 +65,8 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
       const tex = canvasTex(1024, 256, (g) => { g.fillStyle = "rgba(0,0,0,0)"; neonText(g, label, 512, 128, label.length > 18 ? 64 : 92, col); });
       holo(street, tex, 16, 4, col, x - side * (w / 2 + 0.2), Math.min(h - 5, 12 + r() * 20), z - d / 2, side < 0 ? Math.PI / 2 : -Math.PI / 2);
     }
+    // architecture: ledges, rooftop tanks / AC / antennas, a fire escape and a shop awning on the street side
+    if (z > -150) { const dt = dressTower(M, { x, z: z - d / 2, w, h, d, front: side < 0 ? 1 : -1, seed: i * 7 + (side > 0 ? 3 : 0), trim: "#1d2230" }); dt.traverse((o: any) => { if (o.isMesh) o.castShadow = false; }); street.add(dt); }
     void t; z -= d + 1.5 + r() * 3;
   }
   // street lamps with glows
@@ -67,6 +75,17 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
     const head = boxAt(street, 1.6, 0.25, 0.4, s * (STREET.roadHalf + 0.1), 7, z, neon(s < 0 ? "#b8f3ff" : "#ffd1f0"), false);
     const gl = glow(s < 0 ? "#7fe9ff" : "#ff7ccf", 6, 0.55); gl.position.copy(head.position); street.add(gl);
   }
+  // street furniture on the sidewalks (clear of the bakery, the school and the hero's spot) and cables overhead
+  const furniture = [vendingMachine, bench, hydrant, trashBin];
+  for (let z = 24, k = 0; z > -130; z -= 7 + r() * 5, k++) for (const s of [-1, 1]) {
+    if (s > 0 && z < 2 && z > -14) continue; if (s < 0 && z < 6 && z > -34) continue;
+    if (r() < 0.35) continue;
+    const f = furniture[Math.floor(r() * furniture.length)](M); f.position.set(s * (STREET.walkHalf - 1.2), 0.25, z); f.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; street.add(f);
+  }
+  for (let z = -45; z > -130; z -= 26) for (const s of [-1, 1]) { const c = car(M, ["#ff2e88", "#19e3c4", "#2b2b2b", "#ffd166"][Math.floor(r() * 4)], Math.floor(r() * 99)); c.position.set(s * (STREET.roadHalf - 2.6), 0, z + s * 6); street.add(c); }
+  for (let z = 14; z > -150; z -= 18) { const y = 15 + r() * 7; street.add(wires([new THREE.Vector3(-STREET.buildingsAt, y, z), new THREE.Vector3(STREET.buildingsAt, y + (r() - 0.5) * 3, z - 4)], 2.2, "#0a0a0f")); }
+  M.setNight(1);
+
   // glyph rain behind the city
   const rain = new THREE.Mesh(new THREE.PlaneGeometry(520, 300), glyphRainMaterial(atlas)); rain.position.set(0, 120, -240); street.add(rain);
   const rainP = new THREE.Mesh(new THREE.PlaneGeometry(520, 300), glyphRainMaterial(atlas, "#ff2e88")); rainP.position.set(PX, 120, -260); root.add(rainP);
@@ -167,9 +186,19 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
   Object.assign(moon.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 160 }); moon.shadow.bias = -0.0005; moon.shadow.normalBias = 0.04;
   root.add(moon, moon.target);
   const spillA = new THREE.PointLight("#19e3c4", 40, 30, 1.6), spillB = new THREE.PointLight("#ff2e88", 40, 30, 1.6); root.add(spillA, spillB);
+  // weather: rain and splashes around the camera, a lightning flash light and sky flash
+  const weather = createWeather();
+  root.add(weather.root);
+  const flashLight = new THREE.DirectionalLight("#d6e2ff", 0); root.add(flashLight, flashLight.target);
+  const sky = new THREE.Color("#060a1e"), skyFlash = new THREE.Color("#8d9bd6");
 
-  function update(s: WorldState, time: number, focus: THREE.Vector3) {
+  /** env: the shot's weather (from docs/story.md), seconds into the shot, and the camera the rain follows. */
+  function update(s: WorldState, time: number, focus: THREE.Vector3, env?: { weather: Weather; local: number; camera: THREE.Camera }) {
     tick(root, time);
+    let flash = 0;
+    if (env) { flash = weather.update(env.weather, time, env.local, env.camera).flash; }
+    flashLight.intensity = flash * 6; flashLight.position.copy(focus).add(new THREE.Vector3(-25, 70, 15)); flashLight.target.position.copy(focus);
+    (scene.background as THREE.Color).copy(sky).lerp(skyFlash, flash * 0.6);
     moon.position.set(focus.x + 25, 50, focus.z + 30); moon.target.position.copy(focus);
     spillA.position.set(focus.x - 7, 5, focus.z + 4); spillB.position.set(focus.x + 7, 5, focus.z - 2);
     // street props
@@ -200,4 +229,14 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
     const key = `${s.screen}:${s.screenReveal > 0 ? 1 : 0}`; if (key !== screenState) { screenState = key; drawScreen(s.screen, s.screenReveal); }
   }
   return { root, update, screenTex };
+}
+
+// UVs in studs for a box made here, so kit textures repeat at real scale
+function studUVs(g: THREE.BufferGeometry) {
+  const p = g.attributes.position, n = g.attributes.normal, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    if (ay >= ax && ay >= az) uv.setXY(i, p.getX(i), p.getZ(i)); else if (ax >= az) uv.setXY(i, p.getZ(i), p.getY(i)); else uv.setXY(i, p.getX(i), p.getY(i));
+  }
+  uv.needsUpdate = true;
 }

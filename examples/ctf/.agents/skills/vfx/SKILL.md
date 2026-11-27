@@ -1,30 +1,27 @@
 ---
 name: vfx
-description: Shaders and effects for this project - the hex force-field dome, holograms, glyph rain, beams, particle bursts, searchlights, glows, glitch cuts. Use when adding or changing an effect, or when a scene looks flat.
+description: Visual effects and shaders - glitch and flash cuts, lightning, particles (sparks, confetti, shards), beams, holograms, force fields, glows, vignette and grade, all frame-pure and without post-processing. Use when a beat needs punch, a scene looks flat, or the user asks for effects or shaders.
 ---
 
 # Effects
 
-All effects live in `src/vfx.ts` and `src/World.ts`, and all of them are pure functions of time:
-
-- `tick(root, time)` walks the scene and sets `uTime` on every material that has it.
-- Nothing advances on its own between frames.
-
-| Effect | How |
-|---|---|
-| `domeMaterial` | A hex grid with a fresnel rim and a scanning band. Uniforms: <br>• `uHit[8]`: impacts (xyz plus start time), drawn as expanding ripples. <br>• `uShatter`: discards hex cells by hash. <br>• `uAlarm`: tints it red. <br>• `uFlicker`: breaks it up before it falls. |
-| `hologramMaterial` | A canvas texture with scanlines, a moving glitch band, RGB split and an edge glow. Additive, with no depth write. |
-| `towerMaterial` | Procedural lit windows (a hash per cell) and distance fog, both in the shader, so each tower costs one draw call. |
-| `glyphRainMaterial` | Columns of glyphs from a canvas atlas, falling at per-column speeds. |
-| `beam(colour, r)` | A cylinder aimed with `userData.aim(from, to)`, with an additive core and halo. |
-| `burst(count, opts)` | GPU particles. Each point stores its own velocity and seed, and `userData.at(age)` sets the age uniform. Sparks, shards and confetti all use it. |
-| `glow()`, `searchlight()` | Additive sprites and cones, for light you can see. |
-
 ## Rules
 
-- **Glow:** use additive blending with `depthWrite: false` for anything that glows. Add `toneMapped: false` when it must stay saturated under AgX.
-- **Events are times, not state.** A hit 0.4 s into a shot is `uHit[i] = (x, y, z, shotStart + 0.4)`, and the shader works out its age. Rendering any frame again gives the same picture.
-- **No post-processing.**
-  - Glow comes from sprites and additive layers.
-  - Glitch cuts are CSS in `Story.tsx` (`GlitchCut`).
-- **Effects carry the story beats.** The dome flashes on each hit (s07), flickers on failure (s08) and shatters when the flag is found (s12). Tie each effect to a narration word.
+- **Frame-pure.** Effects are functions of time: events are *times* (`uHit = (x, y, z, startTime)`), and the shader computes age. Re-rendering any frame gives the same picture.
+- **No EffectComposer** (it blanks Remotion's frames). Glow = additive sprites/meshes with `depthWrite: false` and `toneMapped: false`; grade = AgX tone mapping + exposure; vignette, scanlines, flashes and glitches are CSS layers (`src/kit/Overlays.tsx`).
+- **Effects carry beats.** Tie each to a word or cut: flash on the storm (`FlashCut`), glitch on a twist (`GlitchCut`), lightning on "!" lines, confetti on the win.
+
+## In the kit
+
+| Effect | Where |
+|---|---|
+| rain, splashes, snow, fog, wet ground, lightning | `kit/weather.ts` (see the world skill) |
+| sky dome with sun glow and stars, flash light | `kit/lighting.ts` |
+| vignette, scanlines, glitch cut, flash cut, lightning flash | `kit/Overlays.tsx` |
+| lit windows and lamps at night | `Materials.setNight` |
+
+## Patterns to copy (from the CTF example, `../ctf/src/vfx.ts`)
+
+Shader particle bursts (`burst(count)` with per-point velocity and `userData.at(age)`), aimed beams, hologram
+material (scanlines, RGB split, glitch band), hex force-field dome (fresnel, impact ripples, shatter by hash),
+procedural tower windows, glyph rain. Move a pattern into `src/kit` when a second video needs it.

@@ -40,18 +40,35 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 <td width="300"><a href="docs/ctf.mp4"><img src="docs/ctf-preview.gif" width="300" alt="Everybody Plays CTF: in a neon city where everyone hacks, the last-ranked player finds the flag in the page source"></a></td>
 <td>
 
-**"Everybody Plays CTF"**: a 26-second, fast-paced short. It's set in a world where everyone, from the baker to the schoolkids, plays capture-the-flag hacking contests. Every character is dressed in code:
+**"Everybody Plays CTF"**: a narrated short set in a world where everyone, from the baker to the schoolkids, plays capture-the-flag hacking contests. Every character is dressed in code:
 
 - drawn Shirt/Pants templates;
 - layered hair, headphones and visors on Roblox attachments;
 - laptops welded to their hands, and IK hands on a keyboard.
 
-They play in a neon city with custom shaders: a hex force-field dome, holograms, glyph rain, beams and particles. Nothing is downloaded.
+They play in a rainy neon city with custom shaders: dressed towers, a lightning storm, a hex force-field dome, holograms, glyph rain, beams and particles. The expressive narrator runs offline (Chatterbox + Kokoro).
 
 ▶ [**Watch it with sound**](docs/ctf.mp4) · [How it's made](examples/ctf/README.md)
 
 </td>
 </tr></table>
+
+### Make your own: the video template
+
+[`examples/template`](examples/template/README.md) is a self-contained starting point for viral Roblox-style story
+shorts. `npm run new -- ../my-video "Title"` copies it. It contains:
+
+- **`docs/`, the source of truth:** the story and shot list, a look bible (cast, places, materials, weather), the audio plan, and a feedback log.
+- **A kit:**
+  - captions and voice timing;
+  - textured houses, rooms and streets built in code;
+  - weather (rain, storm, lightning, snow, fog) and times of day;
+  - camera recipes and debug compositions.
+- **Scripts:**
+  - offline expressive voices, with every take checked by speech recognition;
+  - CC0 and local-only Roblox asset fetchers;
+  - stills, render and preview.
+- **Agent skills,** one per stage.
 
 ## Scope
 

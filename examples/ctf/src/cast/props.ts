@@ -2,7 +2,7 @@
 // colour gradients (dark roots to lighter tips, plus highlight streaks) and a toon outline that matches the rig's.
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { rng } from "./lib/rng";
+import { rng } from "../kit/rng";
 
 const I3 = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 export const AT = (pos: number[]) => ({ rot: I3, pos });

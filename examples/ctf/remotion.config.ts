@@ -7,7 +7,9 @@ Config.setVideoImageFormat("jpeg");
 Config.setJpegQuality(95);
 Config.setOverwriteOutput(true);
 Config.setDefaultPremountInSeconds(2);
-// WebGL through ANGLE so shadows and post-processing render in headless Chrome
+// assets/ is the public folder: staticFile("audio/s01.wav") -> assets/audio/s01.wav
+Config.setPublicDir("assets");
+// WebGL through ANGLE so shadows render in headless Chrome the same as in Studio
 Config.setChromiumOpenGlRenderer("angle");
 Config.setConcurrency(2);
 
@@ -20,6 +22,4 @@ Config.overrideWebpackConfig((c) => ({
 
 // Windows: if the project path is too long for the bundled browser to start, put the path of a copy of
 // chrome-headless-shell.exe in a file named .browser-path
-if (existsSync(".browser-path")) {
-  Config.setBrowserExecutable(readFileSync(".browser-path", "utf8").trim());
-}
+if (existsSync(".browser-path")) Config.setBrowserExecutable(readFileSync(".browser-path", "utf8").trim());

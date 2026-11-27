@@ -1,7 +1,7 @@
 // Shaders and effects for the neon world. Every effect is a pure function of time (uniform uTime or values set
 // from the current frame), so Remotion can render any frame on its own.
 import * as THREE from "three";
-import { rng } from "./lib/rng";
+import { rng } from "../kit/rng";
 
 const FOG = { uFogColor: { value: new THREE.Color("#0a0f24") }, uFogNear: { value: 40 }, uFogFar: { value: 260 } };
 const fogGLSL = `uniform vec3 uFogColor; uniform float uFogNear; uniform float uFogFar; varying float vDepth;

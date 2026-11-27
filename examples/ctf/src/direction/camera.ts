@@ -1,9 +1,9 @@
 // One camera recipe per shot (position, look-at, lens, shake), eased over the shot. Targets follow the cast.
 import * as THREE from "three";
-import type { Cast } from "./characters";
-import type { Shot } from "./timeline";
-import { easeInOut, easeOut, lerp, rng } from "./lib/rng";
-import { BAKERY, SCHOOL, HERO_STREET, PX, VAULT, TERMINAL } from "./layout";
+import type { Cast } from "../cast/characters";
+import type { Shot } from "../kit";
+import { easeInOut, easeOut, lerp, rng } from "../kit/rng";
+import { BAKERY, SCHOOL, HERO_STREET, PX, VAULT, TERMINAL } from "../world/layout";
 
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 const mix = (a: THREE.Vector3, b: THREE.Vector3, t: number) => a.clone().lerp(b, t);
@@ -16,7 +16,7 @@ export function cameraFor(shot: Shot, p: number, local: number, cast: Cast): Cam
     case "s01": return { pos: mix(V(2, 78, 30), V(3, 4.5, 26), e), target: mix(V(0, 70, -150), V(0, 4, -24), e), fov: 50, shake: 0 };
     case "s02": return { pos: mix(V(4.4, 3.8, 2.6), V(5.2, 3.6, 1.2), e), target: V(BAKERY.x, 3.6, BAKERY.z), fov: 46, shake: 0 };
     case "s03": return { pos: mix(V(1.8, 1.4, -18.5), V(0.6, 1.6, -19.5), e), target: V(SCHOOL.x + 1.5, 3.6, SCHOOL.z), fov: 54, shake: 0 };
-    case "s04": { const h = head(hero.rig); return { pos: mix(h.clone().add(V(1.0, -1.4, 7.5)), h.clone().add(V(0.7, -1.0, 9.0)), e), target: mix(h.clone().add(V(0, -1.1, 0)), h.clone().add(V(0, -0.8, 0)), o), fov: 44, shake: 0 }; }
+    case "s04": { const h = head(hero.rig); return { pos: mix(h.clone().add(V(0.8, -1.3, 5.2)), h.clone().add(V(0.6, -1.0, 6.2)), e), target: mix(h.clone().add(V(0, -1.1, 0)), h.clone().add(V(0, -0.8, 0)), o), fov: 44, shake: 0 }; }
     case "s05": { const a = lerp(0.5, 0.15, e), r = 72; return { pos: V(PX + Math.sin(a) * r, lerp(5, 9, e), VAULT.z + Math.cos(a) * r), target: V(PX, 15, VAULT.z), fov: 50, shake: 0 }; }
     case "s06": return { pos: mix(V(PX + 3.5, 1.1, -4.2), V(PX + 2.5, 1.3, -2.5), e), target: V(PX, 4.6, 8), fov: 56, shake: 0 };
     case "s07": return { pos: mix(V(PX + 46, 9, 24), V(PX + 40, 11, 14), e), target: V(PX, 9, -10), fov: 56, shake: 0.16 };

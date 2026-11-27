@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { createRig, createFace } from "blockrig";
 import { hoodie, teamJacket, chefJacket, uniformShirt, tee, cargo, jeans, shorts } from "./wardrobe";
 import { hair, baseballCap, chefHat, headphones, visor, glasses, laptop, rankTag, outlined, AT, type HairStyle } from "./props";
-import { rng } from "./lib/rng";
+import { rng } from "../kit/rng";
 
 export type Person = { rig: any; face: any; tag: THREE.Sprite; laptop?: THREE.Object3D; name: string };
 export type Cast = { hero: Person; baker: Person; kids: Person[]; pros: Person[]; crowd: Person[]; all: Person[] };

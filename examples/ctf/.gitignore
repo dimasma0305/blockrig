@@ -3,8 +3,10 @@ dist
 out
 .browser-path
 .env
-# never commit downloaded third-party assets
-public/cc0/
-public/roblox/
-# generated audio (recreate with `npm run voice`)
-public/audio/
+# generated: rebuild with npm run docs / npm run voice
+src/generated/
+assets/audio/
+# downloaded third-party assets: never commit (see the assets skill)
+assets/cc0/
+assets/roblox/
+assets/textures/

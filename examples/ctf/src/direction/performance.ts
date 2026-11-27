@@ -1,19 +1,19 @@
 // Per-shot staging: where everyone stands, what they play, their faces, IK, tags and the world's state.
 // Everything is computed from the shot and the time, so any frame can be rendered on its own.
 import * as THREE from "three";
-import type { Cast, Person } from "./characters";
-import type { Shot } from "./timeline";
-import type { WorldState } from "./World";
-import { poseAt, groundRig, FEET, type Layer } from "./lib/pose";
-import * as C from "./clips";
-import { clamp01, easeInOut, easeOut, lerp } from "./lib/rng";
-import { BAKERY, SCHOOL, HERO_STREET, PX, VAULT, TERMINAL, BARRIER_Z } from "./layout";
-import { SHOTS } from "./timeline";
+import type { Cast, Person } from "../cast/characters";
+import type { Shot } from "../kit";
+import type { WorldState } from "../world/World";
+import { poseAt, groundRig, FEET, type Layer } from "../kit/pose";
+import * as C from "../cast/clips";
+import { clamp01, easeInOut, easeOut, lerp } from "../kit/rng";
+import { BAKERY, SCHOOL, HERO_STREET, PX, VAULT, TERMINAL, BARRIER_Z } from "../world/layout";
+import { SHOTS } from "../story";
 
 const PI = Math.PI;
 const at = (id: string) => SHOTS.find((s) => s.id === id)!;
-function place(p: Person, x: number, z: number, rotY: number) { p.rig.object.visible = true; p.rig.object.position.set(x, 0, z); p.rig.object.rotation.set(0, rotY, 0); }
-function act(p: Person, layers: Layer[], t: number, expr?: string) {
+export function place(p: Person, x: number, z: number, rotY: number) { p.rig.object.visible = true; p.rig.object.position.set(x, 0, z); p.rig.object.rotation.set(0, rotY, 0); }
+export function act(p: Person, layers: Layer[], t: number, expr?: string) {
   poseAt(p.rig, layers, t);
   if (expr) p.face.set(expr, { fade: 0 });
   groundRig(p.rig, 0, FEET);
@@ -63,6 +63,8 @@ export function perform(shot: Shot, local: number, p: number, time: number, cast
   if (id === "s04") {
     act(hero, [{ clip: C.idle }, { clip: C.slump, at: 0.45, fade: 0.35 }], local, local < 0.45 ? "neutral" : "sad");
     if (local > 0.55 && Math.floor(local * 14) % 3 === 0) tag(hero, "#8,000,000,000", "#ffffff");
+    // keep the pavement clear between the close-up camera (in front, +Z) and the hero
+    crowd.forEach((c) => { const q = c.rig.object.position; if (Math.abs(q.x - HERO_STREET.x) < 3 && q.z > HERO_STREET.z - 1.5 && q.z < HERO_STREET.z + 9) c.rig.object.visible = false; });
     focus.set(HERO_STREET.x, 3, HERO_STREET.z);
   }
   if (id === "s14") {
