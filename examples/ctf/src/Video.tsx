@@ -5,7 +5,8 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { Captions, Soundtrack, Vignette, Scanlines, GlitchCut, LightningFlash, DebugOverlay } from "./kit";
+import { Captions, Soundtrack, Vignette, Scanlines, GlitchCut, LightningFlash, DebugOverlay, useAssetLibrary, type AssetLibrary } from "./kit";
+import { ASSETS } from "./world/assets";
 import { T, weatherAt } from "./story";
 import { buildCast } from "./cast/characters";
 import { buildWorld } from "./world/World";
@@ -14,11 +15,11 @@ import { cameraFor, applyCamera } from "./direction/camera";
 
 export type VideoProps = { debug?: boolean };
 
-function Scene() {
+function Scene({ lib }: { lib: AssetLibrary }) {
   const frame = useCurrentFrame(), time = frame / T.FPS;
   const { camera, gl, scene } = useThree() as any;
   // straight to the canvas with AgX tone mapping and soft shadows (an EffectComposer blanks Remotion's frames)
-  const world = useMemo(() => { gl.toneMapping = THREE.AgXToneMapping; gl.toneMappingExposure = 1.25; gl.shadowMap.type = THREE.PCFShadowMap; return buildWorld(gl, scene); }, [gl, scene]);
+  const world = useMemo(() => { gl.toneMapping = THREE.AgXToneMapping; gl.toneMappingExposure = 1.25; gl.shadowMap.type = THREE.PCFShadowMap; return buildWorld(gl, scene, lib); }, [gl, scene, lib]);
   const cast = useMemo(() => buildCast(), []);
   const { shot, local, p } = T.shotAt(time);
   const { state, focus } = perform(shot, local, p, time, cast);
@@ -41,13 +42,14 @@ function Lightning() {
 
 export const Video: React.FC<VideoProps> = ({ debug }) => {
   const { width, height } = useVideoConfig();
+  const lib = useAssetLibrary(ASSETS); // downloaded models and textures, loaded before the canvas mounts
   return (
     <AbsoluteFill style={{ background: "#060a1e" }}>
-      <ThreeCanvas width={width} height={height} shadows dpr={1}
+      {lib && <ThreeCanvas width={width} height={height} shadows dpr={1}
         gl={{ antialias: true, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
         camera={{ fov: 50, near: 0.05, far: 1200, position: [0, 10, 30] }}>
-        <Scene />
-      </ThreeCanvas>
+        <Scene lib={lib} />
+      </ThreeCanvas>}
       <Lightning />
       <Scanlines alpha={0.1} />
       <Vignette strength={0.55} />

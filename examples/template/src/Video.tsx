@@ -5,7 +5,8 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { Captions, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera } from "./kit";
+import { Captions, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera, useAssetLibrary, type AssetLibrary } from "./kit";
+import { ASSETS } from "./world/assets";
 import { T, weatherAt, daylightAt } from "./story";
 import { buildCast } from "./cast/characters";
 import { buildWorld } from "./world/World";
@@ -14,11 +15,11 @@ import { cameraFor } from "./direction/camera";
 
 export type VideoProps = { debug?: boolean };
 
-function Scene() {
+function Scene({ lib }: { lib: AssetLibrary }) {
   const frame = useCurrentFrame(), time = frame / T.FPS;
   const { camera, gl, scene } = useThree() as any;
   // straight to the canvas with AgX tone mapping and soft shadows (an EffectComposer blanks Remotion's frames)
-  const world = useMemo(() => { gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap; return buildWorld(gl, scene); }, [gl, scene]);
+  const world = useMemo(() => { gl.toneMapping = THREE.AgXToneMapping; gl.shadowMap.type = THREE.PCFShadowMap; return buildWorld(gl, scene, lib); }, [gl, scene, lib]);
   const cast = useMemo(() => buildCast(), []);
   const { shot, local, p } = T.shotAt(time);
   const state = perform(shot, local, p, cast, world);
@@ -42,13 +43,16 @@ function Lightning() {
 
 export const Video: React.FC<VideoProps> = ({ debug }) => {
   const { width, height } = useVideoConfig();
+  // downloaded models, skies and textures: loaded before the canvas mounts (delayRender holds the render), because
+  // ThreeCanvas only redraws on frame changes, not on state changes inside it
+  const lib = useAssetLibrary(ASSETS);
   return (
     <AbsoluteFill style={{ background: "#0b0d14" }}>
-      <ThreeCanvas width={width} height={height} shadows dpr={1}
+      {lib && <ThreeCanvas width={width} height={height} shadows dpr={1}
         gl={{ antialias: true, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
         camera={{ fov: 50, near: 0.1, far: 2000, position: [0, 10, 30] }}>
-        <Scene />
-      </ThreeCanvas>
+        <Scene lib={lib} />
+      </ThreeCanvas>}
       <Lightning />
       <Vignette strength={0.45} />
       <FlashCut timeline={T} shots={["s04"]} />

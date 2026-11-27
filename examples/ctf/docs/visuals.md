@@ -21,20 +21,21 @@ Neon cyber city at night: dark navy `#060a1e`, teal `#19e3c4`, magenta `#ff2e88`
 
 ## Locations
 
-| Id | What | Notes |
+| Id | What | Built from |
 |---|---|---|
-| street | neon canyon of towers along Z: shader windows, neon edges, holo billboards, bakery, school, scoreboard | towers dressed with ledges, rooftop water tanks, AC units, antennas, fire escapes, shop awnings; vending machines, benches, hydrants, bins, parked cars, overhead cables |
-| plaza (x = 400) | the Vault: tiled grid floor, hazard barriers, searchlights, hex force-field dome, terminal | drones, beams, sparks, shards, confetti |
+| street | neon canyon along Z: shops near the street, skyscrapers further in, street lights, dumpsters, cones, traffic lights, signs, parked cars, cables overhead; bakery, school, sky scoreboard, holo billboards | Kenney City Kit Commercial (`building-a`…`j`, `building-skyscraper-a`…`e`, darkened for night, neon edges added), City Kit Roads (`light-square`, `dumpster`, `construction-cone`, `traffic-light`, `road-sign-street`, `construction-barrier`), Car Kit (`sedan`, `taxi`, `police`, `suv`). Story pieces in code: bakery, school, scoreboard, holograms, glyph rain, cables |
+| plaza (x = 400) | the Vault: grid floor, hazard barriers, searchlights, hex force-field dome, terminal, drones, beams | code: these are the story's effects (`src/world/vfx.ts`) |
+
+All downloads: `src/world/assets.ts` (names → files), `assets/manifest.json` (sources), `assets/credits.json` (licences, all CC0).
 
 ## Materials and textures
 
-| Surface | Texture |
-|---|---|
-| road | kit `asphalt`, dark, rain-wet (roughness 0.18, metalness 0.35) + neon lane lines |
-| sidewalks | kit `sidewalk`, dark slabs, wet |
-| towers | shader windows (`towerMaterial`), plaster trim ledges |
-| rooftop tanks, benches | wood; AC units, vending machines: metal / paint |
-| plaza floor | neon grid canvas texture |
+| Surface | Texture | Source |
+|---|---|---|
+| road | `asphalt`, darkened, wet (roughness 0.35, metalness 0.3) + neon lane lines | Poly Haven `asphalt_02` |
+| sidewalks | `concrete`, darkened | Poly Haven `brushed_concrete` |
+| buildings, props, cars | their own Kenney colour maps, darkened ×0.45 for night | Kenney |
+| plaza floor | neon grid canvas texture | code |
 
 ## Weather and time
 

@@ -4,7 +4,8 @@ import * as THREE from "three";
 import { towerMaterial, domeMaterial, hologramMaterial, glyphAtlas, glyphRainMaterial, beam, burst, glow, searchlight, tick, setFog } from "./vfx";
 import { STREET, BAKERY, SCHOOL, PX, VAULT, TERMINAL, BARRIER_Z } from "./layout";
 import { rng } from "../kit/rng";
-import { Materials, dressTower, vendingMachine, bench, hydrant, trashBin, car, wires, createWeather, type Weather } from "../kit";
+import { wires, createWeather, type Weather, type AssetLibrary } from "../kit";
+import { SHOPS, SKYSCRAPERS } from "./assets";
 
 export type WorldState = {
   receipt: number; sql: number; schoolGlitch: number;
@@ -30,7 +31,7 @@ function holo(parent: THREE.Object3D, tex: THREE.Texture, w: number, h: number, 
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), hologramMaterial(tex, colour)); m.position.set(x, y, z); m.rotation.y = ry; parent.add(m); return m;
 }
 
-export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
+export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, lib: AssetLibrary) {
   const root = new THREE.Group(), r = rng(7), atlas = glyphAtlas();
   setFog(30, 230, "#0b1030");
   scene.background = new THREE.Color("#060a1e");
@@ -44,47 +45,48 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), std("#0a0c16", { roughness: 0.22, metalness: 0.55 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; root.add(ground);
   const street = new THREE.Group(); root.add(street);
-  // textured, rain-wet road and sidewalks (UVs in studs, so the asphalt and slabs are at real scale)
-  const M = new Materials();
-  const asphalt = M.surface("asphalt", { base: "#23252e" }); asphalt.roughness = 0.18; asphalt.metalness = 0.35; asphalt.envMapIntensity = 1.6;
-  const slabs = M.surface("sidewalk", { base: "#4a4d5a" }); slabs.roughness = 0.3; slabs.metalness = 0.2;
-  const roadMesh = new THREE.Mesh(new THREE.BoxGeometry(STREET.roadHalf * 2, 0.04, 260), asphalt); roadMesh.position.set(0, 0.005, -60); roadMesh.receiveShadow = true; studUVs(roadMesh.geometry); street.add(roadMesh);
-  for (const s of [-1, 1]) { const pv = boxAt(street, STREET.walkHalf - STREET.roadHalf, 0.25, 260, s * (STREET.roadHalf + STREET.walkHalf) / 2, 0.12, -60, slabs); studUVs(pv.geometry); }
+  // rain-wet road and sidewalks: Poly Haven asphalt and concrete (CC0), darkened for night
+  const asphalt = lib.pbr("asphalt", { repeat: [STREET.roadHalf * 2 / 6, 260 / 6], color: "#5a5d6a" }); asphalt.roughness = 0.35; asphalt.metalness = 0.3; asphalt.envMapIntensity = 1.6;
+  const slabs = lib.pbr("concrete", { repeat: [(STREET.walkHalf - STREET.roadHalf) / 4, 260 / 4], color: "#6a6d7a" }); slabs.roughness = 0.5;
+  const roadMesh = new THREE.Mesh(new THREE.BoxGeometry(STREET.roadHalf * 2, 0.04, 260), asphalt); roadMesh.position.set(0, 0.005, -60); roadMesh.receiveShadow = true; street.add(roadMesh);
+  for (const s of [-1, 1]) boxAt(street, STREET.walkHalf - STREET.roadHalf, 0.25, 260, s * (STREET.roadHalf + STREET.walkHalf) / 2, 0.12, -60, slabs);
   for (let z = 30; z > -190; z -= 6) boxAt(street, 0.25, 0.03, 2.6, 0, 0.02, z, neon("#ffd166"), false);
   for (const s of [-1, 1]) boxAt(street, 0.12, 0.04, 260, s * (STREET.roadHalf - 0.3), 0.03, -60, neon(s < 0 ? "#19e3c4" : "#ff2e88"), false);
 
-  // ---- towers along both sides, neon edges on top, holo billboards ----
+  // ---- buildings along both sides (Kenney City Kit Commercial, CC0): shops near the street, skyscrapers further
+  // in; neon edges on top and holo billboards keep the CTF look. Kenney's daytime colours are darkened for night.
   const billboards = ["CTF WORLD FINAL // TONIGHT", "pwn or be pwned", "flag{n0t_th1s_0ne}", "RANKINGS LIVE", "SHELLS 2 FOR 1", "sudo make me a sandwich"];
+  const night = new Set<THREE.Material>();
   for (const side of [-1, 1]) for (let z = 26, i = 0; z > -190; i++) {
-    const w = 9 + r() * 6, d = 9 + r() * 5, h = 18 + r() * (z < -60 ? 90 : 55), x = side * (STREET.buildingsAt + w / 2 + r() * 2);
-    const t = boxAt(street, w, h, d, x, h / 2, z - d / 2, towerMaterial(i + side * 50, ["#141a35", "#1c1532", "#10202e"][i % 3]), false);
+    const tall = z < -40 || r() < 0.35, name = tall ? SKYSCRAPERS[Math.floor(r() * SKYSCRAPERS.length)] : SHOPS[Math.floor(r() * SHOPS.length)];
+    const b = lib.model(name, { scale: tall ? 11 + r() * 3 : 10, shadows: false }), size = b.userData.size as THREE.Vector3;
+    const along = size.x, deep = size.z, h = size.y, x = side * (STREET.buildingsAt + deep / 2 + r() * 1.5), zc = z - along / 2;
+    b.position.set(x, 0, zc); b.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2; street.add(b);
+    b.traverse((o: any) => { if (o.isMesh && !night.has(o.material)) { night.add(o.material); o.material.color.multiplyScalar(0.45); o.material.envMapIntensity = 0.6; } });
     const edge = [neon("#19e3c4"), neon("#ff2e88"), neon("#ffd166")][(i + (side > 0 ? 1 : 0)) % 3];
-    boxAt(street, w + 0.3, 0.3, 0.3, x, h, z - 0.1, edge, false); boxAt(street, 0.3, h, 0.3, x - side * w / 2, h / 2, z - 0.1, edge, false);
+    boxAt(street, 0.3, 0.3, along + 0.3, x - side * deep / 2, h, zc, edge, false); boxAt(street, 0.3, h, 0.3, x - side * deep / 2, h / 2, z - 0.1, edge, false);
     if (i % 3 === 1 && z > -150) {
       const label = billboards[(i + (side > 0 ? 3 : 0)) % billboards.length], col = side < 0 ? "#19e3c4" : "#ff2e88";
       const tex = canvasTex(1024, 256, (g) => { g.fillStyle = "rgba(0,0,0,0)"; neonText(g, label, 512, 128, label.length > 18 ? 64 : 92, col); });
-      holo(street, tex, 16, 4, col, x - side * (w / 2 + 0.2), Math.min(h - 5, 12 + r() * 20), z - d / 2, side < 0 ? Math.PI / 2 : -Math.PI / 2);
+      holo(street, tex, 16, 4, col, x - side * (deep / 2 + 0.4), Math.min(h - 5, 12 + r() * 20), zc, side < 0 ? Math.PI / 2 : -Math.PI / 2);
     }
-    // architecture: ledges, rooftop tanks / AC / antennas, a fire escape and a shop awning on the street side
-    if (z > -150) { const dt = dressTower(M, { x, z: z - d / 2, w, h, d, front: side < 0 ? 1 : -1, seed: i * 7 + (side > 0 ? 3 : 0), trim: "#1d2230" }); dt.traverse((o: any) => { if (o.isMesh) o.castShadow = false; }); street.add(dt); }
-    void t; z -= d + 1.5 + r() * 3;
+    z -= along + 1.5 + r() * 2.5;
   }
-  // street lamps with glows
+  // street lights (Kenney City Kit Roads) with glows
   for (let z = 22; z > -120; z -= 14) for (const s of [-1, 1]) {
-    boxAt(street, 0.25, 7, 0.25, s * (STREET.roadHalf + 0.8), 3.5, z, std("#1c1f2b", { metalness: 0.6 }));
-    const head = boxAt(street, 1.6, 0.25, 0.4, s * (STREET.roadHalf + 0.1), 7, z, neon(s < 0 ? "#b8f3ff" : "#ffd1f0"), false);
-    const gl = glow(s < 0 ? "#7fe9ff" : "#ff7ccf", 6, 0.55); gl.position.copy(head.position); street.add(gl);
+    const l = lib.model("streetLight", { scale: 12, shadows: false }); l.position.set(s * (STREET.roadHalf + 0.8), 0.25, z); l.rotation.y = s < 0 ? -Math.PI / 2 : Math.PI / 2; street.add(l);
+    const gl = glow(s < 0 ? "#7fe9ff" : "#ff7ccf", 6, 0.55); gl.position.set(s * (STREET.roadHalf - 0.6), 7, z); street.add(gl);
   }
-  // street furniture on the sidewalks (clear of the bakery, the school and the hero's spot) and cables overhead
-  const furniture = [vendingMachine, bench, hydrant, trashBin];
+  // street props (Kenney City Kit Roads: dumpsters, cones, traffic lights, signs), clear of the bakery, the school and
+  // the hero's spot; parked cars (Kenney Car Kit) further down; cables overhead
+  const props = ["dumpster", "cone", "trafficLight", "signStreet", "barrier"];
   for (let z = 24, k = 0; z > -130; z -= 7 + r() * 5, k++) for (const s of [-1, 1]) {
     if (s > 0 && z < 2 && z > -14) continue; if (s < 0 && z < 6 && z > -34) continue;
     if (r() < 0.35) continue;
-    const f = furniture[Math.floor(r() * furniture.length)](M); f.position.set(s * (STREET.walkHalf - 1.2), 0.25, z); f.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; street.add(f);
+    const f = lib.model(props[Math.floor(r() * props.length)], { scale: 10, shadows: false }); f.position.set(s * (STREET.walkHalf - 1.4), 0.25, z); f.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; street.add(f);
   }
-  for (let z = -45; z > -130; z -= 26) for (const s of [-1, 1]) { const c = car(M, ["#ff2e88", "#19e3c4", "#2b2b2b", "#ffd166"][Math.floor(r() * 4)], Math.floor(r() * 99)); c.position.set(s * (STREET.roadHalf - 2.6), 0, z + s * 6); street.add(c); }
+  for (let z = -45; z > -130; z -= 26) for (const s of [-1, 1]) { const c = lib.model(["sedan", "taxi", "police", "suv"][Math.floor(r() * 4)], { scale: 3.5 }); c.position.set(s * (STREET.roadHalf - 2.6), 0, z + s * 6); c.rotation.y = s > 0 ? Math.PI : 0; street.add(c); }
   for (let z = 14; z > -150; z -= 18) { const y = 15 + r() * 7; street.add(wires([new THREE.Vector3(-STREET.buildingsAt, y, z), new THREE.Vector3(STREET.buildingsAt, y + (r() - 0.5) * 3, z - 4)], 2.2, "#0a0a0f")); }
-  M.setNight(1);
 
   // glyph rain behind the city
   const rain = new THREE.Mesh(new THREE.PlaneGeometry(520, 300), glyphRainMaterial(atlas)); rain.position.set(0, 120, -240); street.add(rain);
@@ -231,12 +233,3 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
   return { root, update, screenTex };
 }
 
-// UVs in studs for a box made here, so kit textures repeat at real scale
-function studUVs(g: THREE.BufferGeometry) {
-  const p = g.attributes.position, n = g.attributes.normal, uv = g.attributes.uv;
-  for (let i = 0; i < p.count; i++) {
-    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
-    if (ay >= ax && ay >= az) uv.setXY(i, p.getX(i), p.getZ(i)); else if (ax >= az) uv.setXY(i, p.getZ(i), p.getY(i)); else uv.setXY(i, p.getX(i), p.getY(i));
-  }
-  uv.needsUpdate = true;
-}

@@ -36,11 +36,11 @@ export type Lighting = {
   update(o: { time: Daylight; overcast?: number; flash?: number; focus?: THREE.Vector3 }): void;
 };
 
-export function createLighting({ shadowSize = 40, shadowMap = 2048 } = {}): Lighting {
+export function createLighting({ shadowSize = 40, shadowMap = 2048, sky: showSky = true } = {}): Lighting {
   const root = new THREE.Group(); root.name = "Lighting";
   const uniforms = { uTop: { value: new THREE.Color() }, uHorizon: { value: new THREE.Color() }, uGround: { value: new THREE.Color() }, uSun: { value: new THREE.Color() }, uSunDir: { value: new THREE.Vector3() }, uStars: { value: 0 }, uFlash: { value: 0 }, uOvercast: { value: 0 } };
   const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 32, 16), new THREE.ShaderMaterial({ uniforms, vertexShader: SKY_VS, fragmentShader: SKY_FS, side: THREE.BackSide, depthWrite: false, fog: false }));
-  sky.renderOrder = -1; sky.frustumCulled = false; root.add(sky);
+  sky.renderOrder = -1; sky.frustumCulled = false; sky.visible = showSky; root.add(sky); // off when an HDRI is the sky
   const hemi = new THREE.HemisphereLight("#ffffff", "#444444", 1); root.add(hemi);
   const sun = new THREE.DirectionalLight("#ffffff", 3);
   sun.castShadow = true; sun.shadow.mapSize.set(shadowMap, shadowMap); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;

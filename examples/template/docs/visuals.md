@@ -26,31 +26,26 @@ Every character needs: a body shape, drawn Shirt/Pants, hair or headwear, and on
 
 ## Locations
 
-| Id | What | Built by | Notes |
-|---|---|---|---|
-| street | suburban street, houses set back behind lawns, few windows | `suburbanStreet()` in src/kit/structures.ts | hero's house is the first on the right |
-| bedroom | kid's bedroom: bed, lamp, desk, shelf, rug, window | `room()` + props | open side faces the camera (+Z) |
+| Id | What | Built from |
+|---|---|---|
+| street | suburban street: houses set back behind lawns, picket fences, trees, planters, street lights, a stop sign, parked cars; clouds and birds overhead; a dog | Kenney City Kit Suburban (`building-type-*`, `fence`, `tree-*`, `planter`), City Kit Roads (`road-straight`, `road-crossing`, `light-curved`, `road-sign-stop`), Car Kit (`sedan`, `suv`, `taxi`), Kenney platformer `cloud`; poly.pizza bird (CC-BY, credit) and Shiba Inu (Quaternius, CC0, animated). The hero's house is the third on the right; its yard has no fence |
+| bedroom | kid's bedroom, open towards the camera | Kenney Furniture Kit: `wall`, `wallWindow`, `bedSingle`, `pillow`, `bear`, `sideTable`, `lampRoundTable`, `desk`, `computerScreen`, `chairDesk`, `bookcaseOpen`, `books`, `rugRectangle`, `pottedPlant` |
+
+All of them: `src/world/assets.ts` (names → files), `assets/manifest.json` (sources), `assets/credits.json` (licences).
 
 ## Materials and textures
 
-Every surface has a texture at its real size (UVs are in studs). Flat colour is only for small trims and car paint.
+Downloaded models bring their own textures (Kenney colour maps). Large surfaces use CC0 PBR sets:
 
-| Surface | Texture | Notes |
+| Surface | Texture | Source |
 |---|---|---|
-| road | `asphalt` + `roadMarkings()` | cracks and patches; turns shiny when wet |
-| sidewalk, paths | `sidewalk` | 4-stud slabs; gets wet |
-| lawns | `grass` | blades and a few flowers |
-| house walls | `siding` or `brick` | colour per house, seeded |
-| roofs | `shingles` | dark colours |
-| doors, fences, furniture | `wood` | planks with grain |
-| bedroom walls | `plaster` | |
-| bedroom floor | `wood` (or `carpet`, `tile`) | |
-| bed linen, sofa | `fabric` (plaid when given an accent) | |
-| rug | `carpet` | |
-| lamp shade | `lampshade` | glows at night (emissive) |
-| trees | `bark`, `leaves` | |
+| road | Kenney road tiles (markings included) | City Kit Roads |
+| sidewalks, front paths | `concrete` | Poly Haven `brushed_concrete` |
+| lawns, ground | `grass` | ambientCG `Grass004` |
+| bedroom floor | `planks` | Poly Haven `brown_planks_04` |
+| sky and reflections | HDRI per time of day | Poly Haven `kloofendal_48d_partly_cloudy_puresky` (day), `qwantani_dusk_2_puresky` (golden), `overcast_soil_puresky` (storm), `rogland_clear_night` (night) |
 
-To use photo-real CC0 textures instead (Poly Haven / ambientCG), list them in `assets/manifest.json`, run `npm run assets`, and map them in `src/kit/textures.ts` (see the materials skill). Keep them stylised enough to match blocky characters.
+Code-built fallbacks (`src/kit/structures.ts`, `src/kit/textures.ts`) are not used in this video.
 
 ## Weather and time of day
 
@@ -64,7 +59,7 @@ Set per shot in docs/story.md (`weather:`, `time:`; `a -> b` changes across the 
 | storm | full | – | heavy | full | strong | strikes |
 | snow / blizzard | – | yes | some / heavy | – | light / strong | – |
 
-Times: day, golden, dusk, night (windows and lamps light up), storm (flat grey light).
+Times: day, golden, dusk, night, storm: each picks its HDRI sky (background + reflections); the sun light follows the time for shadows. Rain, splashes, lightning, fog and wet ground are code (they follow the camera).
 
 ## Camera language
 

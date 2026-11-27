@@ -11,6 +11,18 @@ Buildings, roads, lamps, fences, trees, cars, furniture, clouds, birds and skies
 (`assets` skill: CC0 model kits, Poly Haven HDRI skies with real sun and clouds, PBR textures). Place them with
 GLTFLoader inside `delayRender`. The code builders below are the fallback when no asset fits; say why in docs/visuals.md.
 
+```ts
+// src/world/assets.ts lists names -> files; Video.tsx loads them (useAssetLibrary) before the canvas mounts
+const house = lib.model("building-type-a", { scale: 15 });        // Kenney city kits: 1 unit = 15 studs
+const bed = lib.model("bed", { scale: 5.5 });                       // Kenney furniture: ~5.5
+const dog = lib.model("dog", { height: 2.6 }); lib.pose(dog, "Walk", local); // fit by size; glTF animation, frame-pure
+scene.background = lib.sky("day");                                  // Poly Haven HDRI (also PMREM for reflections)
+const grass = lib.pbr("grass", { repeat: [w / 6, d / 6] });         // PBR set at real size
+```
+
+Measure an unknown model first: `node scripts/asset-sizes.mjs assets/kenney/<kit>/<model>.glb` (size, animations).
+Keep cameras on the inside of fences and hedges, or leave the hero's own lot open.
+
 ## Structure fallback (src/kit/structures.ts)
 
 Scale: a character is ~5 studs, a door ~7, a storey ~10. Everything is seeded and textured.

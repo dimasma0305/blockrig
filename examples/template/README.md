@@ -7,6 +7,7 @@ A self-contained project for narrated vertical shorts made with **BlockRig** cha
 cd examples/template
 npm run new -- ../my-video "My Video"
 cd ../my-video && npm install
+npm run assets        # download the models, skies and textures in assets/manifest.json (Kenney, Poly Haven, ambientCG, poly.pizza)
 npm run setup-voice   # once per machine: offline voices (Kokoro; Chatterbox with an NVIDIA GPU)
 ```
 
@@ -20,9 +21,10 @@ npm run stills    # out/contact-sheet.jpg
 npm run render    # out/<slug>.mp4
 ```
 
-The sample story, "The Rain Knows" (*In this town, it rains every time someone lies*), shows every system: a textured
-suburban street and bedroom built in code, drawn clothes and hair, faces, sitting, pointing, a storm with lightning,
-wet ground, golden hour, a lone rain cloud, an expressive voice with panicked "!" lines.
+The sample story, "The Rain Knows" (*In this town, it rains every time someone lies*), shows every system: a suburban
+street and bedroom built from downloaded CC0 assets (Kenney houses, roads, cars, furniture; Poly Haven HDRI skies and
+textures; clouds, birds and an animated dog), drawn clothes and hair, faces, a storm with lightning, wet ground,
+golden hour, a lone rain cloud, and an expressive narrator with an emotion per line.
 
 | Folder | What |
 |---|---|
@@ -34,5 +36,6 @@ wet ground, golden hour, a lone rain cloud, an expressive voice with panicked "!
 | `scripts/` | docs compiler, voice engines and setup, asset and Roblox fetchers, stills, render, preview, checks, new-video |
 | `.agents/skills/` | one skill per stage, for coding agents ([`AGENTS.md`](AGENTS.md) is the entry point) |
 
-Everything committed is original (MIT). Downloaded CC0 assets keep their licences next to them; Roblox catalog items
-are for local use only and never committed or published.
+Everything committed is original (MIT). Downloads are never committed; `assets/credits.json` lists each one's source
+and licence, and `npm run assets` prints the credits a video description needs (the sample's bird is CC-BY 3.0,
+"Bird" by Poly by Google via poly.pizza). Roblox catalog items are for local use only and never committed or published.

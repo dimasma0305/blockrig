@@ -10,3 +10,10 @@ assets/audio/
 assets/cc0/
 assets/roblox/
 assets/textures/
+
+# downloaded assets (npm run assets)
+assets/kenney/
+assets/github/
+assets/hdri/
+assets/polypizza/
+assets/credits.json

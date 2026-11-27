@@ -1,6 +1,6 @@
 # CTF example: "Everybody Plays CTF"
 
-A 26-second vertical short (1080×1920, 60 fps) set in a world where everyone, from bakers to schoolkids, plays capture-the-flag hacking competitions. Everything on screen is made in code: the cast with **BlockRig**, a neon city with custom shaders and particle effects in **three.js**, all rendered by **Remotion**. Nothing is downloaded for the picture.
+A 30-second vertical short (1080×1920, 60 fps) set in a world where everyone, from bakers to schoolkids, plays capture-the-flag hacking competitions. The cast is made with **BlockRig**; the city is built from downloaded CC0 assets (Kenney City Kit Commercial, Roads and Car Kit; Poly Haven textures) plus custom shaders and particle effects in **three.js**, all rendered by **Remotion**.
 
 [![Everybody Plays CTF, preview](../../docs/ctf-preview.gif)](../../docs/ctf.mp4)
 
@@ -15,6 +15,7 @@ Made from [`examples/template`](../template/README.md), so it works the same way
 ```sh
 cd examples/ctf
 npm install            # also links the library from ../.. (blockrig: file:../..)
+npm run assets         # Kenney kits and Poly Haven textures (CC0) listed in assets/manifest.json
 npm run setup-voice    # once per machine: Kokoro + Chatterbox voices (needs an NVIDIA GPU for Chatterbox)
 npm run voice          # narration from docs/story.md + docs/audio.md, timings, music
 npm run check          # every take says its line, pace, captions
@@ -60,4 +61,5 @@ For agents: [`AGENTS.md`](AGENTS.md) holds the rules. `.agents/skills/` has one 
 
 - **Code, story, characters, music, shaders:** original, MIT like the rest of BlockRig.
 - **Voice:** generated with Chatterbox (Resemble AI, MIT; its output carries an inaudible watermark) from a Kokoro voice (Apache 2.0).
+- **Models and textures:** Kenney (kenney.nl) and Poly Haven, CC0; listed in `assets/credits.json` after `npm run assets`.
 - **Font:** Montserrat, SIL Open Font License, via `@remotion/google-fonts`.

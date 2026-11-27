@@ -2,7 +2,7 @@
 
 What the user asked for and what changed, newest first.
 
-- 2026-11-27 — "maximise online assets instead of reinventing (expressions, clothes, hair, models, environment, weather, clouds, sun, birds, road, lamp, wood, grass)" → assets-first rule in AGENTS.md and every skill; asset sources being surveyed.
+- 2026-11-27 — "maximise online assets instead of reinventing (expressions, clothes, hair, models, environment, weather, clouds, sun, birds, road, lamp, wood, grass)" → assets-first rule in AGENTS.md and every skill; street rebuilt from Kenney City Kit Commercial / Roads / Car Kit and Poly Haven textures.
 - 2026-11-27 — "spikes in the narrator, sad sounds like another voice" → no pitch shifting per emotion; takes kept within ±18% of the narrator's pitch; check flags drift.
 - 2026-11-27 — "why does he say rank last so happily? I want emotion, the correct intonation and expression for each line" → `emotion:` per shot (s04 sad, s05/s06/s09 serious, s08 shocked, s10/s14 smug, wins excited); "!" removed from s04; mood-specific voice samples.
 - 2026-11-27 — "lacking the weather, the structure" → rain/storm/lightning per shot (kit weather), dressed towers (ledges, rooftop tanks, AC, antennas, fire escapes, awnings), street furniture, cables, textured wet road and sidewalks.

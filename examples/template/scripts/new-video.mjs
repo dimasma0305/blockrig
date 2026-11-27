@@ -9,7 +9,7 @@ if (!dest) { console.error('usage: npm run new -- <folder> "Title"'); process.ex
 const to = path.resolve(dest);
 if (fs.existsSync(to) && fs.readdirSync(to).length) { console.error(`${to} is not empty`); process.exit(1); }
 const skip = new Set(["node_modules", "out", "generated", ".browser-path"]);
-const skipUnder = ["assets/audio", "assets/roblox", "assets/cc0", "assets/textures"].map((p) => path.normalize(p));
+const skipUnder = ["assets/audio", "assets/roblox", "assets/cc0", "assets/textures", "assets/kenney", "assets/github", "assets/hdri", "assets/polypizza", "assets/credits.json"].map((p) => path.normalize(p));
 const from = process.cwd();
 function copy(rel) {
   const src = path.join(from, rel), st = fs.statSync(src);
@@ -30,4 +30,4 @@ fs.writeFileSync(path.join(to, "package.json"), JSON.stringify(pkg, null, 2) + "
 const storyMd = path.join(to, "docs/story.md");
 fs.writeFileSync(storyMd, fs.readFileSync(storyMd, "utf8").replace(/^title: .*$/m, `title: ${title}`).replace(/^slug: .*$/m, `slug: ${slug}`));
 fs.writeFileSync(path.join(to, "docs/feedback.md"), fs.readFileSync(path.join(to, "docs/feedback.md"), "utf8").replace(/## This video[\s\S]*$/, "## This video\n\n- (add items here)\n"));
-console.log(`new video in ${to}\n  cd ${dest} && npm install\n  then write docs/story.md (story skill), docs/visuals.md, docs/audio.md, and npm run studio`);
+console.log(`new video in ${to}\n  cd ${dest} && npm install && npm run assets\n  then write docs/story.md (story skill), docs/visuals.md, docs/audio.md, and npm run studio`);
