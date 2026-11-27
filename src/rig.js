@@ -12,6 +12,8 @@ import { buildBodyFromParts, defaultBodyAttachments, templateUVs, regionSlices, 
 const REV = parseInt(THREE.REVISION, 10);
 const LEGACY_SKINNING_FLAG = REV < 129; // r128 and older need material.skinning = true
 const HEAD_H = 1.2, HEAD_R = 0.62;
+// textures BlockRig made itself (dispose() frees only these); a WeakSet because old three.js textures have no userData
+const OWN_TEXTURES = new WeakSet();
 
 // Look up constants that exist only in some three.js versions at run time. A static `THREE.sRGBEncoding`
 // (removed in r162) or `THREE.SRGBColorSpace` (added in r152) breaks bundlers that check named imports.
@@ -71,7 +73,7 @@ export function faceTexture(image, skin = "#f6dcc0", target = null) {
     }
   }
   if (target) return null;
-  const t = new THREE.CanvasTexture(cv); t.anisotropy = 8; t.userData.blockrigOwned = true; return setSRGB(t);
+  const t = new THREE.CanvasTexture(cv); t.anisotropy = 8; OWN_TEXTURES.add(t); return setSRGB(t);
 }
 
 /**
@@ -83,7 +85,7 @@ export function faceTexture(image, skin = "#f6dcc0", target = null) {
 export function createFaceDecal(face, { radius = 0.63, height = 1.2, arc = Math.PI * 0.95, y = 0.6, segments = 24 } = {}) {
   const g = new THREE.CylinderGeometry(radius, radius, height, segments, 1, true, Math.PI - arc / 2, arc);
   g.translate(0, y, 0);
-  const tex = new THREE.CanvasTexture(face.canvas); setSRGB(tex); tex.anisotropy = 8; tex.userData.blockrigOwned = true;
+  const tex = new THREE.CanvasTexture(face.canvas); setSRGB(tex); tex.anisotropy = 8; OWN_TEXTURES.add(tex);
   const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.04, depthWrite: false, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2 });
   const mesh = new THREE.Mesh(g, mat); mesh.name = "FaceDecal"; mesh.renderOrder = 2;
   face.onChange(() => { tex.needsUpdate = true; });
@@ -289,7 +291,7 @@ export function createRig(o = {}) {
     if (!partMap && avatar.layers[region]) return avatar.layers[region];
     const k = 2, canvas = makeCanvas(TEMPLATE_SIZE[0] * k, TEMPLATE_SIZE[1] * k), L = { region, partMap, ctx: null, tex: null, mat: null };
     const ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
-    if (ctx) { L.ctx = ctx; L.tex = setSRGB(new THREE.CanvasTexture(canvas)); L.tex.flipY = false; L.tex.userData.blockrigOwned = true; L.mat = material({ map: L.tex }); }
+    if (ctx) { L.ctx = ctx; L.tex = setSRGB(new THREE.CanvasTexture(canvas)); L.tex.flipY = false; OWN_TEXTURES.add(L.tex); L.mat = material({ map: L.tex }); }
     else L.mat = material({ color: avatar.colors[region] }); // no 2D canvas (e.g. Node): body colours only
     if (partMap) avatar.extra.push(L); else avatar.layers[region] = L;
     return L;
@@ -626,7 +628,7 @@ export function createRig(o = {}) {
       if (model.parent) model.parent.remove(model);
       const skip = disposeWelds ? new Set() : new Set(welds.keys());
       const seen = new Set();
-      const free = (m) => { if (!m || seen.has(m)) return; seen.add(m); for (const k of ["map", "normalMap", "alphaMap", "emissiveMap"]) if (m[k] && m[k].userData && m[k].userData.blockrigOwned) m[k].dispose(); m.dispose(); };
+      const free = (m) => { if (!m || seen.has(m)) return; seen.add(m); for (const k of ["map", "normalMap", "alphaMap", "emissiveMap"]) if (m[k] && OWN_TEXTURES.has(m[k])) m[k].dispose(); m.dispose(); };
       const walk = (o) => {
         if (skip.has(o)) return;
         if (o.isMesh || o.isSkinnedMesh) { if (o.geometry && !seen.has(o.geometry)) { seen.add(o.geometry); o.geometry.dispose(); } (Array.isArray(o.material) ? o.material : [o.material]).forEach(free); if (o.isSkinnedMesh && o.skeleton && o.skeleton.boneTexture) o.skeleton.boneTexture.dispose(); }
