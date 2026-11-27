@@ -36,6 +36,8 @@ npm install
 npm run setup-voice      # once per machine: offline voices (Kokoro, Chatterbox on an NVIDIA GPU)
 npm run docs             # compile + check docs/ (every other command runs it first)
 npm run voice            # narration clips, word timings, music
+# compare the narration with reference shorts (tempo, pauses, pitch, expression): docs/references.md, voice skill
+~/.venvs/chatterbox/Scripts/python scripts/voice/analyze_ref.py out/ref/*.m4a   # then: ... --ours
 npm run check            # voice says the right words, pace, captions, types
 npm run collide          # Rapier: cameras in walls, hidden faces, characters in props / floating / sunk / stiff on soft seats (-- --roblox)
 npm run studio           # live preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab, PlanLab

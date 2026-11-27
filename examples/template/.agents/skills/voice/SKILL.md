@@ -37,6 +37,7 @@ clip whose pitch drifts more than 20% from the narrator's median.
 | Emotion | Use for | Delivery |
 |---|---|---|
 | neutral | plain set-up lines | base settings |
+| flat | a strange rule or a matter-of-fact line, stated deadpan ("In this town, it rains every time someone lies.") | exaggeration 0.3, cfg 0.55, tempo 1.2 (flat AND fast, as measured), its own plainly read sample |
 | happy | good news, warm lines | brighter |
 | excited | hype, the hook, wins, lists building up | energetic, a bit faster, louder |
 | panic | lies, chaos, "oh no" | most intense, fast, loud |
@@ -70,3 +71,11 @@ the reference's length.
 Synthesized in `scripts/music.mjs` (no downloads, nothing to credit): mystery, suspense, happy, comedy, sad, action,
 chill, cyber, triumph (add a mood by adding a line to `THEMES`). Set sections in docs/audio.md (`- s04: suspense`). Mixed at 0.2. Never
 chart songs; the user adds trending sounds when posting.
+
+## Measure, don't guess (scripts/voice/analyze_ref.py)
+
+Compare our lines with the user's reference shorts by numbers: words per minute per sentence, pause between
+sentences, median pitch and pitch movement in semitones (docs/references.md has the method and the measured
+viral numbers). Viral narrators: fast inside sentences (200-330 wpm), a 0.35-0.65 s beat between them (`gap`),
+flat lines 2-3 st, lively lines 5-15 st, excited lines up to +50% pitch. `npm run check` allows high-energy lines
+(panic, shocked, excited, angry, happy) 35% above the median; anything else, and anything lower, stays within 20%.

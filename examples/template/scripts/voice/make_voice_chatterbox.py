@@ -37,6 +37,9 @@ EMOTIONS = {
     # another person). Emotion comes from the delivery Chatterbox copies (the mood's voice sample), its
     # exaggeration and pacing, and tempo and loudness.
     "neutral": {"ex": cfg["exaggeration"], "cfg": cfg["cfg"], "tempo": 1.0, "gain": 0, "prompt": "neutral"},
+    # the viral-narrator deadpan: a strange fact stated like the weather (hooks, rules, "In this town...")
+    # measured on viral shorts (analyze_ref.py): matter-of-fact lines are flat (2-3 st) and FAST (300-390 wpm)
+    "flat":    {"ex": 0.3, "cfg": 0.55, "tempo": 1.2, "gain": 0, "prompt": "flat"},
     "happy":   {"ex": 1.0, "cfg": 0.4, "tempo": 1.0, "gain": 0.5, "prompt": "excited"},
     "excited": {"ex": 1.0, "cfg": 0.38, "tempo": 1.04, "gain": 1.5, "prompt": "excited"},
     "panic":   {"ex": 1.2, "cfg": 0.32, "tempo": 1.06, "gain": 2.0, "prompt": "excited"},
@@ -58,6 +61,7 @@ PROMPTS = {  # (text, Kokoro speed): same voice and pitch for every mood; only t
     "excited": ("No way! This is the best day ever! Everybody look, I actually did it! Let's go!", 1.12),
     "sad": ("I tried my best... and it still wasn't enough. Nobody even noticed. I just sat there... alone.", 0.8),
     "serious": ("Listen carefully. Tonight, everything changes. There is one chance. And no second try.", 0.87),
+    "flat": ("In my school, the lunch lady knows your name. Nobody told her. She just knows. Every day. Same tray.", 1.0),
 }
 lines = json.load(open(a.lines, encoding="utf8"))
 

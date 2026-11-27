@@ -37,7 +37,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: IN THIS TOWN | IT *RAINS* EVERY TIME | SOMEONE *LIES*
 - action: hero walks down the sunny street; neighbours chat on the sidewalk
-- emotion: neutral
+- emotion: flat
 - camera: high wide crane down onto the street, ending behind the hero
 - faces: hero=happy
 - weather: clear

@@ -8,7 +8,7 @@ import { THEME_NAMES } from "./music.mjs";
 const EXPRESSIONS = "neutral happy grin laugh smug wink determined angry furious roar shocked scared sad hurt sleepy embarrassed dazed".split(" ");
 const WEATHER = "clear overcast fog drizzle rain storm snow blizzard lightning".split(" ");
 const TIMES = "day golden dusk night storm".split(" ");
-const EMOTIONS = "neutral happy excited panic shocked scared sad serious smug angry whisper".split(" ");
+const EMOTIONS = "neutral flat happy excited panic shocked scared sad serious smug angry whisper".split(" ");
 
 const read = (f) => fs.readFileSync(f, "utf8").replace(/\r\n/g, "\n").replace(/<!--[\s\S]*?-->/g, "");
 const errors = [], warnings = [];

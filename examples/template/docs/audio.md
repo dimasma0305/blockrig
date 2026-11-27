@@ -2,8 +2,11 @@
 
 ## Voice
 
-The narrator of viral Roblox story shorts: a young, slightly high male voice, expressive, ~160 words a minute
-overall with no dead air (reference measured at 161 wpm, 2.7 words/s including pauses).
+The narrator of viral Roblox story shorts: a young, slightly high male voice. Measured on four viral shorts
+(3-6M views; `scripts/voice/analyze_ref.py`, numbers in docs/references.md): 160-210 wpm overall; sentences spoken
+fast (200-330 wpm) with a 0.35-0.65 s beat between them; matter-of-fact lines flat (2-3 semitones of pitch movement)
+and very fast; hooks and reactions lively (5-15 st), excited lines jumping 30-50% higher. The hook here is `flat`:
+a strange rule stated deadpan.
 
 - engine: chatterbox
 - voice: am_adam
@@ -11,7 +14,7 @@ overall with no dead air (reference measured at 161 wpm, 2.7 words/s including p
 - exaggeration: 0.9
 - cfg: 0.35
 - tempo: 1.0
-- gap: 0.2
+- gap: 0.45
 - panic: exaggeration 1.4, cfg 0.3, gain 2
 
 Engines (`npm run setup-voice` installs the offline ones):
