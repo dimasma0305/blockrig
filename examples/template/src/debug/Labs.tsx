@@ -13,12 +13,15 @@ import { TEXTURES, texture, WEATHER, TIMES, createLighting, createWeather, apply
 import { buildCast } from "../cast/characters";
 import { ALL } from "../cast/clips";
 import { act, place } from "../direction/performance";
+import { useRobloxCast, type RobloxCast } from "../cast/roblox";
 
 const label: React.CSSProperties = { position: "absolute", color: "#fff", font: "800 44px sans-serif", WebkitTextStroke: "8px #000", paintOrder: "stroke fill" };
-const canvas = (children: React.ReactNode) => {
+// a component (not a plain function) so it can be mounted only once its scene's data has loaded
+function Canvas({ children }: { children: React.ReactNode }) {
   const { width, height } = useVideoConfig();
   return <ThreeCanvas width={width} height={height} shadows dpr={1} gl={{ antialias: true, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }} camera={{ fov: 40, position: [0, 4, 20] }}>{children}</ThreeCanvas>;
-};
+}
+const canvas = (children: React.ReactNode) => <Canvas>{children}</Canvas>;
 function useStage(background = "#2a3140") {
   const { gl, scene } = useThree() as any;
   return useMemo(() => {
@@ -31,20 +34,23 @@ function useStage(background = "#2a3140") {
 }
 
 // ---------------------------------------------------------------- Lineup
-function LineupScene() {
+function LineupScene({ rb }: { rb: RobloxCast | null }) {
   const frame = useCurrentFrame(), { camera } = useThree();
   useStage();
-  const cast = useMemo(() => buildCast(), []);
+  const cast = useMemo(() => buildCast(rb), [rb]);
+  const faces = ["neutral", "happy", "sad", "angry", "shocked", "smug"], face = faces[Math.floor(frame / 30) % faces.length];
   const n = cast.all.length;
-  cast.all.forEach((q, i) => { place(q, (i - (n - 1) / 2) * 4.2, 0, Math.sin(frame / 40 + i) * 0.6); act(q, [], 0, undefined); });
-  applyCamera(camera as THREE.PerspectiveCamera, { pos: V(0, 4.5, Math.max(26, n * 4.2 * 1.25)), target: V(0, 3, 0), fov: 36, shake: 0 }, frame); // back off for big casts
+  cast.all.forEach((q, i) => { place(q, (i - (n - 1) / 2) * 4.2, 0, Math.sin(frame / 40 + i) * 0.6); act(q, [], 0, face); }); // cycles the expressions every half second
+  applyCamera(camera as THREE.PerspectiveCamera, { pos: V(0, 3.6, Math.max(26, n * 4.2 * 1.25) * 0.55), target: V(0, 3.2, 0), fov: 36, shake: 0 }, frame); // back off for big casts
   return <>{cast.all.map((q, i) => <primitive key={i} object={q.rig.object} />)}</>;
 }
-export const Lineup: React.FC = () => {
-  const cast = useMemo(() => buildCast(), []);
+export const Lineup: React.FC<{ roblox?: boolean }> = ({ roblox }) => {
+  const cast = useMemo(() => buildCast(), []), rb = useRobloxCast(!!roblox), frame = useCurrentFrame();
+  const faces = ["neutral", "happy", "sad", "angry", "shocked", "smug"];
   return (
     <AbsoluteFill>
-      {canvas(<LineupScene />)}
+      {rb !== undefined && <Canvas><LineupScene rb={rb} /></Canvas>}
+      <div style={{ ...label, top: 160, left: 60 }}>{faces[Math.floor(frame / 30) % faces.length]}</div>
       <div style={{ ...label, bottom: 120, left: 0, right: 0, display: "flex", justifyContent: "space-around", fontSize: 30 }}>{cast.all.map((q) => <span key={q.name}>{q.name}</span>)}</div>
     </AbsoluteFill>
   );

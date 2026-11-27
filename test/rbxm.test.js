@@ -114,3 +114,22 @@ test("rbxmx (XML): same instance tree as the binary reader, auto-detected by par
   assert.deepEqual(describeAccessory(viaText), { name: "Spiky & Blue", meshId: 111, textureId: 222, attachment: { name: "HairAttachment", cframe: { rot: [0, 0, 1, 0, 1, 0, -1, 0, 0], pos: [0, 0.15, -0.5] } }, layered: null, colorMapId: null });
   assert.throws(() => parseRbxmx("<notroblox/>"), /not an XML Roblox model/);
 });
+
+test("rbxm: Content properties (type 0x22, 2024+) are read and fill the old id names", () => {
+  const C = 0x22;
+  const face = {
+    className: "Accessory", props: { Name: [S, "New Face"] },
+    children: [{ className: "Part", props: { Name: [S, "Handle"] }, children: [
+      { className: "SpecialMesh", props: { Name: [S, "Mesh"], MeshType: [E, 5], MeshContent: [C, "rbxassetid://72095094369673"], TextureContent: [C, "rbxassetid://108114516458433"] } },
+      { className: "Attachment", props: { Name: [S, "FaceFrontAttachment"], CFrame: [CF, { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, 0, -0.6] }] } },
+    ] }],
+  };
+  const [acc] = parseRbxm(writeRbxm([face]));
+  const mesh = findInstance([acc], (x) => x.className === "SpecialMesh");
+  assert.equal(mesh.props.MeshContent, "rbxassetid://72095094369673");
+  assert.equal(mesh.props.MeshId, "rbxassetid://72095094369673");
+  assert.equal(mesh.props.TextureId, "rbxassetid://108114516458433");
+  const d = describeAccessory([acc]);
+  assert.equal(d.meshId, 72095094369673); assert.equal(d.textureId, 108114516458433);
+  assert.equal(d.attachment.name, "FaceFrontAttachment");
+});

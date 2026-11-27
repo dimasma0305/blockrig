@@ -7,9 +7,9 @@ import { hair, baseballCap, glasses, outlined, AT, type HairStyle } from "./prop
 import { rng } from "../kit/rng";
 import type { RobloxCast, RobloxHead, RobloxHair } from "./roblox";
 
-export type Person = { rig: any; face: any; name: string; dynamic?: boolean };
+export type Person = { rig: any; face: any; name: string; dynamic?: boolean; faceSets?: Record<string, THREE.Object3D[]> };
 /** Roblox catalog items for one character (local videos only): a dynamic head, hair, classic shirt and pants. */
-export type RobloxLook = { head?: RobloxHead; hair?: RobloxHair; shirt?: HTMLImageElement; pants?: HTMLImageElement };
+export type RobloxLook = { head?: RobloxHead; hair?: RobloxHair; shirt?: HTMLImageElement; pants?: HTMLImageElement; faces?: Record<string, RobloxHair[]>; skin?: string };
 export type Cast = { hero: Person; sister: Person; neighbours: Person[]; all: Person[] };
 
 const skin = (c: string) => ({ HeadColor3: c, TorsoColor3: c, LeftArmColor3: c, RightArmColor3: c, LeftLegColor3: c, RightLegColor3: c });
@@ -22,12 +22,21 @@ export function person(name: string, o: {
   const rb = o.roblox;
   if (rb) {
     // Roblox items: dynamic head (expressions through FaceControls), catalog hair, classic shirt and pants
-    const rig = createRig({ shape: o.shape as any, scale: o.scale as any, bodyColors: skin(o.skin), clothing: { shirt: rb.shirt ?? o.shirt, pants: rb.pants ?? o.pants },
+    const rig = createRig({ shape: o.shape as any, scale: o.scale as any, bodyColors: skin(rb.skin ?? o.skin), clothing: { shirt: rb.shirt ?? o.shirt, pants: rb.pants ?? o.pants },
       bodyParts: rb.head ? { Head: { mesh: rb.head.mesh, size: rb.head.size, attachments: rb.head.attachments, map: rb.head.map ?? undefined } } : undefined, outline: 0.035, shadows: true } as any);
     if (rb.hair) rig.addAccessory(rb.hair.mesh, { attachment: rb.hair.attachment, map: rb.hair.map });
     else if (o.hair) rig.attachTo(o.hair, "HairAttachment");
     if (o.back) rig.attachTo(o.back, "BodyBackAttachment", AT([0, 0, -0.32]));
-    return { rig, face: null, name, dynamic: !!rb.head };
+    // face accessories (one set per emotion, e.g. angry = sharp eyes + anger vein): all attached, shown per shot by act()
+    let faceSets: Record<string, THREE.Object3D[]> | undefined;
+    if (rb.faces && !rb.head) {
+      const made = new Map<RobloxHair, THREE.Object3D>();
+      faceSets = Object.fromEntries(Object.entries(rb.faces).map(([emotion, items]) => [emotion, items.filter(Boolean).map((f) => {
+        if (!made.has(f)) { const m = rig.addAccessory(f.mesh, { attachment: f.attachment, map: f.map }); m.visible = false; made.set(f, m); }
+        return made.get(f)!;
+      })]));
+    }
+    return { rig, face: null, name, dynamic: !!rb.head, faceSets };
   }
   const face = createFace({ expression: o.expression ?? "neutral", blink: false, seed: o.seed ?? 1 });
   const rig = createRig({ shape: o.shape as any, scale: o.scale as any, bodyColors: skin(o.skin), clothing: { shirt: o.shirt, pants: o.pants }, face, outline: 0.035, shadows: true });
@@ -48,11 +57,17 @@ export function plate() {
 }
 
 export function buildCast(rb: RobloxCast | null = null): Cast {
-  const look = (head: string, hair: string, shirt: string, pants: string): RobloxLook | undefined =>
-    rb ? { head: rb.heads[head], hair: rb.hair[hair], shirt: rb.clothing[shirt], pants: rb.clothing[pants] } : undefined;
+  // Roblox items (local --roblox renders): anime face accessories per emotion, anime hair, classic clothing
+  const F = (...names: string[]) => names.map((n) => rb?.faces[n]).filter(Boolean) as RobloxHair[];
+  const boyFaces = () => ({ neutral: F("faceAnime"), happy: F("faceFang"), grin: F("faceFang"), laugh: F("faceFang"), smug: F("faceFang"), wink: F("faceFang"),
+    embarrassed: F("faceAnime"), determined: F("faceRanker"), angry: F("faceRanker"), furious: F("faceRanker"), shocked: F("facePotato"), scared: F("facePotato"), sad: F("faceCrying"), hurt: F("faceCrying") });
+  const girlFaces = () => ({ neutral: F("faceSparkle"), happy: F("faceSmile"), grin: F("faceSmile"), laugh: F("faceSmile"), smug: F("faceHearts"), wink: F("faceHearts"),
+    embarrassed: F("faceHearts"), determined: F("faceSharpEyes"), angry: F("faceSharpEyes", "faceAngerVein"), furious: F("faceSharpEyes", "faceAngerVein"), shocked: F("faceChibi"), scared: F("faceChibi"), sad: F("faceCrying"), hurt: F("faceCrying") });
+  const look = (who: "boy" | "girl", hair: string, shirt: string, pants: string): RobloxLook | undefined =>
+    rb ? { hair: rb.hair[hair], shirt: rb.clothing[shirt], pants: rb.clothing[pants], faces: who === "boy" ? boyFaces() : girlFaces(), skin: who === "boy" ? "#d9a877" : "#f4ece6" } : undefined;
   const kid = { shape: "child", scale: { head: 1.15 } };
-  const hero = person("hero", { ...kid, skin: "#f1c27d", shirt: hoodie("#1fa392", "#ffffff", "{ }"), pants: jeans("#2f4f7f", "#f2f2f2", "#19e3c4"), hair: hair("messy", "#5a3a22", { seed: 4 }), expression: "happy", seed: 2, roblox: look("boyHead", "heroHair", "heroShirt", "heroPants") });
-  const sister = person("sister", { ...kid, shape: "child", skin: "#f5d0b5", shirt: tee("#ff7eb6", "★"), pants: shorts("#6a4c93"), hair: hair("pigtails", "#3b2414", { tie: "#ffd166", seed: 7 }), expression: "angry", seed: 8, roblox: look("girlHead", "sisterHair", "sisterShirt", "sisterPants") });
+  const hero = person("hero", { ...kid, skin: "#f1c27d", shirt: hoodie("#1fa392", "#ffffff", "{ }"), pants: jeans("#2f4f7f", "#f2f2f2", "#19e3c4"), hair: hair("messy", "#5a3a22", { seed: 4 }), expression: "happy", seed: 2, roblox: look("boy", "heroHair", "heroShirt", "heroPants") });
+  const sister = person("sister", { ...kid, shape: "child", skin: "#f5d0b5", shirt: tee("#ff7eb6", "★"), pants: shorts("#6a4c93"), hair: hair("pigtails", "#3b2414", { tie: "#ffd166", seed: 7 }), expression: "angry", seed: 8, roblox: look("girl", "sisterHair", "sisterShirt", "sisterPants") });
   const r = rng(99), styles: HairStyle[] = ["swept", "bun", "afro", "slick", "buzz", "spiky"];
   const neighbours = Array.from({ length: 4 }, (_, i) => {
     const c = ["#e63946", "#3a86ff", "#f4a261", "#06d6a0", "#8338ec"][Math.floor(r() * 5)], k = r();
@@ -61,7 +76,7 @@ export function buildCast(rb: RobloxCast | null = null): Cast {
       shirt: k < 0.5 ? tee(c, ["☺", "♥", "#1", "~"][i % 4]) : hoodie(c, "#ffffff", ["~/", "#", "{}", "$"][i % 4]), pants: r() < 0.6 ? jeans() : shorts(["#023047", "#6a040f"][i % 2]),
       hair: hair(styles[Math.floor(r() * styles.length)], ["#1a1a1a", "#3b2414", "#8a5a2b", "#d9b26f", "#b33c2a"][Math.floor(r() * 5)], { seed: 50 + i }),
       hat: i === 1 ? baseballCap("#ffb703") : undefined, face: i === 2 ? glasses() : undefined, expression: "neutral", seed: 60 + i,
-      roblox: look(i % 2 ? "girlHead" : "boyHead", `n${i}Hair`, `n${i}Shirt`, `n${i}Pants`),
+      roblox: look(i % 2 ? "girl" : "boy", `n${i}Hair`, `n${i}Shirt`, `n${i}Pants`),
     });
   });
   return { hero, sister, neighbours, all: [hero, sister, ...neighbours] };

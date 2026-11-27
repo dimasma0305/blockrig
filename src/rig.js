@@ -12,7 +12,7 @@ import { buildBodyFromParts, defaultBodyAttachments, templateUVs, regionSlices, 
 
 const REV = parseInt(THREE.REVISION, 10);
 const LEGACY_SKINNING_FLAG = REV < 129; // r128 and older need material.skinning = true
-const HEAD_H = 1.2, HEAD_R = 0.62;
+const HEAD_H = 1.2, HEAD_R = 0.6; // Roblox classic head: 1.2 studs across (face accessories are made to sit just outside it)
 // textures BlockRig made itself (dispose() frees only these); a WeakSet because old three.js textures have no userData
 const OWN_TEXTURES = new WeakSet();
 
@@ -114,6 +114,11 @@ function geometryFromMesh(mesh, { lod = 0, skinned = false } = {}) {
     g.setAttribute("skinWeight", new THREE.BufferAttribute(mesh.skinWeight, 4));
   }
   g.setIndex(new THREE.BufferAttribute(lodIndices(mesh, lod), 1));
+  // some meshes carry no normals (all zero, e.g. Draco-compressed v7 files without a NORMAL attribute): compute
+  // them, as Roblox does, or the surface renders black
+  const n = mesh.normals;
+  let any = false; for (let i = 0; i < n.length && !any; i++) if (n[i] !== 0) any = true;
+  if (!any) g.computeVertexNormals();
   return g;
 }
 
@@ -699,7 +704,8 @@ export function createRig(o = {}) {
       if (!attachment) throw new Error("blockrig: addAccessory needs the handle attachment");
       const body = headAtt[attachment.name], onBody = !body && bodyAtt[attachment.name];
       if (!body && !onBody) throw new Error(`blockrig: unsupported attachment ${attachment.name}`);
-      const m = new THREE.Mesh(geometryFromMesh(mesh), material({ map, color, side: THREE.DoubleSide, roughness: 1 }));
+      // textures with transparent areas (face accessories, hair strands) cut out like Roblox draws them, instead of black
+      const m = new THREE.Mesh(geometryFromMesh(mesh), material({ map, color, side: THREE.DoubleSide, roughness: 1, alphaTest: map ? 0.5 : 0 }));
       m.name = attachment.name;
       if (onBody) { // weld to the body part that carries the attachment (bind-pose character space)
         const [x, y, z] = onBody.pos, i = index.get(onBody.part);

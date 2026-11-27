@@ -40,7 +40,7 @@ EMOTIONS = {
     "happy":   {"ex": 1.0, "cfg": 0.4, "tempo": 1.0, "gain": 0.5, "prompt": "excited"},
     "excited": {"ex": 1.0, "cfg": 0.38, "tempo": 1.04, "gain": 1.5, "prompt": "excited"},
     "panic":   {"ex": 1.2, "cfg": 0.32, "tempo": 1.06, "gain": 2.0, "prompt": "excited"},
-    "shocked": {"ex": 1.15, "cfg": 0.32, "tempo": 1.0, "gain": 1.5, "prompt": "excited"},
+    "shocked": {"ex": 0.95, "cfg": 0.4, "tempo": 1.0, "gain": 1.5, "prompt": "neutral"},  # the excited sample pushed shocked lines up to +40% pitch
     "scared":  {"ex": 1.0, "cfg": 0.3, "tempo": 1.04, "gain": -1, "prompt": "sad"},
     "sad":     {"ex": 0.45, "cfg": 0.6, "tempo": 0.92, "gain": -2.5, "prompt": "sad"},
     "serious": {"ex": 0.5, "cfg": 0.55, "tempo": 0.96, "gain": -1, "prompt": "serious"},
@@ -81,10 +81,22 @@ def kokoro(text, speed=0.95):
 NUM = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine", "10": "ten", "50": "fifty", "knew": "new", "know": "no", "their": "there", "theyre": "there", "too": "to", "two": "to", "for": "for", "four": "for", "right": "write"}
 def norm(s): return [NUM.get(w, w) for w in re.sub(r"[^a-z0-9 ]", " ", s.lower().replace("-", " ")).split()]
 
+last_probs = []
 def transcribe(wav):
+    """Words with times; also keeps each word's recognition probability in last_probs (the clarity signal)."""
+    global last_probs
     ta.save(f"{tmp}/t.wav", wav, SR)
-    segs, _ = asr.transcribe(f"{tmp}/t.wav", language="en", word_timestamps=True)
-    return [(w.word.strip(), w.start, w.end) for s in segs for w in (s.words or [])]
+    segs, _ = asr.transcribe(f"{tmp}/t.wav", language="en", word_timestamps=True, condition_on_previous_text=False)
+    words = [w for s in segs for w in (s.words or [])]
+    last_probs = [float(w.probability) for w in words]
+    return [(w.word.strip(), w.start, w.end) for w in words]
+
+def clarity():
+    """How clearly the last transcribed take was spoken: (weakest word, mean) recognition probability. A mumbled word
+    still gets transcribed (the recogniser guesses from context) but with low probability, so this catches it."""
+    if not last_probs: return (0.0, 0.0)
+    return (min(last_probs), sum(last_probs) / len(last_probs))
+CLEAR_MIN, CLEAR_MEAN = float(cfg.get("clearMin", 0.45)), float(cfg.get("clearMean", 0.8))
 
 def score(text, heard): return difflib.SequenceMatcher(None, norm(text), norm(" ".join(w for w, _, _ in heard))).ratio()
 
@@ -144,25 +156,27 @@ for L in lines:
     text = L["text"]
     mood = L.get("emotion") or ("panic" if text.rstrip().endswith("!") else "neutral")
     emo = EMOTIONS.get(mood, EMOTIONS["neutral"]); ex, cw = emo["ex"], emo["cfg"]
-    need = 0.85 if len(text.split()) >= 6 else 0.9  # allow recogniser quirks (50 / fifty, zero-days)
+    need = 0.9 if len(text.split()) >= 12 else 0.95  # every word right (homophones are normalised); only very long lines may miss one
     best, cand = None, f"{tmp}/cand.wav"
     # every take is processed exactly as it will ship, then checked; keep the best (ties: the longer, less hurried)
     if len(text.split()) > 2:
-        for take in range(6):
+        for take in range(int(cfg.get("takes", 10))):
             torch.manual_seed(int(hashlib.md5(f"{text}/{take}".encode()).hexdigest()[:8], 16))
             wav = model.generate(text, audio_prompt_path=prompt_for(emo["prompt"]), exaggeration=ex, cfg_weight=cw)
             final, dur = finish(wav, emo, cand)
-            heard = transcribe(final); sc = score(text, heard)
+            heard = transcribe(final); sc = score(text, heard); cmin, cmean = clarity()
+            clear = cmin >= CLEAR_MIN and cmean >= CLEAR_MEAN
             off = abs(mean_pitch(final) / REF_PITCH - 1) if REF_PITCH else 0
             # rank: right words first, then on-pitch, then the longer (less hurried) take
-            key = (sc >= need, off <= PITCH_TOL, -off, sc, dur)
+            key = (sc >= need, clear, off <= PITCH_TOL, round(cmean, 2), -off, sc, dur)
             if best is None or key > best[4]: best = (sc, final, dur, heard, key); shutil.copyfile(cand, L["out"])
-            if sc >= need and off <= PITCH_TOL: break
+            if sc >= need and clear and off <= PITCH_TOL: break
     used = "chatterbox"
     if best is None or best[0] < need:
         final, dur = finish(kokoro(text, PROMPTS.get(emo["prompt"], PROMPTS["neutral"])[1]), emo, L["out"])
         heard = transcribe(final); best, used = (score(text, heard), final, dur, heard, None), "kokoro"
     sc, final, duration, heard, _ = best
+    transcribe(final); cmin, cmean = clarity()
     with open(L["out"] + ".json", "w") as f:
-        json.dump({"duration": round(duration, 3), "engine": used, "emotion": mood, "match": round(sc, 3), "pitch": mean_pitch(final), "words": words_for(text, heard, duration)}, f)
-    print(f"{L['id']}  {used:10s} {mood:8s} match {sc:.2f}  {mean_pitch(final):5.0f} Hz  {duration:.2f}s  {text}", flush=True)
+        json.dump({"duration": round(duration, 3), "engine": used, "emotion": mood, "match": round(sc, 3), "clarity": [round(cmin, 2), round(cmean, 2)], "pitch": mean_pitch(final), "words": words_for(text, heard, duration)}, f)
+    print(f"{L['id']}  {used:10s} {mood:8s} clear {cmin:.2f}/{cmean:.2f} match {sc:.2f}  {mean_pitch(final):5.0f} Hz  {duration:.2f}s  {text}", flush=True)

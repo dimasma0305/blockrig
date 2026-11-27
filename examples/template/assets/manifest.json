@@ -70,7 +70,7 @@
     }
   },
   "roblox": {
-    "$about": "Free official Roblox items (creator: Roblox, price 0). LOCAL videos only: never commit or publish. npm run roblox (see the assets skill).",
+    "$about": "Free Roblox catalog items (official, or community UGC at price 0). LOCAL videos only: never commit or publish. npm run roblox (see the assets skill).",
     "boyHead": {
       "bundle": 949,
       "kind": "head"
@@ -80,7 +80,7 @@
       "kind": "head"
     },
     "heroHair": {
-      "assetId": 376548738,
+      "assetId": 101109395111164,
       "kind": "hair"
     },
     "heroShirt": {
@@ -92,7 +92,7 @@
       "kind": "pants"
     },
     "sisterHair": {
-      "assetId": 2956239660,
+      "assetId": 89707605927173,
       "kind": "hair"
     },
     "sisterShirt": {
@@ -104,7 +104,7 @@
       "kind": "pants"
     },
     "n0Hair": {
-      "assetId": 62234425,
+      "assetId": 77044854392130,
       "kind": "hair"
     },
     "n0Shirt": {
@@ -116,7 +116,7 @@
       "kind": "pants"
     },
     "n1Hair": {
-      "assetId": 63690008,
+      "assetId": 93440100235529,
       "kind": "hair"
     },
     "n1Shirt": {
@@ -128,7 +128,7 @@
       "kind": "pants"
     },
     "n2Hair": {
-      "assetId": 376524487,
+      "assetId": 70568969011219,
       "kind": "hair"
     },
     "n2Shirt": {
@@ -140,7 +140,7 @@
       "kind": "pants"
     },
     "n3Hair": {
-      "assetId": 376526888,
+      "assetId": 101456180619587,
       "kind": "hair"
     },
     "n3Shirt": {
@@ -150,6 +150,50 @@
     "n3Pants": {
       "assetId": 382537806,
       "kind": "pants"
+    },
+    "faceAnime": {
+      "assetId": 131886627952212,
+      "kind": "face"
+    },
+    "faceFang": {
+      "assetId": 106459314796536,
+      "kind": "face"
+    },
+    "faceRanker": {
+      "assetId": 114738498874820,
+      "kind": "face"
+    },
+    "facePotato": {
+      "assetId": 71083397812129,
+      "kind": "face"
+    },
+    "faceCrying": {
+      "assetId": 140335885709847,
+      "kind": "face"
+    },
+    "faceSparkle": {
+      "assetId": 117530109834139,
+      "kind": "face"
+    },
+    "faceSmile": {
+      "assetId": 73803306079949,
+      "kind": "face"
+    },
+    "faceSharpEyes": {
+      "assetId": 87283810049324,
+      "kind": "face"
+    },
+    "faceAngerVein": {
+      "assetId": 96729799003786,
+      "kind": "face"
+    },
+    "faceChibi": {
+      "assetId": 96980015396127,
+      "kind": "face"
+    },
+    "faceHearts": {
+      "assetId": 100152234940998,
+      "kind": "face"
     }
   }
 }

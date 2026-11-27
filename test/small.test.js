@@ -86,3 +86,21 @@ test("dispose(): frees what the rig made, leaves what you passed in", () => {
   assert.ok(!disposed.has(userTex), "your texture stays"); assert.ok(!disposed.has(prop.geometry), "your welded prop stays");
   assert.equal(rig.welds.size, 0);
 });
+
+test("addAccessory: textured accessories cut out transparent texels (alphaTest), untextured ones don't", () => {
+  const rig = createRig({});
+  const quad = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), normals: new Float32Array(9), uvs: new Float32Array(6), indices: new Uint32Array([0, 1, 2]), vertexCount: 3, faceCount: 1, lods: [0, 1] };
+  const att = { name: "FaceCenterAttachment", cframe: { rot: I3, pos: [0, 0, 0] } };
+  const withMap = rig.addAccessory(quad, { attachment: att, map: new THREE.Texture() });
+  const plain = rig.addAccessory(quad, { attachment: att });
+  assert.equal(withMap.material.alphaTest, 0.5);
+  assert.equal(plain.material.alphaTest, 0);
+});
+
+test("meshes without normals (all zero) get computed normals, so they don't render black", () => {
+  const rig = createRig({});
+  const tri = { positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), normals: new Float32Array(9), uvs: new Float32Array(6), indices: new Uint32Array([0, 1, 2]), vertexCount: 3, faceCount: 1, lods: [0, 1] };
+  const m = rig.addAccessory(tri, { attachment: { name: "FaceCenterAttachment", cframe: { rot: I3, pos: [0, 0, 0] } } });
+  const nz = m.geometry.attributes.normal.getZ(0);
+  assert.ok(Math.abs(nz) > 0.99, `normal z ${nz}`);
+});

@@ -46,6 +46,10 @@ function encodeValues(type, vals) {
       return Buffer.concat([rot, f32s(vals.map((v) => v.pos[0])), f32s(vals.map((v) => v.pos[1])), f32s(vals.map((v) => v.pos[2]))]);
     }
     case 0x0b: case 0x12: return interleave(vals.map((v) => be32(v)), 4); // BrickColor, Enum
+    case 0x22: { // Content: URIs only (kind 1), or none (kind 0)
+      const uris = vals.filter((v) => typeof v === "string"), n32 = (x) => { const b = Buffer.alloc(4); b.writeUInt32LE(x); return b; };
+      return Buffer.concat([i32s(vals.map((v) => (typeof v === "string" ? 1 : 0))), n32(uris.length), ...uris.map(str), n32(0), n32(0)]);
+    }
     default: throw new Error(`writer: type ${type}`);
   }
 }

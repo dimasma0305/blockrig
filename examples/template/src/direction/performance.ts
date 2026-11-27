@@ -13,7 +13,10 @@ export function place(p: Person, x: number, z: number, rotY: number, y = 0) { p.
 /** Pose a person from clip layers at local time t, set the face, and stand them on the ground (or seat them). */
 export function act(p: Person, layers: Layer[], t: number, face: string | undefined, ground = 0, contacts = FEET) {
   poseAt(p.rig, layers, t);
-  if (p.dynamic) { Object.assign(p.rig.faceControls, facsExpression(face ?? "neutral")); p.rig.applyFaceControls(); } // Roblox dynamic head
+  if (p.faceSets) { // Roblox face accessories: show the set for this emotion
+    const show = new Set(p.faceSets[face ?? "neutral"] ?? p.faceSets.neutral ?? []);
+    for (const set of Object.values(p.faceSets)) for (const o of set) o.visible = show.has(o);
+  } else if (p.dynamic) { Object.assign(p.rig.faceControls, facsExpression(face ?? "neutral")); p.rig.applyFaceControls(); } // Roblox dynamic head
   else { if (face) p.face.set(face, { fade: 0 }); p.rig.updateFace(0); } // drawn face: redraw the live texture
   groundRig(p.rig, ground, contacts);
 }

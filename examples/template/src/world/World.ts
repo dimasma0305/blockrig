@@ -32,7 +32,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   const length = 240, roadHalf = CITY / 2, walk = 6, sidewalkHalf = roadHalf + walk;
   for (let z = -length / 2; z <= length / 2; z += CITY) {
     const tile = lib.model(Math.abs(z - 15) < 1 ? "roadCrossing" : "road", { scale: CITY, shadows: false });
-    street.add(at(tile, 0, 0.02, z));
+    street.add(at(tile, 0, 0.02, z, Math.PI / 2)); // Kenney road tiles run along X: turn them to run along the street (Z)
     tile.traverse((c: any) => { if (c.isMesh && !wet.some((w) => w.mat === c.material)) wettable(c.material); });
   }
   for (const s of [-1, 1]) {

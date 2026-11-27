@@ -53,7 +53,14 @@ export function parseRbxm(input, options = {}) {
     const id = c.u32(), pname = c.string(c.u32()), type = c.u8(), cls = classes.get(id);
     if (!cls) continue;
     const values = readValues(c, type, cls.refs.length, sstr);
-    if (values) cls.refs.forEach((ref, i) => { inst.get(ref).props[pname] = values[i]; });
+    if (!values) continue;
+    // Content properties replaced the old string ids (MeshContent -> MeshId, TextureContent -> TextureId / TextureID,
+    // ColorMapContent -> ColorMap ...): fill the old names too, so readers work with files from before and after
+    const legacy = type === 0x22 && pname.endsWith("Content") ? LEGACY_CONTENT[pname] ?? [pname.slice(0, -7)] : [];
+    cls.refs.forEach((ref, i) => {
+      const props = inst.get(ref).props; props[pname] = values[i];
+      for (const old of legacy) if (typeof values[i] === "string" && props[old] === undefined) props[old] = values[i];
+    });
   }
   const roots = [];
   if (prnt) {
@@ -66,6 +73,8 @@ export function parseRbxm(input, options = {}) {
   }
   return roots;
 }
+
+const LEGACY_CONTENT = { MeshContent: ["MeshId"], TextureContent: ["TextureId", "TextureID"], ShirtTemplateContent: ["ShirtTemplate"], PantsTemplateContent: ["PantsTemplate"], GraphicContent: ["Graphic"] };
 
 // ---- encodings ----
 function interleaved(c, n, width) {
@@ -115,6 +124,13 @@ function readValues(c, type, n, sstr) {
     case 0x13: return readRefs(c, n); // Ref
     case 0x1a: { const r = c.slice(n), g = c.slice(n), b = c.slice(n); return Array.from(r, (_, i) => [r[i], g[i], b[i]]); } // Color3uint8
     case 0x1c: { const d = interleaved(c, n, 4), a = []; for (let i = 0; i < n; i++) { const s = sstr[d.getUint32(i * 4, false)]; a.push(s || null); } return a; } // SharedString
+    case 0x22: { // Content (2024+): source kinds (1 = URI, 2 = object), then the URIs, object refs and external refs
+      const kinds = readI32s(c, n), uris = [], nu = c.u32();
+      for (let i = 0; i < nu; i++) uris.push(utf8OrBytes(c.slice(c.u32())));
+      const no = c.u32(), objs = no ? readRefs(c, no) : []; const ne = c.u32(); if (ne) readRefs(c, ne);
+      let ui = 0, oi = 0;
+      return kinds.map((k) => (k === 1 ? uris[ui++] : k === 2 ? { ref: objs[oi++] } : null));
+    }
     default: return null; // other types are skipped
   }
 }
