@@ -6,6 +6,7 @@ import { buildBody } from "./body.js";
 import { lodIndices } from "./mesh.js";
 import { parseFacs, facsBoneOffsets, FACE_CONTROLS } from "./facs.js";
 import { fitLayer, cageMap } from "./wrap.js";
+import { solvePosition, applyPole, solveRotation, solveLookAt } from "./ik.js";
 import { buildBodyFromParts, defaultBodyAttachments, templateUVs, regionSlices, paintRegion, colorHex, BODY_REGION, TEMPLATE_SIZE } from "./avatar.js";
 
 const REV = parseInt(THREE.REVISION, 10);
@@ -373,6 +374,49 @@ export function createRig(o = {}) {
     return object;
   }
 
+  // ---- Humanoid.HipHeight: the HumanoidRootPart's bottom above the ground when standing (R6: above its legs) ----
+  const rootHalf = spec.rootHalf ?? (spec.scale ? spec.scale.height : 1);
+  const hipBind = rootBone.position.y - rootHalf - spec.floor - (rigType === "R6" ? 2 * (spec.scale ? spec.scale.height : 1) : 0);
+  let hipAdjust = 0, lastRoot = [0, 0, 0];
+
+  // ---- IKControl ----
+  const ikControls = [];
+  const boneOfPart = (name) => (name === "Head" || name === "Neck" ? neck : bones[name]);
+  const stageQ = () => stage.getWorldQuaternion(new THREE.Quaternion());
+  // where an end effector is: a body/head attachment or a part's centre, and which part carries it
+  function effectorOf(name) {
+    if (headAtt[name]) { const p = headAtt[name]; return { part: "Head", point: () => head.localToWorld(new THREE.Vector3(p[0], p[1], p[2])) }; }
+    if (bodyAtt[name]) {
+      const a = bodyAtt[name], i = index.get(a.part), local = new THREE.Vector3().fromArray(a.pos).applyMatrix4(new THREE.Matrix4().copy(bindWorld[i]).invert());
+      return { part: a.part, point: () => bones[a.part].localToWorld(local.clone()) };
+    }
+    if (name === "Head") return { part: "Head", point: () => head.localToWorld(new THREE.Vector3(...headCentre)) };
+    const p = spec.parts.find((x) => x.bone === name), i = index.get(name);
+    if (!p || i === undefined) throw new Error(`blockrig: no part or attachment "${name}" for an IKControl`);
+    const local = new THREE.Vector3().fromArray(p.center).applyMatrix4(new THREE.Matrix4().copy(bindWorld[i]).invert());
+    return { part: name, point: () => bones[name].localToWorld(local.clone()) };
+  }
+  // the joints from chainRoot down to the effector part (its own joint included when it has to turn)
+  function chainOf(rootName, partName, withEnd) {
+    const root = boneOfPart(rootName), end = boneOfPart(partName);
+    if (!root || !end) throw new Error(`blockrig: unknown joint in IK chain ${rootName} -> ${partName}`);
+    const out = []; let b = withEnd ? end : end.parent;
+    while (b && b !== root) { out.unshift(b); b = b.parent; }
+    if (b !== root) throw new Error(`blockrig: ${partName} is not below ${rootName}`);
+    out.unshift(root); return out;
+  }
+  // a part's world orientation (its character-axes frame), and its front (-Z)
+  function partFrameQ(partName) {
+    if (partName === "Head") return head.getWorldQuaternion(new THREE.Quaternion());
+    return bones[partName].getWorldQuaternion(new THREE.Quaternion()).multiply(bindWorldQ[index.get(partName)].clone().invert());
+  }
+  const targetPos = (t, offset) => {
+    const v = typeof t === "function" ? t() : t && t.isObject3D ? t.getWorldPosition(new THREE.Vector3()) : t ? new THREE.Vector3().copy(t) : null;
+    if (v && offset && offset.pos) { const o = new THREE.Vector3().fromArray(offset.pos); if (t && t.isObject3D) o.applyQuaternion(t.getWorldQuaternion(new THREE.Quaternion())); v.add(o); }
+    return v;
+  };
+  const targetQ = (t) => (t && t.isObject3D ? t.getWorldQuaternion(new THREE.Quaternion()) : t && t.isQuaternion ? t.clone() : null);
+
   // ---- dynamic head (FACS) state ----
   const faceControls = Object.fromEntries(FACE_CONTROLS.map((n) => [n, 0]));
   let dyn = null;
@@ -386,7 +430,7 @@ export function createRig(o = {}) {
     /** Add a rotation on top of the joint's current pose. */
     nudgeJoint(name, x = 0, y = 0, z = 0) { name = alias(name); const b = joint(name); if (!b) return false; tq.setFromEuler(te.set(x, y, z, "YXZ")); b.quaternion.multiply(delta(name, tq)); return true; },
     /** Move the whole body (HumanoidRootPart) in character space, studs. */
-    setRootOffset(x = 0, y = 0, z = 0) { rootBone.position.set(rootBind.x + x, rootBind.y + y, rootBind.z + z); },
+    setRootOffset(x = 0, y = 0, z = 0) { rootBone.position.set(rootBind.x + x, rootBind.y + y + hipAdjust, rootBind.z + z); lastRoot = [x, y, z]; },
     resetPose() { list.forEach((b, i) => { b.quaternion.copy(bindLocalQ[i]); b.position.copy(bindLocalP[i]); }); neck.quaternion.copy(neckBindQ); neck.position.copy(neckBindP); rig.setRootOffset(0, 0, 0); },
     /**
      * Translate a joint (the position part of a Motor6D Transform), in character axes, studs.
@@ -499,6 +543,44 @@ export function createRig(o = {}) {
     get tool() { return equipped; },
     /** A body part's bind-pose CFrame in character space (its centre, character axes), like Part.CFrame. */
     partCFrame(name) { return matrixToCFrame(partFrame(name)); },
+    /** Humanoid.HipHeight: the HumanoidRootPart's bottom above the ground when standing (R6: above its legs). Set it to raise or lower the body. */
+    get hipHeight() { return hipBind + hipAdjust; },
+    set hipHeight(v) { hipAdjust = v - hipBind; rig.setRootOffset(...lastRoot); },
+    /**
+     * Add an IKControl: { type: "Position"|"Rotation"|"Transform"|"LookAt", chainRoot, endEffector (part or
+     * attachment name), target (world Vector3, Object3D or () => Vector3), pole?, weight = 1, offset?, priority = 0,
+     * enabled = true, iterations = 12 }. Solved after the Animator on every update (or call rig.solveIK()).
+     * Returns the control; change its fields at any time.
+     */
+    addIKControl(o) {
+      const c = Object.assign({ type: "Position", weight: 1, priority: 0, enabled: true, iterations: 12, pole: null, offset: null }, o);
+      if (!c.chainRoot || !c.endEffector) throw new Error("blockrig: an IKControl needs chainRoot and endEffector");
+      c.seq = ikControls.length; ikControls.push(c); return c;
+    },
+    removeIKControl(c) { const i = ikControls.indexOf(c); if (i >= 0) ikControls.splice(i, 1); },
+    get ikControls() { return ikControls; },
+    /** Apply the IKControls to the current pose (the Animator calls this after posing). */
+    solveIK() {
+      const active = ikControls.filter((c) => c.enabled && c.weight > 0 && c.target).sort((a, b) => a.priority - b.priority || a.seq - b.seq);
+      if (!active.length) return;
+      model.updateMatrixWorld(true);
+      for (const c of active) {
+        const eff = effectorOf(c.endEffector), turns = c.type !== "Position";
+        const chain = chainOf(c.chainRoot, eff.part, turns), before = chain.map((b) => b.quaternion.clone());
+        const tp = targetPos(c.target, c.offset);
+        if ((c.type === "Position" || c.type === "Transform") && tp) {
+          const posChain = c.type === "Transform" ? chain.slice(0, -1) : chain;
+          if (posChain.length) { solvePosition(posChain, eff.point, tp, { iterations: c.iterations }); if (c.pole) { const pp = targetPos(c.pole); if (pp) applyPole(posChain, eff.point, pp); } }
+        }
+        if (c.type === "Rotation" || c.type === "Transform") {
+          const tq = targetQ(c.target);
+          if (tq) { const end = chain[chain.length - 1]; solveRotation(end, eff.part === "Head" ? tq : tq.multiply(bindWorldQ[index.get(eff.part)])); }
+        }
+        if (c.type === "LookAt" && tp) solveLookAt(chain, eff.point, () => new THREE.Vector3(0, 0, -1).applyQuaternion(partFrameQ(eff.part)), tp);
+        if (c.weight < 1) chain.forEach((b, i) => { b.quaternion.copy(before[i].slerp(b.quaternion, c.weight)); });
+        model.updateMatrixWorld(true);
+      }
+    },
     /** Remove a welded object from the rig. */
     unweld(object) { if (object.parent) object.parent.remove(object); welds.delete(object); return object; },
     /** Objects welded to the rig: Map(object -> part name). */

@@ -82,7 +82,7 @@ export function buildBodyFromParts(parts = {}, { scale } = {}) {
   const floor = Math.min(...["LeftFoot", "RightFoot"].map((f) => centre[f][1] - P[f].size[1] / 2));
   const attachments = {}; // every attachment in bind-pose character space, by name (rig attachments excluded)
   for (const [name, p] of Object.entries(P)) for (const [k, v] of Object.entries(p.attachments)) if (!/RigAttachment$/.test(k)) attachments[k] = { part: name, pos: centre[name].map((c, i) => c + v[i]), rot: p.rot[k] || ATTACHMENT_ROT[k] || null };
-  const body = { rigType: "R15", bind, parts: partList, floor, neck, headScale: 1, attachments };
+  const body = { rigType: "R15", bind, parts: partList, floor, neck, headScale: 1, attachments, rootHalf: P.HumanoidRootPart.size[1] / 2 };
   return scale ? scaleBody(body, scale) : body;
 }
 
@@ -93,7 +93,7 @@ function scaleBody(b, s0) {
     ...b,
     bind: b.bind.map((x) => ({ ...x, pos: P(x.pos) })),
     parts: b.parts.map((p) => ({ ...p, size: [p.size[0] * s.width, p.size[1] * s.height, p.size[2] * s.depth], center: P(p.center) })),
-    neck: { ...b.neck, pos: P(b.neck.pos) },
+    neck: { ...b.neck, pos: P(b.neck.pos) }, rootHalf: (b.rootHalf ?? 1) * s.height,
     attachments: Object.fromEntries(Object.entries(b.attachments || {}).map(([k, v]) => [k, { ...v, pos: P(v.pos) }])),
     headScale: s.head, scale: s,
   };

@@ -271,6 +271,7 @@ export class Animator {
       }
       this._faces = now;
     }
+    if (rig.solveIK) rig.solveIK(); // IKControls apply on top of the animated pose, as in Roblox
     if (rig.updateFace) rig.updateFace(dt);
   }
 }

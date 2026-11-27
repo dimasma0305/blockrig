@@ -55,11 +55,12 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
 - 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, **fitted to the body through its WrapLayer/WrapTarget cages** (matched by template UV, like Roblox) and stacked by `Order`.
 - 🎩 **Rigid accessories, welds and tools**: attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`), `Weld`-style C0/C1 welds, and `Humanoid:EquipTool`'s RightGrip with `Tool.Grip`.
+- 🦵 **HipHeight and IKControl**: Roblox-style `hipHeight`, and IK chains (Position, Rotation, Transform, LookAt, with pole and weight) solved on top of animation.
 - 🎞️ **Animator**: keyframe clips with `Linear / Constant / Cubic / Elastic / Bounce` × `In / Out / InOut`, priorities (`Idle → Action4`), weighted blending, linear fades, timed markers and root motion, and Roblox-style `AnimationTrack`s (seek, speed, weight, looped, priority, marker and keyframe signals, Stopped/Ended/DidLoop).
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` and `CurveAnimation` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **123 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **128 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Quick start
@@ -228,6 +229,25 @@ rig.unequipTool();
 ```
 
 Welded objects follow their part. `equipTool` builds Roblox's RightGrip weld: Part0 is the right hand (R6: Right Arm), C0 the RightGripAttachment (turned -90° about X, as on the standard bodies) and C1 the tool's `Grip`. Roblox's own Linked Sword stands upright in the arm-forward tool hold, the way it does in-game. `rig.partCFrame(name)` gives a part's bind-pose CFrame (like `Part.CFrame`) to measure C0 from.
+
+## HipHeight and IKControl
+
+<img src="docs/ik.png" alt="Two original characters: one reaching for a glowing orb while looking at it, one with a foot planted on a step" width="100%">
+
+```js
+rig.hipHeight;            // Humanoid.HipHeight: ~2.05 studs on the classic R15 body, 0 on R6
+rig.hipHeight += 0.5;     // raise the body (kept through animation)
+
+const reach = rig.addIKControl({                       // IKControl
+  type: "Position", chainRoot: "RightUpperArm", endEffector: "RightGripAttachment",
+  target: orb, pole: elbowHint, weight: 1,             // Vector3, Object3D or () => Vector3
+});
+rig.addIKControl({ type: "LookAt", chainRoot: "UpperTorso", endEffector: "Head", target: orb, weight: 0.8 });
+rig.addIKControl({ type: "Position", chainRoot: "RightUpperLeg", endEffector: "RightFoot", target: stepTop, pole: kneeHint });
+reach.weight = 0.5;                                    // change any field at any time
+```
+
+IK runs after the Animator on every update, on top of the animated pose, as in Roblox. `Position` moves the effector (a part's centre or an attachment) to the target. `Rotation` turns the effector part to the target's orientation, and `Transform` does both. `LookAt` turns the part's front toward the target, shared along the chain. A `pole` picks the bend direction. Controls run in `priority` order. See [`examples/ik.html`](examples/ik.html).
 
 ## Dynamic heads (FACS)
 
@@ -413,7 +433,7 @@ flowchart LR
 npm test             # 85 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
-npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html, faces.html and clothing.html)
+npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html, faces.html, clothing.html and ik.html)
 ```
 
 - **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every expression (valid parameters, the right shapes for open mouths, `x` and `><` eyes), face blending, blinking, look/talk, face markers and decals, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion.

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **HipHeight**: `rig.hipHeight` measures Humanoid.HipHeight from the body (R6: 0) and can be set to raise or lower the body.
+- **IKControl**: `rig.addIKControl({ type, chainRoot, endEffector, target, pole, weight, priority, offset })` for Position, Rotation, Transform and LookAt chains, with part or attachment end effectors; solved after the Animator (`rig.solveIK()`). `examples/ik.html`, `docs/ik.png`.
+
 - **Welds and tools**: `rig.weld(object, part, { c0, c1 })` (Weld: Object = Part * C0 * C1^-1), `rig.attachTo(object, attachment, objectAttachment)` (RigidConstraint), `rig.equipTool(handle, { grip })` / `unequipTool()` (Humanoid:EquipTool's RightGrip weld with `Tool.Grip`), `rig.partCFrame(name)`, `rig.welds`, `rig.unweld()`, and `describeTool()` for gear `.rbxm` files. Body attachments carry orientations; grip attachments default to the standard -90° about X. Checked with Roblox's Linked Sword on the ROBLOX Boy, R6 and R15 bodies.
 - The story example welds its props with `rig.weld` (frames unchanged).
 
@@ -27,7 +30,7 @@
 - `examples/clothing.html` and `docs/clothing.png`; `ONLY=name npm run screenshots`.
 - The story example (`examples/story`): a 26-second short made with BlockRig, Remotion and three.js.
 - Bundlers: version-specific three.js colour-space constants are read at run time.
-- 123 tests.
+- 128 tests.
 
 ## 0.2.0
 

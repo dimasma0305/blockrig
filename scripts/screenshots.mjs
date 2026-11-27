@@ -17,6 +17,7 @@ const SHOTS = [
   { file: "bodies", page: "bodies.html", w: 1400, h: 440 },
   { file: "faces", page: "faces.html", w: 1200, h: 640 },
   { file: "clothing", page: "clothing.html", w: 1400, h: 560 },
+  { file: "ik", page: "ik.html", w: 1200, h: 560 },
 ];
 // ONLY=bodies,clothing npm run screenshots  renders just those
 const only = (process.env.ONLY || "").split(",").filter(Boolean);

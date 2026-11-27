@@ -88,6 +88,14 @@ export interface Rig {
   readonly welds: Map<THREE.Object3D, string>;
   /** A body part's bind-pose CFrame in character space (its centre), like Part.CFrame. */
   partCFrame(name: string): CFrame;
+  /** Humanoid.HipHeight: the root part's bottom above the ground when standing (R6: above its legs). Settable. */
+  hipHeight: number;
+  /** Add an IKControl (solved after the Animator on every update). */
+  addIKControl(o: IKControlSpec): IKControl;
+  removeIKControl(c: IKControl): void;
+  readonly ikControls: IKControl[];
+  /** Apply the IKControls to the current pose. */
+  solveIK(): void;
   /** Roblox FaceControls (50 values, 0..1) driving a dynamic head. */
   faceControls: Record<FaceControlName, number>;
   /** True once setHead() was given a dynamic (FACS) head mesh. */
@@ -289,4 +297,24 @@ export function describeTool(roots: RbxInstance[]): {
   name: string; grip: CFrame; requiresHandle: boolean;
   handle: { className: string; size: number[] | null; meshId: number | null; textureId: number | null; scale: number[]; offset: number[] } | null;
 };
+export type IKTarget = THREE.Vector3 | THREE.Object3D | (() => THREE.Vector3);
+export interface IKControlSpec {
+  type?: "Position" | "Rotation" | "Transform" | "LookAt";
+  /** the first joint of the chain, e.g. "RightUpperArm" */
+  chainRoot: string;
+  /** a part (its centre) or a body/head attachment, e.g. "RightHand" or "RightGripAttachment" */
+  endEffector: string;
+  /** world position (Vector3), an Object3D (position and, for Rotation/Transform, orientation) or a function */
+  target: IKTarget | null;
+  /** bends the chain towards this point (world) */
+  pole?: IKTarget | null;
+  weight?: number; priority?: number; enabled?: boolean; iterations?: number;
+  /** offset from the target (pos in the target's frame when it's an Object3D) */
+  offset?: CFrame | null;
+}
+export type IKControl = Required<Pick<IKControlSpec, "type" | "weight" | "priority" | "enabled" | "iterations">> & IKControlSpec;
+export function solvePosition(chain: THREE.Bone[], effector: () => THREE.Vector3, target: THREE.Vector3, o?: { iterations?: number; tolerance?: number }): void;
+export function applyPole(chain: THREE.Bone[], effector: () => THREE.Vector3, pole: THREE.Vector3): void;
+export function solveRotation(bone: THREE.Object3D, worldQ: THREE.Quaternion): void;
+export function solveLookAt(chain: THREE.Object3D[], origin: () => THREE.Vector3, forward: () => THREE.Vector3, target: THREE.Vector3): void;
 export const VERSION: string;
