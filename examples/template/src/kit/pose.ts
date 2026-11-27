@@ -45,3 +45,5 @@ export function groundRig(rig: any, ground: number, contacts: [string, number][]
 export const FEET: [string, number][] = [["LeftFoot", 0.3], ["RightFoot", 0.3]];
 export const KNEEL: [string, number][] = [["LeftFoot", 0.3], ["RightFoot", 0.3], ["RightLowerLeg", 0.5], ["LeftLowerLeg", 0.5]];
 export const SEAT: [string, number][] = [["LowerTorso", 0.25], ["LeftFoot", 0.3], ["RightFoot", 0.3]];
+/** Sitting on furniture: only the hips rest on the surface; the legs hang. */
+export const ON_SEAT: [string, number][] = [["LowerTorso", 0.35]];

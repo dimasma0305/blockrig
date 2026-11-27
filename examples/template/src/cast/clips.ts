@@ -1,6 +1,6 @@
-// Clips for the CTF story (original keyframes). Axes are the character's own: arms/legs +X swing forward,
+// Story clips as BlockRig keyframe clips (original). Axes are the character's own: arms/legs +X swing forward,
 // knee bend = -X, elbow bend = +X, RightUpperArm +Z / LeftUpperArm -Z out to the side, torso -X leans forward,
-// Neck +X looks up.
+// Neck +X looks up. Add a clip here for every new action a shot needs, and check it in the PoseLab composition.
 import { clips as base } from "blockrig";
 
 const k = (t: number, poses: Record<string, any>, ease = "Cubic", dir = "InOut") => {
@@ -65,3 +65,15 @@ export const celebrate = {
     k(0.9, { UpperTorso: [0.1, 0, 0], LeftUpperArm: [2.7, 0, -0.4], RightUpperArm: [2.7, 0, 0.4], Neck: [0.25, 0, 0], HumanoidRootPart: { p: [0, 0, 0] } }, "Bounce", "Out"),
   ],
 };
+
+// ---- everyday story poses ----
+export const armsCrossed = hold("armsCrossed", { LeftUpperArm: [0.55, 0, -0.25], RightUpperArm: [0.55, 0, 0.25], LeftLowerArm: [1.9, 0, 1.25], RightLowerArm: [1.9, 0, -1.25], Neck: [-0.05, 0, 0], UpperTorso: [0.06, 0, 0] });
+export const point = hold("point", { RightUpperArm: [1.45, 0, 0.15], RightLowerArm: [0.1, 0, 0], UpperTorso: [-0.05, -0.15, 0], Neck: [0, -0.1, 0] });
+export const shrug = hold("shrug", { LeftUpperArm: [0.2, 0, -0.45], RightUpperArm: [0.2, 0, 0.45], LeftLowerArm: [1.3, 0, 0.5], RightLowerArm: [1.3, 0, -0.5], Neck: [0, 0, 0.18], UpperTorso: [0, 0, 0] });
+export const sit = hold("sit", { LeftUpperLeg: [1.5, 0, -0.05], RightUpperLeg: [1.5, 0, 0.05], LeftLowerLeg: [-1.5, 0, 0], RightLowerLeg: [-1.5, 0, 0], LeftUpperArm: [0.2, 0, -0.1], RightUpperArm: [0.2, 0, 0.1] });
+export const panic = loop("panic", 0.5, [
+  [0, { LeftUpperArm: [2.6, 0, -0.6], RightUpperArm: [2.6, 0, 0.6], LeftLowerArm: [0.6, 0, 0], RightLowerArm: [0.6, 0, 0], Neck: [0.2, 0.25, 0] }],
+  [0.25, { LeftUpperArm: [2.4, 0, -0.8], RightUpperArm: [2.4, 0, 0.8], LeftLowerArm: [0.9, 0, 0], RightLowerArm: [0.9, 0, 0], Neck: [0.2, -0.25, 0] }],
+  [0.5, { LeftUpperArm: [2.6, 0, -0.6], RightUpperArm: [2.6, 0, 0.6], LeftLowerArm: [0.6, 0, 0], RightLowerArm: [0.6, 0, 0], Neck: [0.2, 0.25, 0] }],
+]);
+export const ALL: Record<string, any> = { idle, run, victory, walk, crowdIdle, lookUp, slump, smug, aim, type, cheer, gasp, handOver, celebrate, armsCrossed, point, shrug, sit, panic };

@@ -9,7 +9,13 @@ const THEMES = {
   happy: { bpm: 124, key: 60, scale: [0, 2, 4, 5, 7, 9, 11], prog: [0, 4, 5, 3], lead: "bell", drums: "bouncy", swing: 0.08 },
   cyber: { bpm: 118, key: 50, scale: [0, 2, 3, 5, 7, 8, 10], prog: [0, 0, 5, 6], lead: "pulse", drums: "bouncy", swing: 0 },
   triumph: { bpm: 128, key: 62, scale: [0, 2, 4, 5, 7, 9, 11], prog: [0, 5, 3, 4], lead: "bell", drums: "bouncy", swing: 0 },
+  comedy: { bpm: 132, key: 62, scale: [0, 2, 4, 5, 7, 9, 10], prog: [0, 3, 4, 0], lead: "pluck", drums: "bouncy", swing: 0.22 },
+  sad: { bpm: 76, key: 55, scale: [0, 2, 3, 5, 7, 8, 10], prog: [0, 5, 2, 6], lead: "bell", drums: "soft", swing: 0 },
+  action: { bpm: 140, key: 50, scale: [0, 1, 3, 5, 7, 8, 10], prog: [0, 0, 6, 5], lead: "pulse", drums: "tense", swing: 0 },
+  chill: { bpm: 84, key: 58, scale: [0, 2, 4, 7, 9, 11, 14], prog: [0, 3, 5, 4], lead: "pluck", drums: "soft", swing: 0.18 },
 };
+/** The mood names docs/audio.md can use. */
+export const THEME_NAMES = Object.keys(THEMES);
 
 const hz = (m) => 440 * 2 ** ((m - 69) / 12);
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }

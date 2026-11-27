@@ -1,0 +1,20 @@
+{
+  "$comment": "Assets this video uses. 'cc0' packs are downloaded by `npm run assets` into assets/cc0/ (git-ignored, licence kept next to each). 'textures' are CC0 PBR sets from Poly Haven into assets/textures/. 'roblox' items are fetched for local use only by `npm run roblox` into assets/roblox/ (git-ignored, never committed or published). The template's sample needs none of them: it is built in code.",
+  "cc0": {
+    "kenney-city": {
+      "licence": "CC0 (Kenney, https://kenney.nl) - from github.com/KenneyNL/Starter-Kit-City-Builder",
+      "base": "https://raw.githubusercontent.com/KenneyNL/Starter-Kit-City-Builder/main/models/",
+      "files": [],
+      "example": ["building-small-a.glb", "road-straight.glb", "Textures/colormap.png"]
+    }
+  },
+  "textures": {
+    "$example": { "id": "asphalt_02", "resolution": "1k", "maps": ["diff", "rough", "nor_gl"] }
+  },
+  "hdri": {
+    "$example": { "id": "evening_meadow", "resolution": "1k" }
+  },
+  "roblox": {
+    "$example": { "name": "classic-hair", "assetId": 0, "format": "avatar_meshpart_accessory" }
+  }
+}
