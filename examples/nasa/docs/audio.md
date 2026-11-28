@@ -14,7 +14,7 @@ line (one voice sample), the hook `flat` (calm, normal speed), every word clear 
 - exaggeration: 0.9
 - cfg: 0.35
 - tempo: 1.0
-- gap: 0.33
+- gap: 0.25
 - commaPause: 0.22
 - stopPause: 0.4
 - panic: exaggeration 1.4, cfg 0.3, gain 2
@@ -44,7 +44,7 @@ The user found one voice for everyone hard to follow (2026-11-28): each dialogue
 
 - s01: suspense
 - s04: quirky-arp
-- s37: story
+- s38: story
 - s47: suspense
 - s52: action
 - s54: none

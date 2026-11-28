@@ -11,7 +11,7 @@ size: 1080x1920
 - **Plot:** A kid raised as a hacker from the crib (a hacker name as a baby, CTFs at two, OSCP at three) has nine years to hack NASA while every "Can I go play?" gets "After NASA"; with three seconds left Dad tells him to press Enter, he passes, and Dad's "OPEN AFTER NASA" box holds one bottle of sunscreen for the next objective: hack the Sun before eleven.
 - **Twist:** the big box after NASA is a tiny sunscreen, because the next rule is "hack the SUN before ELEVEN" ("After the Sun").
 - **Comment bait:** what's your hacker name?
-- **Length:** ~2 min, 52 shots (one line each), 6 locations (street, my room, nursery, preschool, conference hall, friend's room).
+- **Length:** ~1:35, fast-paced: 45 shots, only the silent beats the story needs (the typing panic, Dad walking in, pressing Enter, the box, the last shot).
 - **Dialogue:** every line, narration and dialogue, is spoken by the one narrator voice with the emotion noted; a dialogue line's caption carries a speaker tag (`speaker:`: ME, MOM, DAD, BEST FRIEND, SYSTEM). `say:` is how the narrator pronounces a name (same word count as the line); captions show the real spelling.
 - **Explainers** (`note:`): a short label under the age card that says what the jargon means, so every joke reads without hacker knowledge.
 - **On-screen text** (`title:` age card, `timer:` countdown above my head, `screen:` what the laptop or board shows): real brand and event names are plain text only, never logos.
@@ -84,17 +84,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: funny
 - light: indoor
-
-### s06 · nursery
-
-- action: the laptop flashes ROOT ACCESS; I cheer, try to stand, fall on my bottom; confidence turns into a confused stare
-- camera: front, low, the baby and the laptop
-- faces: hero=laugh
-- screen: ROOT ACCESS
-- time: day
-- mood: funny
-- light: indoor
-- min: 2.2
 
 ### s09 · preschool
 > By two, we're already competing in CTFs.
@@ -179,7 +168,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: funny
 - light: indoor
-- min: 2
 
 ### s15 · preschool
 > One more flag and we win!
@@ -207,7 +195,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: funny
 - light: indoor
-- min: 1.2
 
 ### s17 · preschool
 > Guys! My manager is taking me offline!
@@ -221,17 +208,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: panic
 - light: indoor
-
-### s18 · preschool
-
-- action: my teammates hear a lullaby; MIC DISCONNECTED; they stare at the empty chair
-- camera: close on the teammates' faces
-- faces: friend=sad, tm1=dazed
-- screen: MIC DISCONNECTED
-- time: day
-- mood: funny
-- light: indoor
-- min: 1.5
 
 ### s19 · room
 > Mom! I passed OSCP!
@@ -263,16 +239,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: funny
 - light: indoor
-
-### s21 · room
-
-- action: I try to peel open the yogurt and fail
-- camera: close on my hands and face
-- faces: hero=angry
-- time: day
-- mood: funny
-- light: indoor
-- min: 1.5
 
 ### s22 · room
 > Certified professional. Still couldn't open a yogurt.
@@ -316,7 +282,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: tense
 - light: indoor
-- min: 1.2
 
 ### s35 · room
 > I'm only nine!
@@ -344,16 +309,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: tense
 - light: indoor
 
-### s37 · room
-
-- action: Dad carries in a big sealed package labelled OPEN AFTER NASA; through the window, children play outside
-- camera: wide of the room, the window bright
-- faces: dad=neutral, hero=sad
-- time: day
-- mood: calm
-- light: indoor
-- min: 1.7
-
 ### s38 · room
 > Can I go play?
 
@@ -379,17 +334,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: calm
 - light: indoor
-- min: 1
-
-### s40 · room
-
-- action: I set the ball beside my chair and sit at the computer
-- camera: side, the ball in the foreground
-- faces: hero=sad
-- time: day
-- mood: sad
-- light: indoor
-- min: 1.4
 
 ### s41 · room
 > So I practiced. Every day.
@@ -402,17 +346,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day -> night
 - mood: sad
 - light: indoor
-
-### s42 · room
-
-- action: montage: calendar pages fly, empty juice boxes pile up, day to night; tabs CTFtime, picoCTF, Hack The Box; the ball stays by the chair
-- camera: locked-off wide, time-lapse
-- faces: hero=determined
-- screen: PRACTICE TABS
-- time: night -> day
-- mood: sad
-- light: indoor
-- min: 2.4
 
 ### s43 · friend
 > You've got this, bro. Please don't get removed.
@@ -439,7 +372,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: calm
 - light: indoor
-- min: 1
 
 ### s45 · friend
 > I need someone to watch kurenaif with.
@@ -467,7 +399,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: calm
 - light: indoor
-- min: 1
 
 ### s47 · room
 > Your cousin finished when he was six.
@@ -510,7 +441,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: tense
 - light: studio
-- min: 1
 
 ### s52 · room
 
@@ -522,7 +452,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: action
 - light: studio
-- min: 2.5
+- min: 1.4
 
 ### s53 · room
 > Why is nothing happening?!
@@ -549,7 +479,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: silence
 - light: studio
-- min: 1.2
+- min: 1
 
 ### s55 · room
 > Press Enter.
@@ -564,7 +494,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: silence
 - light: studio
-- min: 1
 
 ### s56 · room
 > Oh.
@@ -579,7 +508,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: silence
 - light: studio
-- min: 1
 
 ### s57 · room
 
@@ -591,7 +519,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: triumph
 - light: studio
-- min: 1.4
+- min: 1.2
 
 ### s58 · room
 > I knew that.
@@ -606,7 +534,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: triumph
 - light: indoor
-- min: 1
 
 ### s59 · room
 > Happy birthday, buddy.
@@ -651,17 +578,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: funny
 - light: indoor
 
-### s62 · room
-
-- action: I look at the sun through the window; my smile stops; head tilt
-- camera: from outside the window onto me, the sun behind the camera
-- faces: hero=dazed
-- timer: 11TH BIRTHDAY IN 365 DAYS
-- time: day
-- mood: funny
-- light: indoor
-- min: 1.4
-
 ### s63 · room
 
 - action: Dad opens the enormous package: inside, one tiny bottle of sunscreen; he puts it in my hand
@@ -671,7 +587,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: funny
 - light: indoor
-- min: 1.7
+- min: 1.4
 
 ### s64 · room
 > Start earlier this time.
@@ -714,7 +630,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: calm
 - light: indoor
-- min: 1.2
 
 ### s70 · room
 
@@ -726,4 +641,4 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: calm
 - light: indoor
-- min: 2.7
+- min: 2.2
