@@ -34,6 +34,6 @@ export function estimateWords(text: string, phrases: { start: number; end: numbe
 
 // ---- checks
 export function pace(shots: { narration?: string; minSeconds?: number }[], total: number, o?: { target?: number; fast?: number; slow?: number }): { words: number; seconds: number; silent: number; wpm: number; problem?: string };
-export function pitchReport(clips: { id: string; pitch: number; mood?: string; speaker?: string }[], voices?: Record<string, unknown>): { medians: Record<string, number>; problems: string[]; notes: string[] };
+export function pitchReport(clips: { id: string; pitch: number; mood?: string; speaker?: string }[], voices?: Record<string, unknown>): { medians: Record<string, number>; outliers: { id: string; voice: string; pitch: number; median: number; off: number }[]; problems: string[]; notes: string[] };
 export function wordTimeProblems(id: string, clip: { duration: number; words?: Word[] } | undefined): string[];
 export function musicSections(story: { voice?: { gapSeconds?: number }; shots: { id: string; minSeconds?: number }[]; music?: { theme: string; fromShot: string }[] }, durations: Record<string, number>): { total: number; sections: { theme: string; index: number; silent: boolean; from: number; to: number }[] };

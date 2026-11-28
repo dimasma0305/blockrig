@@ -28,12 +28,12 @@ undone later. One line per item: date, what they said, what we did, where.
 - Premium, good Roblox assets: most-favourited hair and outfits (premium UGC included), not plain free basics → new cast items; faces Roblox-accurate: textures untouched, skin set to the face plate colour (as players do).
 - Use Roblox assets freely: Roblox allows avatars and catalog items in (monetized) videos → the Roblox version is the default render; files stay git-ignored (`npm run roblox`).
 - Faces, hair and bodies like https://www.youtube.com/shorts/Xd_yEnAdiGo; shade, texture, lighting and sky like https://www.youtube.com/shorts/wVjP5B-94MM. → kit look: ACES Filmic, strong warm low sun, little fill, crisp clear-day fog, grain on map surfaces, pale skin, `avatarAmbient` on characters; low cameras show the sky (look, world, camera skills).
-- Town layout must be realistic: objects placed by rules, not overlapping. → 2D plan with Turf (kit/plan.ts): zones, lots, footprints, scatter/along; PlanLab shows it.
+- Town layout must be realistic: objects placed by rules, not overlapping. → 2D plan (blockrig/video `Plan`): zones, lots, footprints, scatter/along; PlanLab shows it.
 - The narrator sounded like different people from line to line, and was hard to follow. → one voice sample for every mood (emotion = performance strength, tempo within 5%); hook calm at normal speed; stricter clarity bar. Never per-mood voice samples.
 - Commas must be heard ("In this town, it rains..."): the flat take ran through it. → the voice script enforces real silence at commas (0.22 s) and inner "..."/stops (0.4 s).
 - The hook "In this town..." should be flat, like viral narrators. → `flat` emotion (deadpan, fast), measured against 4 viral shorts with analyze_ref.py; 0.45 s gaps between lines. Narrator pitch (ours ~145 Hz vs viral ~200 Hz): comparison sent, user to choose.
-- Materials behave physically: a bed is soft, so a seated body sinks in a little; floors do not give. → kit/surfaces.ts (`restOn`, softness table), checked by `npm run collide` ("stiff", "sunk").
-- Staging mistakes (camera in a wall, hidden faces, floating or sunk characters) must be caught before rendering. → `npm run collide` (Rapier, kit/collide.ts).
+- Materials behave physically: a bed is soft, so a seated body sinks in a little; floors do not give. → blockrig/video `surfaceOf` (`restOn`, softness table), checked by `npm run collide` ("stiff", "sunk").
+- Staging mistakes (camera in a wall, hidden faces, floating or sunk characters) must be caught before rendering. → `npm run collide` (Rapier, blockrig/video `createProbe`).
 - Captions or floating tags must not cover faces. → camera skill, debug overlay.
 
 ## This video

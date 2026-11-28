@@ -8,6 +8,14 @@ description: Make the narration (one clip per shot, word timings) and music from
 `npm run voice` compiles docs, then `scripts/voice.mjs` writes `assets/audio/<shot>.wav`, per-word timings and the
 music into `assets/audio/timings.json`. Shot lengths and captions follow it.
 
+The scripts only run the models (Chatterbox, Kokoro, Whisper, ffmpeg). Every decision is BlockRig's
+(`blockrig/voice`, tested there): the mood of a line (`moodOf`, `EMOTIONS`), which voice speaks it (`voiceOf`),
+whether a take is good (`judgeTake`: words, then pitch, then length), the caption word times (`alignWords`), pauses
+at punctuation (`addPauses`), trimming (`trimToSpeech`), pace and pitch checks (`pace`, `pitchReport`) and music
+sections. The docs are compiled and checked by `compileStory` (`blockrig/video`). When a voice problem shows up, fix
+it there with a test, not only in these scripts. Takes record `yin: 2` (BlockRig's YIN; the old tracker read ~7%
+low): `npm run check` only compares pitches measured the same way.
+
 ## The narrator users want
 
 A young, slightly high male voice with real intonation, ~160 wpm overall (measured on a popular short: 161 wpm,

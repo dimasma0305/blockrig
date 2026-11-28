@@ -38,7 +38,7 @@ casting shadows themselves.
 | Effect | Where |
 |---|---|
 | rain, splashes, snow, fog, wet ground, lightning | `kit/weather.ts` (see the world skill) |
-| sky dome with sun glow and stars, flash light | `kit/lighting.ts` |
+| sky dome with sun glow and stars, flash light | `createLighting` (blockrig/video) |
 | vignette, scanlines, glitch cut, flash cut, lightning flash | `kit/Overlays.tsx` |
 | lit windows and lamps at night | `Materials.setNight` |
 

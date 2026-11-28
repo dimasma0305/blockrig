@@ -22,7 +22,7 @@ const grass = lib.pbr("grass", { repeat: [w / 6, d / 6] });         // PBR set a
 
 **Roblox version (the default when downloaded): free Toolbox maps.** A house, a room or a street someone built in Roblox looks
 more like the reference shorts than any kit. Add it to `assets/manifest.json` (`{ "mapHouseA": { "assetId": 317197851,
-"kind": "map" } }`), fetch it with the Roblox loop (`assets` skill), and draw it with `buildRobloxMap` (src/kit/robloxMap.ts):
+"kind": "map" } }`), fetch it with the Roblox loop (`assets` skill), and draw it with `buildRobloxMap` (blockrig/video):
 parts, wedges, corner wedges, balls, cylinders, mesh modifiers, MeshParts with their textures, decals, textures and
 lights, merged per material, with the CC0 PBR sets for surface detail. Then:
 
@@ -54,7 +54,7 @@ Rules: no empty boxes. A street needs layers (road, curb, sidewalk, lawn, fence,
 at character height. A room needs a bed/sofa, a light source, a rug, something on the walls and a window. Put
 locations far apart (`LOCATIONS` in src/world/World.ts) so they never share a frame. New builders go in the kit.
 
-## The look (src/kit/lighting.ts; user's reference https://www.youtube.com/shorts/wVjP5B-94MM)
+## The look (blockrig/video lighting; user's reference https://www.youtube.com/shorts/wVjP5B-94MM)
 
 A strong warm afternoon sun low enough for long, crisp shadows; a deep blue sky with big bright cumulus (Poly Haven
 `kloofendal_48d_partly_cloudy_puresky`); little flat fill, so shadows keep depth; saturated, contrasty colour
@@ -74,12 +74,12 @@ Per shot in docs/story.md: `weather: clear | overcast | fog | drizzle | rain | s
 - A lone cloud over one character: a second `createWeather({ area: 3 })` updated `at` that spot (see the sample's s07).
 - Indoors, weather is switched off (only visible through windows).
 
-## Time of day (src/kit/lighting.ts)
+## Time of day (blockrig/video lighting)
 
 `time: day | golden | dusk | night | storm` (or `a -> b`): sky gradient dome with sun glow and stars, sun with soft
 shadows, sky fill, exposure. Night/overcast lights windows and lamps (`Materials.setNight`).
 
-## Layout: plan in 2D first (src/kit/plan.ts, Turf)
+## Layout: plan in 2D first (blockrig/video `Plan`)
 
 Lay a location out on a flat (x, z) blueprint before anything becomes 3D, so placement follows real rules instead
 of hand-tuned offsets:
@@ -98,7 +98,7 @@ of hand-tuned offsets:
 `ROBLOX=0` for the all-original cut) draws every zone and footprint over the real street from above. Adding a location:
 give it its own plan and a stage for each of its shots.
 
-## Real-world light balance (LOOK in src/kit/lighting.ts)
+## Real-world light balance (LOOK in blockrig/video lighting)
 
 Shadows only read like the real world when the sun is several times brighter than the light that fills the shade.
 In three.js that fill (the environment map, the hemisphere light, the characters' self-light) is not blocked by
@@ -137,7 +137,7 @@ Keep the shot's `time:` consistent with it (the sun and exposure still come from
 Sandbox first (`light` prop, `soft` for the soft shadows). Add a preset by adding an entry to `LIGHT_PRESETS` and to
 the list in scripts/docs.mjs. Both are frame-pure (the environment renders once, the PCSS noise depends on the pixel).
 
-## Ground layers: never two surfaces at one height (src/kit/ground.ts)
+## Ground layers: never two surfaces at one height (blockrig/video `layer`)
 
 Flat ground pieces that lie on each other (grass, a field of soil, a road, a square, burnt ground) flicker when two
 share a height: the depth buffer can't tell which is on top, worse at a distance (a forest floor and the soil beside

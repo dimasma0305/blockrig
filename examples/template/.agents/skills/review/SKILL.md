@@ -26,11 +26,11 @@ shot or a full render.
    - no flickering ground: the build fails on overlapping ground layers (world skill), but also watch a few frames
      of wide shots across ground seams.
 3. `npm run collide` (run it with the FIRST stills, not after a render: on the nasa video it found the hero inside a desk in 40 shots that looked "fine" at contact-sheet size) (with the Roblox items by default; `-- --no-roblox` for the all-original cut): Rapier checks every 6th frame of the real render
-   (src/kit/collide.ts) and prints each problem with its shot and frames:
+   (blockrig/video `createProbe`) and prints each problem with its shot and frames:
    - camera inside a wall or prop (blank or wall-back frames);
    - a character's face hidden from the camera by something solid;
    - a character inside a wall, prop or furniture; feet (or seated hips) floating above or sunk deeper than the
-     surface's softness (kit/surfaces.ts), or "stiff": resting exactly on top of something soft like a bed;
+     surface's softness (blockrig/video `surfaceOf`), or "stiff": resting exactly on top of something soft like a bed;
    - two characters inside each other.
    Fix the staging (World.ts spots, performance.ts, camera.ts) and run it again until it says "nothing found".
    Things that move (clouds, birds, the dog, weather) carry `userData.noCollide`; a Roblox map collides with

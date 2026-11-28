@@ -19,10 +19,13 @@ export function pace(shots, total, { target = 160, fast = 190, slow = 130 } = {}
 
 /**
  * One voice per speaker: each voice's clips against that voice's median pitch. `clips`: `[{ id, pitch, mood, speaker }]`.
- * Returns `{ medians: { voice: Hz }, problems: [...], notes: [...] }` (needs 3+ clips per voice).
+ * Returns `{ medians: { voice: Hz }, outliers: [{ id, voice, pitch, median, off }], problems, notes }` (needs 3+
+ * clips per voice). Voicing takes against the voice sample's pitch and checking against the median of the finished
+ * takes can disagree (template: a take +34% from the sample was +37% from the median): re-voice the outliers
+ * against the median.
  */
 export function pitchReport(clips, voices = {}) {
-  const byVoice = new Map(), medians = {}, problems = [], notes = [];
+  const byVoice = new Map(), medians = {}, outliers = [], problems = [], notes = [];
   for (const c of clips) if (c.pitch > 0) { const v = voiceOf(c, voices); if (!byVoice.has(v)) byVoice.set(v, []); byVoice.get(v).push(c); }
   for (const [v, cs] of byVoice) {
     if (cs.length < 3) continue;
@@ -30,11 +33,12 @@ export function pitchReport(clips, voices = {}) {
     medians[v] = median;
     for (const c of cs) {
       const d = c.pitch / median - 1, limit = pitchLimit(c.mood ?? "neutral", d > 0);
+      if (Math.abs(d) > limit) outliers.push({ id: c.id, voice: v, pitch: c.pitch, median, off: d });
       if (Math.abs(d) > limit) problems.push(`${c.id}: voice pitch ${c.pitch.toFixed(0)} Hz is ${(d * 100).toFixed(0)}% off ${v}'s ${median.toFixed(0)} Hz (sounds like another voice)`);
       else if (Math.abs(d) > 0.12) notes.push(`${c.id}: voice pitch ${(d * 100).toFixed(0)}% off ${v}'s median`);
     }
   }
-  return { medians, problems, notes };
+  return { medians, outliers, problems, notes };
 }
 
 /** Problems with one clip's word times: they go backwards, or a word starts after the clip ends. */

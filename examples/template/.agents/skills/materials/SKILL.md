@@ -47,7 +47,7 @@ Poly Haven / ambientCG CC0 sets (colour + roughness + normal) are the default fo
 kept), then load with `TextureLoader` inside a `delayRender` and use the same `studs` repeat. Keep them stylised
 enough for blocky characters (low-contrast, not noisy).
 
-## How surfaces behave (src/kit/surfaces.ts)
+## How surfaces behave (blockrig/video `surfaceOf`/`restOn`)
 
 Materials are also physical: how far a body sinks in. Beds, mattresses, blankets 0.35 studs; pillows and cushions
 0.45; sofas 0.3; snow 0.3; sand and mud ~0.12; grass 0.06; carpet and rugs 0.04; floors, roads, wood, stone 0.

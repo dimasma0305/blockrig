@@ -11,11 +11,11 @@ Per shot: `place(person, x, z, rotY)` then `act(person, layers, local, face, gro
 `facing(from, to)` gives the rotation. Layers are BlockRig clips (`src/cast/clips.ts`) with `at` (start offset),
 `fade`, `weight`, `speed`; `poseAt` seeks them so any frame is exact. Contacts: `FEET` (standing), `ON_SEAT` (sitting
 on furniture: hips on the seat, legs hang). New action → add a clip, check it in PoseLab.
-**Soft things give way** (src/kit/surfaces.ts): a body sinks into a bed, sofa or pillow and a little into grass,
+**Soft things give way** (blockrig/video `surfaceOf`/`restOn`): a body sinks into a bed, sofa or pillow and a little into grass,
 never into a floor. Put a character on a surface with `restOn(top, "bed")`, not the raw top: hips sink ~0.35 studs
 into a mattress, which is what makes them look seated rather than perched on a board.
 
-## Camera (src/direction/camera.ts + src/kit/camera.ts)
+## Camera (src/direction/camera.ts + blockrig/video camera recipes)
 
 Recipes: `move(from, to, p)` (dolly/crane), `pushIn(subject, dir, far, near, p)`, `orbit`, `follow`, `lowAngle`,
 `topDown`; `shake` is seeded per frame. Targets come from joints (`rig.jointPosition("Neck")`), so framing follows

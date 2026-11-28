@@ -117,6 +117,7 @@ Every problem the videos' feedback logs (`examples/*/docs/feedback.md`) recorded
 | "Why does he say *rank last* so happily?" | An emotion per line; a line ending in "!" panics | `moodOf`, `EMOTIONS` (voice) |
 | The narrator sounded like a different person from line to line; "sad sounds like another voice" | One voice sample for every mood (no pitch shifting); every take's pitch kept near its voice's median (high-energy lines may go 35% up, drifting down stays at 20%) | `judgeTake`, `pitchLimit`, `pitchReport` (voice) |
 | The pitch tracker read every voice ~7% low (found while moving it) | YIN walks to the bottom of the dip | `medianPitch` (voice) |
+| A take passed the voice script but failed `npm run check` (judged against the voice sample, checked against the median of the finished takes) | The checker lists outliers, and the voice script re-voices them against the median | `pitchReport` `outliers` (voice) |
 | Takes that said the line right were thrown out ("$5,000", "11", "an"/"and") | Numbers spelled out, homophones merged, letter-level match | `matchScore`, `spellNumbers` (voice) |
 | "Commas must be heard"; a glitch at pauses split "Sawit" in two | Real silence at commas and stops, only ever cut into silence, with fades | `addPauses` (voice) |
 | A take that loses the text and babbles | Takes capped at ~2.5 words/s × 1.8 | `maxTakeSeconds`, `judgeTake` (voice) |

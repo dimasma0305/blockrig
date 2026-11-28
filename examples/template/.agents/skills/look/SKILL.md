@@ -57,6 +57,6 @@ Characters, from https://www.youtube.com/shorts/Xd_yEnAdiGo:
   shells (1.2 studs, FaceCenterAttachment) built around the classic head; BlockRig's head has the same shape
   (`HEAD_CORNER`), so separately bought hair and faces fit like a set. A face that floats or shows a second skin tone
   means a shape mismatch: measure the mesh (size, attachment) before blaming the texture;
-- evenly lit, like Roblox's strong avatar ambient: `avatarAmbient()` (kit/lighting.ts) on every character, so faces
+- evenly lit, like Roblox's strong avatar ambient: `avatarAmbient()` (blockrig/video) on every character, so faces
   stay readable in shade.
 Light, sky and surfaces: see the world skill ("The look").

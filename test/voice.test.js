@@ -101,6 +101,7 @@ test("voice: each voice is checked against its own median pitch; caption times a
   const r = pitchReport(clips, { mom: {} });
   close(r.medians.narrator, 150, 0.01); close(r.medians.mom, 230, 0.01);
   assert.ok(r.problems.some((p) => p.startsWith("d:")), "sad drifting 27% down is another voice");
+  assert.deepEqual(r.outliers.map((o) => [o.id, o.voice, o.median]), [["d", "narrator", 150]], "outliers to re-voice against the median");
   assert.ok(!r.problems.some((p) => p.startsWith("e:")), "panic 30% up is allowed");
   assert.ok(!r.problems.some((p) => p.startsWith("m")), "mom is compared with mom");
   assert.deepEqual(wordTimeProblems("s01", { duration: 1, words: [{ word: "a", start: 0.5 }, { word: "b", start: 0.2 }] }), ['s01: word times go backwards at "b"']);
