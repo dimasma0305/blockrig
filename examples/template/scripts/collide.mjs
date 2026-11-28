@@ -7,18 +7,14 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { bundle } from "@remotion/bundler";
 import { renderFrames, selectComposition, ensureBrowser } from "@remotion/renderer";
-import { webpackOverride } from "./webpack.mjs";
+import { getBundle } from "./bundle.mjs";
 
 const args = process.argv.slice(2), roblox = !args.includes("--no-roblox") && fs.existsSync("assets/roblox/cast.json"), ei = args.indexOf("--every"), every = ei >= 0 ? Number(args[ei + 1]) : 6;
 const inputProps = { collide: true, roblox, debug: false };
 const browserExecutable = fs.existsSync(".browser-path") ? fs.readFileSync(".browser-path", "utf8").trim() : null;
 await ensureBrowser({ browserExecutable });
-const serveUrl = await bundle({
-  entryPoint: path.resolve("src/index.ts"), publicDir: path.resolve("assets"),
-  webpackOverride,
-});
+const { serveUrl } = await getBundle(); // built once, reused until the code changes (scripts/bundle.mjs)
 const chromiumOptions = { gl: "angle" };
 const composition = await selectComposition({ serveUrl, id: "Story", browserExecutable, chromiumOptions, inputProps });
 const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "collide-"));

@@ -4,6 +4,16 @@
 
 BlockRig's purpose is now making Roblox-style story videos fast and good: the characters plus the rest of the video.
 
+- **Faster renders (template):**
+  - the Remotion bundle is cached and shared by stills, collide and render (assets linked, not copied);
+  - every shot is its own cached video segment; `--only s03` re-renders one shot and reuses the rest;
+  - the soundtrack is mixed by ffmpeg instead of a browser pass (14 s to 0.4 s);
+  - one browser serves the whole render;
+  - the MP4 is joined without re-encoding.
+
+  On the template: a no-change re-render takes 3 s, one shot 43 s; before, every render took 168 s. `scripts/bench.mjs` measures render settings.
+- Removed lip sync (`mouthAt`, `talk`, `faceFor`) and the timeline's per-shot `words`: unused.
+
 - **Faces are Roblox's only.** Removed the drawn, animated faces: `drawFace`, `EXPRESSIONS`, `FACE_DEFAULTS`, `expression`, `mixFace`, parameter faces, blinking, `lookAt`, `talk` and image crossfades (`fade`), plus `examples/faces.html` and `docs/faces.png`. `createFace({ images })` is a classic face Decal: `set(name)` replaces its image instantly, as in Roblox; `face:<name>` clip markers and `rig.setExpression(name)` still swap it. Moving faces are dynamic heads (`facsExpression`, FaceControls) and face accessories. Story `faces:` names are checked against the FACS presets. The videos' no-Roblox fallback no longer draws a face.
 
 - **Avatars by user or outfit:** `user:<name or id>` (users API, then avatar API: worn items, equipped emotes, body colours, scales, R6/R15) and `outfit:<id>`. A bundle's outfit brings its colours and scales; `rigFromPack` uses them. Roblox's 429 is retried with backoff. Checked on real files: Korblox Deathspeaker (bundle 192) built and running; `user:Roblox` resolves 17 items.

@@ -41,6 +41,8 @@ cd ../my-video && npm install
 5. **Collide.** `npm run collide` runs the Rapier staging check on the real frames. It finds cameras inside walls, faces hidden behind props, characters inside furniture, and characters floating, sunk or stiff on a soft bed.
 6. **Render.** `npm run render` renders `out/<slug>.mp4` (1080×1920, with the voice, music and captions). `npm run fast-gpu` (once, on laptops with two GPUs) makes renders about 4× faster.
 
+**Renders are cached:** the bundle, each shot's video segment and the soundtrack are kept, so a re-render redoes only what changed: 3 s with no change, about 40 s for one changed shot (`npm run render -- --only s03`), against 168 s before.
+
 **Or all at once:** `npm run make` runs docs → voice (if there is none yet) → check → stills → collide, and writes `out/report.html`. The report shows what passed, each problem with its shot and frames, what needs you (a sign-in, a missing pack), the pace and pitch, the contact sheet and every shot's still. `npm run make -- --render` renders too when nothing is wrong. Re-voicing only redoes lines whose text, voice or mood changed.
 
 ## Module map

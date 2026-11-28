@@ -6,7 +6,15 @@ description: Render the final video and its share copies - npm run render (out/<
 # Render
 
 1. Run the review skill's checks first, including `npm run collide` (a full render takes minutes; a still takes seconds).
-2. `npm run render` → `out/<slug>.mp4` (1080×1920, 60 fps, H.264 CRF 18). Run it in the background. It prints an ffprobe summary; a missing audio stream means no voice yet.
+2. `npm run render` → `out/<slug>.mp4` (1080×1920, 60 fps, H.264 CRF 18). Run it in the background. It prints an ffprobe summary (a missing audio stream means no voice yet) and where the time went.
+   Renders are cached, so re-render freely:
+   - **The bundle** is built once and reused by stills, collide and render until the code changes (`scripts/bundle.mjs`; assets are linked, so new audio or textures don't need a new bundle).
+   - **Every shot** is its own video segment in `out/.cache/shots`, keyed by the bundle, the shot's frames, the visible assets and the settings. An unchanged shot is never rendered again.
+   - **The soundtrack** is mixed by ffmpeg (no browser) once per voice or music change.
+   - **The MP4** is the segments joined without re-encoding.
+
+   Changed only some shots' code? `npm run render -- --only s03,s05` re-renders those and reuses every other shot's latest segment. `--fresh` ignores the cache.
+   Measured on the template (980 frames, RTX 4060): first render 72–157 s (the frame rate varies between runs), no change 3 s, one shot re-rendered 43 s (before: 168 s every time).
 3. `node scripts/render.mjs --debug` → `out/<slug>-debug.mp4` with the overlay burned in, for reviewing framing with the user (never for posting).
 4. `npm run preview -- --to <dir> [--start s --len s]` → a 720p MP4 and a short GIF (GitHub shows GIFs inline, not MP4s from a repo).
 5. Pull a frame sheet from the MP4 and look at it (review skill), and scan it for black frames:
@@ -33,6 +41,9 @@ The user can watch it live before any render: Remotion Studio (`npm run studio`,
 `roblox` prop on (this video's Root sets it by default). Offer it whenever the user wants to check changes.
 
 ## Speed
+
+`node scripts/bench.mjs [from] [count]` renders the same frames under several settings (`VARIANTS=base,nopost,c6,c12,q80`) and prints frames per second after the tabs start. On the template the same settings ranged 6.4–10.1 frames/s between runs, so repeat a variant before trusting a difference. Tab startup is 15–24 s per run: one long run beats many short ones, which is why the render groups neighbouring shots and shares one browser.
+
 
 Measured on the nasa video (8 tabs, RTX 4060): a 2:32 video at 60 fps took 11 min 18 s (~13.5 frames/s, about 45 s
 of it bundling and browser start). Lights switched per location plus soft-shadow samples 16 → 10 saved 11% on the
