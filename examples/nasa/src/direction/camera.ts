@@ -106,7 +106,7 @@ function shotCamera(shot: Shot, p: number, local: number, cast: Cast, world: Wor
     case "s58": return fromFloor(mid2(me, dad), 0.4, 1.2, 44);
     // ---- the reveal
     case "s59": return fromFloor(mid2(me, dad), 1.0, 1.0, 48, -10);
-    case "s60": { const k = world.props.pkg.position.clone().add(V(0, 2.2, 0)); return { pos: head(me).add(V(2.2, 0.8, -1.2)), target: k, fov: 46, shake: 0 }; }
+    case "s60": { const k = world.props.pkg.position.clone().add(V(0, 2, 0)); return { pos: V(8.5, 6, -10), target: head(me).lerp(k, 0.4).add(V(0, -0.6, 0)), fov: 52, shake: 0 }; } // me pointing at the box
     case "s61": return on(me, 0.15, 4.5 - 1.2 * e, 0.3, 42);
     case "s62": { const h = head(me); return { pos: h.clone().add(V(0.4, 0.6, -13)), target: h.clone().add(V(0, -0.4, 0)), fov: 28, shake: 0 }; }
     case "s63": { const k = R.pkg; return { pos: k.clone().add(V(0.6, 10.5, 2.6)), target: k.clone().add(V(0, 2, 0)), fov: 46, shake: 0 }; }

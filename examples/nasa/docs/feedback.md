@@ -38,6 +38,8 @@ undone later. One line per item: date, what they said, what we did, where.
 
 ## This video
 
+- 2026-11-28 Cut the $5,000 jokes (prologue, bug bounty, money, receipt, sunscreen lines), the "work remotely" bit and the prologue; "if you fail you get removed by the government" (s02, timers UNTIL REMOVAL, the friend's line); babies get hacker names instead of defacing websites (s04 line; @0xDEAF over the baby, @r00tkit, @nullbyte, @kur3n4if in the preschool; WHOAMI / ROOT ACCESS screens). 52 shots, 1:52.
+
 - 2026-11-28 "Render it again, now using our new things" → nasa runs on BlockRig's library: src/kit re-exports blockrig/video (timeline, pose, camera, lighting, Roblox maps, plan, ground layers, surfaces, collide probe), lights via lightsByLocation, scripts on blockrig/voice + compileStory (identical compiled story), collide also checks captions over faces (s01 and s09 re-aimed, one kid stepped back). Render 4 min 49 s.
 
 - 2026-11-28 "Make the render faster" → lights switched per location and soft-shadow samples 16 → 10 (11% faster, measured), and 30 fps (user's choice; half the frames).

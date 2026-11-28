@@ -21,7 +21,7 @@ export const Layers2D: React.FC<{ timeline: Timeline }> = ({ timeline: T }) => {
   if (n >= 2 && n <= 3) out.push(<AbsoluteFill key="freeze" style={{ background: "rgba(70,110,170,0.12)", mixBlendMode: "multiply" }} />,
     <div key="pause" style={{ position: "absolute", top: "9%", left: "7%", fontFamily, fontSize: 64, color: "#fff", WebkitTextStroke: "8px #000", paintOrder: "stroke fill", opacity: 0.85 }}>❚❚ PAUSED</div>);
   // the rewind: the last 0.9 s of s03 and the first 0.5 s of s04
-  const rewindIn = shot.id === "s03" ? local - (shot.dur - 0.9) : shot.id === "s04" ? 0.9 + local : -1;
+  const rewindIn = shot.id === "s02" ? local - (shot.dur - 0.9) : shot.id === "s04" ? 0.9 + local : -1;
   if (rewindIn >= 0 && rewindIn < 1.4) {
     const r = rng(frame * 7 + 1), k = rewindIn < 0.9 ? rewindIn / 0.9 : 1 - (rewindIn - 0.9) / 0.5;
     out.push(<AbsoluteFill key="rw" style={{ background: `rgba(20,10,40,${0.35 * k})` }}>

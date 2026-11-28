@@ -10,7 +10,7 @@ import { layer, checkGround, lightsByLocation } from "blockrig/video";
 import { restOn } from "blockrig/video";
 import type { RobloxCast } from "../cast/roblox";
 import { HOUSES } from "./assets";
-import { screen, banner, fanFlag, calendar, timerTag, poster, standee } from "./boards";
+import { screen, banner, fanFlag, calendar, timerTag, poster, standee, nameTag } from "./boards";
 import * as P from "./storyProps";
 
 export const LOCATIONS = { room: new THREE.Vector3(0, 0, 0), nursery: new THREE.Vector3(600, 0, 0), preschool: new THREE.Vector3(1200, 0, 0), hall: new THREE.Vector3(1800, 0, 0), friend: new THREE.Vector3(2400, 0, 0), town: new THREE.Vector3(3000, 0, 0) };
@@ -211,6 +211,10 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   const pmrem = new THREE.PMREMGenerator(gl), envs: Record<string, THREE.Texture> = {};
   const env = (name: string) => (envs[name] ??= pmrem.fromEquirectangular(lib.sky(name)).texture);
   const timer = timerTag(); timer.visible = false; root.add(timer);
+  // hacker usernames over the kids' heads (the baby and the preschool), and my name sign in the nursery
+  const tags = { hero: nameTag("0xDEAF"), friend: nameTag("kur3n4if", "#ff7ad9"), tm1: nameTag("r00tkit", "#ffd166"), tm2: nameTag("nullbyte", "#7ad7ff") };
+  for (const t of Object.values(tags)) root.add(t);
+  const sign = banner(["0xDEAF", "(my name)"], 4.2, 2.2, "#0b1020", "#3dff8b", "#13c4a3"); sign.position.set(nursery.baby.x - 1, 6.2, nursery.baby.z - 8.4); root.add(sign);
   checkGround(root);
   // render speed: each place's lamps are only on while the camera is there (blockrig/video lightsByLocation)
   const lamps = lightsByLocation(root, LOCATIONS);
@@ -218,7 +222,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
 
   const skyFor = (d: Daylight) => (d.stars > 0.6 ? "night" : d.sunDir[1] < 0.5 ? "golden" : "day");
   return {
-    root, lib, room, lap, nursery, town, pre, hall, friendRoom, props, mon, babyScreen, babyLaptop, tcp, tablet, lobbyBoard, timer, restOn,
+    root, lib, room, lap, nursery, town, tags, pre, hall, friendRoom, props, mon, babyScreen, babyLaptop, tcp, tablet, lobbyBoard, timer, restOn,
     update(o: { location: string; weather: Weather; daylight: Daylight; time: number; local: number; camera: THREE.Camera; ownLight?: boolean; confetti?: { at: THREE.Vector3; t: number } | null }) {
       const focus = (LOCATIONS as any)[o.location] ?? LOCATIONS.room;
       lamps.show(o.location);

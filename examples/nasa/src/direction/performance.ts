@@ -19,7 +19,7 @@ export function act(p: Person, layers: Layer[], t: number, face: string | undefi
     const show = new Set(p.faceSets[face ?? "neutral"] ?? p.faceSets.neutral ?? []);
     for (const set of Object.values(p.faceSets)) for (const o of set) o.visible = show.has(o);
   } else if (p.dynamic) { Object.assign(p.rig.faceControls, facsExpression(face ?? "neutral")); p.rig.applyFaceControls(); }
-  else { if (face) p.face.set(face, { fade: 0 }); p.rig.updateFace(0); }
+  else if (p.face?.images?.[face ?? ""]) { p.face.set(face!); p.rig.updateFace(); } // a classic face decal, when one is loaded
   if (contacts.length) groundRig(p.rig, ground, contacts);
 }
 /** Face a point on the ground: the rotation to give rig.object.rotation.y (rigs face +Z). */
@@ -105,7 +105,7 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
       place(me, b.x, b.z, rot);
       const flop = id === "s06";
       act(me, flop ? [{ clip: C.babyFlop, at: 0.35 }] : [{ clip: C.floorSit }, ...(id === "s04" ? [{ clip: C.type, weight: 0.6 }] : [])], local, flop ? (p < 0.5 ? "laugh" : p < 0.7 ? "shocked" : "dazed") : faceOf(shot, "hero"), 0, SEAT);
-      world.babyScreen.set(flop && local > 0.3 ? "WEBSITE HACKED" : "TCP1P", 0);
+      world.babyScreen.set(flop && local > 0.3 ? "ROOT ACCESS" : "WHOAMI", 0);
       if (n >= 7) {
         stand(dad, N.dad, facing(N.dad, b) + (id === "s07" && p > 0.55 ? 0.9 : 0), id === "s08" ? [{ clip: C.idle }, { clip: C.nod, at: 1.1 }] : [{ clip: C.idle }], faceOf(shot, "dad"));
         stand(mom, N.mom, facing(N.mom, b), [{ clip: C.idle }], faceOf(shot, "mom"));
@@ -255,6 +255,10 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
       break;
     }
   }
+  // hacker usernames over our heads: the baby (s04-s06) and the toddlers in the wider preschool shots (close-ups: no tag)
+  const tagOn: [THREE.Sprite, Person][] = n === 4 || n === 6 ? [[world.tags.hero, me]] : [9, 11, 16, 18].includes(n) ? [[world.tags.hero, me], [world.tags.friend, friend], [world.tags.tm1, tm1], [world.tags.tm2, tm2]] : [];
+  for (const t of Object.values(world.tags)) t.visible = false;
+  for (const [t, q] of tagOn) { if (!q.rig.object.visible) continue; q.rig.jointPosition("Neck", tmp); t.visible = true; t.position.copy(tmp).add(V(0, 1.6 * q.rig.object.scale.y + 0.35, 0)); }
   // the countdown floats above my head
   if (world.timer.visible) { me.rig.jointPosition("Neck", tmp); world.timer.position.copy(tmp).add(V(0, 1.7 * me.rig.object.scale.y + 0.45, 0)); world.timer.set(s.timer, p); }
   return out;

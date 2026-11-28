@@ -1,7 +1,7 @@
 // The cast (docs/visuals.md "Cast"), built with BlockRig's avatar mode: BodyColors, drawn Shirt/Pants
 // templates, hair and accessories on Roblox attachments, live drawn faces. All original.
 import * as THREE from "three";
-import { createRig, createFace } from "blockrig";
+import { createRig } from "blockrig";
 import { hoodie, tee, jeans, shorts } from "./wardrobe";
 import { hair, outlined, AT, type HairStyle } from "./props";
 import { partyHat } from "../world/storyProps";
@@ -43,7 +43,7 @@ export function person(name: string, o: {
     avatarAmbient(rig.object);
     return { rig, face: null, name, dynamic: !!rb.head, faceSets };
   }
-  const face = createFace({ expression: o.expression ?? "neutral", blink: false, seed: o.seed ?? 1 });
+  const face = null; // faces are Roblox's only (BlockRig): without the Roblox items the head has no face
   const rig = createRig({ shape: o.shape as any, scale: o.scale as any, bodyColors: skin(o.skin), clothing: { shirt: o.shirt, pants: o.pants }, face, outline: 0.035, shadows: true });
   if (o.hair) rig.attachTo(o.hair, "HairAttachment");
   if (o.hat) rig.attachTo(o.hat, "HatAttachment");

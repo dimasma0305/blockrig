@@ -7,11 +7,11 @@ size: 1080x1920
 
 # Hack NASA Before Ten
 
-- **Hook (first 2 s):** In this world, everyone has to hack NASA before they turn ten. If you fail... you get deleted.
-- **Plot:** A kid raised as a hacker from the crib (CTFs at two, OSCP at three, bug bounties at five) has nine years to hack NASA, while Mom "invests" his $5,000 bounty and every "Can I go play?" gets "After NASA"; with three seconds left Dad tells him to press Enter, he passes, and the $5,000 turns out to be one bottle of sunscreen for the next objective: hack the Sun before eleven.
-- **Twist:** Mom's big investment is a tiny sunscreen, because the next rule is "hack the SUN before ELEVEN" ("After the Sun").
-- **Comment bait:** what will Mom buy for the Sun?
-- **Length:** ~3 min, 66 shots (one line each; 20 silent beats), 5 locations (my room, nursery, preschool, conference hall, friend's room).
+- **Hook (first 2 s):** In this world, everyone has to hack NASA before they turn ten. If you fail... the government removes you.
+- **Plot:** A kid raised as a hacker from the crib (a hacker name as a baby, CTFs at two, OSCP at three) has nine years to hack NASA while every "Can I go play?" gets "After NASA"; with three seconds left Dad tells him to press Enter, he passes, and Dad's "OPEN AFTER NASA" box holds one bottle of sunscreen for the next objective: hack the Sun before eleven.
+- **Twist:** the big box after NASA is a tiny sunscreen, because the next rule is "hack the SUN before ELEVEN" ("After the Sun").
+- **Comment bait:** what's your hacker name?
+- **Length:** ~2 min, 52 shots (one line each), 6 locations (street, my room, nursery, preschool, conference hall, friend's room).
 - **Dialogue:** every line, narration and dialogue, is spoken by the one narrator voice with the emotion noted; a dialogue line's caption carries a speaker tag (`speaker:`: ME, MOM, DAD, BEST FRIEND, SYSTEM). `say:` is how the narrator pronounces a name (same word count as the line); captions show the real spelling.
 - **Explainers** (`note:`): a short label under the age card that says what the jargon means, so every joke reads without hacker knowledge.
 - **On-screen text** (`title:` age card, `timer:` countdown above my head, `screen:` what the laptop or board shows): real brand and event names are plain text only, never logos.
@@ -43,44 +43,30 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - light: day
 
 ### s02 · room
-> If you fail... you get deleted.
+> If you fail... the government removes you.
 
-- captions: IF YOU *FAIL*... | YOU GET *DELETED*.
+- captions: IF YOU *FAIL*... | THE *GOVERNMENT* | REMOVES YOU.
+- note: by order of the government
 - action: same frozen frame, tighter
 - camera: extreme close on my face and the timer
 - emotion: flat
 - faces: hero=scared
-- timer: 00:03 UNTIL DELETION
-- screen: NASA: LOCKED
-- time: day
-- mood: tense
-- light: studio
-
-### s03 · room
-> When I finally passed, I found out what my mom bought with my stolen five thousand dollars.
-
-- captions: WHEN I FINALLY *PASSED*, | I FOUND OUT | WHAT MY *MOM* BOUGHT | WITH MY *STOLEN* | FIVE THOUSAND *DOLLARS*.
-- say: When I finally passed, I found out what my mom bought, with my stolen five thousand dollars.
-- action: frozen frame; the giant sealed package sits beside the desk; at the end the picture rewinds
-- camera: pull back to show me, the desk and the package
-- emotion: serious
-- faces: hero=scared
-- timer: 00:03 UNTIL DELETION
+- timer: 00:03 UNTIL REMOVAL
 - screen: NASA: LOCKED
 - time: day
 - mood: tense
 - light: studio
 
 ### s04 · nursery
-> Here, babies learn to hack websites before they learn to walk.
+> Here, every baby gets a hacker name before a real one.
 
-- captions: HERE, *BABIES* | LEARN TO HACK *WEBSITES* | BEFORE THEY LEARN | TO *WALK*.
-- action: rewind cut; baby me types on a tiny laptop (TCP1P sticker) on the nursery rug; dragon plush, toy chest with a Hack The Box sticker
+- captions: HERE, EVERY *BABY* | GETS A *HACKER* NAME | BEFORE A *REAL* ONE.
+- action: rewind cut; baby me types on a tiny laptop on the nursery rug; my hacker name 0xDEAF floats over my head and is painted on the wall sign; the laptop says LOGGED IN AS 0xDEAF
 - camera: wide low across the rug, slow push in
 - emotion: neutral
 - faces: hero=determined
 - title: AGE 0
-- screen: TCP1P
+- screen: WHOAMI
 - time: day
 - mood: funny
 - light: indoor
@@ -101,41 +87,14 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 ### s06 · nursery
 
-- action: the laptop flashes WEBSITE HACKED; I cheer, try to stand, fall on my bottom; confidence turns into a confused stare
+- action: the laptop flashes ROOT ACCESS; I cheer, try to stand, fall on my bottom; confidence turns into a confused stare
 - camera: front, low, the baby and the laptop
 - faces: hero=laugh
-- screen: WEBSITE HACKED
+- screen: ROOT ACCESS
 - time: day
 - mood: funny
 - light: indoor
 - min: 2.2
-
-### s07 · nursery
-> He still can't walk.
-
-- captions: HE STILL | CAN'T *WALK*.
-- speaker: dad
-- action: Dad looks at the baby, then at Mom
-- camera: two-shot of Mom and Dad by the door, the baby small in front
-- emotion: neutral
-- faces: dad=sad, mom=neutral, hero=dazed
-- time: day
-- mood: funny
-- light: indoor
-
-### s08 · nursery
-> He can work remotely.
-
-- captions: HE CAN WORK | *REMOTELY*.
-- speaker: mom
-- action: Mom, straight-faced; Dad considers, then nods
-- camera: close on Mom, Dad nodding at the edge
-- emotion: flat
-- faces: mom=neutral, dad=neutral
-- time: day
-- mood: funny
-- light: indoor
-- min: 2
 
 ### s09 · preschool
 > By two, we're already competing in CTFs.
@@ -342,84 +301,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: happy
 - light: studio
 
-### s28 · room
-> By five, we're doing bug bounties.
-
-- captions: BY *FIVE*, | WE'RE DOING | BUG *BOUNTIES*.
-- note: bug bounty = companies pay you for finding bugs
-- action: dinosaur pyjamas; tabs HackerOne, Bugcrowd, PortSwigger Web Security Academy; Burp Suite sticker next to the TCP1P sticker
-- camera: over my shoulder onto the screen
-- emotion: neutral
-- faces: hero=determined
-- title: AGE 5
-- screen: BUG BOUNTY TABS
-- time: day
-- mood: funny
-- light: indoor
-
-### s29 · room
-
-- action: notification: REPORT ACCEPTED, $5,000 REWARD
-- camera: push in fast on the screen
-- faces: hero=shocked
-- screen: REPORT ACCEPTED: $5,000 REWARD
-- time: day
-- mood: happy
-- light: indoor
-- min: 1.2
-
-### s30 · room
-> Mom! Five thousand dollars!
-
-- captions: MOM! | FIVE THOUSAND *DOLLARS*!
-- speaker: me
-- action: genuine joy, arms up
-- camera: front, low
-- emotion: happy
-- faces: hero=laugh
-- screen: REPORT ACCEPTED: $5,000 REWARD
-- time: day
-- mood: happy
-- light: indoor
-
-### s31 · room
-> Give it here. I'm investing in your future.
-
-- captions: GIVE IT *HERE*. | I'M *INVESTING* | IN YOUR FUTURE.
-- speaker: mom
-- action: Mom appears behind me instantly, open palm, a nod
-- camera: two-shot, Mom looming over my chair
-- emotion: smug
-- faces: mom=happy, hero=shocked
-- screen: REPORT ACCEPTED: $5,000 REWARD
-- time: day
-- mood: funny
-- light: indoor
-
-### s32 · room
-
-- action: the balance drops $5,000 to $0; I angrily sip a juice box
-- camera: slow zoom on my face
-- faces: hero=angry
-- screen: BALANCE: $0
-- time: day
-- mood: funny
-- light: indoor
-- min: 1.7
-
-### s33 · room
-> That was my first security incident.
-
-- captions: THAT WAS MY FIRST | SECURITY *INCIDENT*.
-- action: still sipping, staring
-- camera: still close
-- emotion: flat
-- faces: hero=angry
-- screen: BALANCE: $0
-- time: day
-- mood: funny
-- light: indoor
-
 ### s34 · room
 > Explain this.
 
@@ -534,9 +415,9 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - min: 2.4
 
 ### s43 · friend
-> You've got this, bro. Please don't get deleted.
+> You've got this, bro. Please don't get removed.
 
-- captions: YOU'VE GOT THIS, *BRO*. | PLEASE DON'T | GET *DELETED*.
+- captions: YOU'VE GOT THIS, *BRO*. | PLEASE DON'T | GET *REMOVED*.
 - speaker: friend
 - action: my best friend on a video call in his kurenaif room, flag in hand; my screen shows his avatar with the flag
 - camera: close on him holding the phone
@@ -631,35 +512,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - light: studio
 - min: 1
 
-### s50 · room
-> Use my money!
-
-- captions: USE *MY* MONEY!
-- speaker: me
-- action: I point at the package
-- camera: past me to the package
-- emotion: angry
-- faces: hero=furious
-- timer: 10TH BIRTHDAY IN 00:45
-- time: day
-- mood: tense
-- light: studio
-
-### s51 · room
-> Already invested.
-
-- captions: ALREADY *INVESTED*.
-- speaker: mom
-- action: Mom pats the box, one nod
-- camera: low on Mom and the box
-- emotion: smug
-- faces: mom=smug
-- timer: 10TH BIRTHDAY IN 00:41
-- time: day
-- mood: tense
-- light: studio
-- min: 1.2
-
 ### s52 · room
 
 - action: I stare into the camera, then type like mad: dramatic light, spinning camera, rising music; countdown to 00:10; the screen reads READY TO SUBMIT
@@ -692,7 +544,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - action: back to the opening shot at 00:03; Dad walks past eating a sandwich; the music stops
 - camera: the opening framing, Dad crossing behind
 - faces: hero=scared, dad=neutral
-- timer: 00:03 UNTIL DELETION
+- timer: 00:03 UNTIL REMOVAL
 - screen: READY TO SUBMIT
 - time: day
 - mood: silence
@@ -708,7 +560,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - camera: on Dad, sandwich in hand
 - emotion: flat
 - faces: dad=neutral
-- timer: 00:03 UNTIL DELETION
+- timer: 00:03 UNTIL REMOVAL
 - time: day
 - mood: silence
 - light: studio
@@ -723,7 +575,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - camera: extreme close on me
 - emotion: whisper
 - faces: hero=embarrassed
-- timer: 00:02 UNTIL DELETION
+- timer: 00:02 UNTIL REMOVAL
 - time: day
 - mood: silence
 - light: studio
@@ -771,9 +623,9 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - light: indoor
 
 ### s60 · room
-> I passed! Now show me what you bought!
+> I passed! Can I open it now?
 
-- captions: I *PASSED*! | NOW SHOW ME | WHAT YOU *BOUGHT*!
+- captions: I *PASSED*! | CAN I *OPEN* | IT NOW?
 - speaker: me
 - action: I relax for a moment, then notice the package and point at it
 - camera: past me to the package
@@ -831,45 +683,6 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - emotion: neutral
 - faces: dad=happy, hero=dazed
 - timer: 11TH BIRTHDAY IN 365 DAYS
-- time: day
-- mood: funny
-- light: indoor
-
-### s65 · room
-
-- action: a receipt falls out: SOLAR STARTER KIT, $5,000, PAID; I look at the receipt, the bottle, then Mom
-- camera: close on the receipt, then whip to me
-- faces: hero=shocked
-- timer: 11TH BIRTHDAY IN 365 DAYS
-- screen: RECEIPT
-- time: day
-- mood: funny
-- light: indoor
-- min: 1.9
-
-### s66 · room
-> You spent my five thousand dollars... on sunscreen?!
-
-- captions: YOU SPENT MY | FIVE THOUSAND *DOLLARS*... | ON *SUNSCREEN*?!
-- speaker: me
-- action: disbelief building, bottle held up
-- camera: low on me, Mom in the background
-- emotion: shocked
-- faces: hero=furious, mom=neutral
-- timer: 11TH BIRTHDAY IN 365 DAYS
-- time: day
-- mood: funny
-- light: indoor
-
-### s67 · room
-> And you haven't even said thank you.
-
-- captions: AND YOU HAVEN'T | EVEN SAID | *THANK* YOU.
-- speaker: mom
-- action: mildly offended, an eyebrow up
-- camera: close on Mom
-- emotion: serious
-- faces: mom=angry
 - time: day
 - mood: funny
 - light: indoor

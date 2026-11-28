@@ -70,6 +70,12 @@ export function screen(w = 3.4, h = 2.1) {
       lock(g, W / 2, H * 0.36, H * 0.26, "#ff2d3d"); centre(g, "NASA: LOCKED", W / 2, H * 0.75, H * 0.15, "#ff2d3d", W * 0.85); return;
     }
     if (K === "TCP1P") { const r = browser(g, W, H, ["target-site", "notes"]); for (let i = 0; i < 7; i++) left(g, ["$ nmap target", "80/tcp open http", "$ sqlmap -u ...", "[+] injectable!", "> dumping...", "", ""][i], 30, r.y + 50 + i * 70, 44, "#3dff8b"); return; }
+    if (K === "WHOAMI") { // the baby's laptop: logged in under its hacker name
+      g.fillStyle = "#0b1020"; g.fillRect(0, 0, W, H);
+      left(g, "$ whoami", W * 0.07, H * 0.22, H * 0.1, "#3dff8b"); left(g, "0xDEAF", W * 0.07, H * 0.42, H * 0.17, "#ffffff");
+      g.fillStyle = "#13c4a3"; g.fillRect(W * 0.07, H * 0.62, W * 0.86, H * 0.2); centre(g, "LOGGED IN AS 0xDEAF", W / 2, H * 0.72, H * 0.09, "#0b1020", W * 0.82); return;
+    }
+    if (K === "ROOT ACCESS") { g.fillStyle = p > 0.5 ? "#0b3b18" : "#0b1020"; g.fillRect(0, 0, W, H); check(g, W / 2, H * 0.34, H * 0.18); centre(g, "ROOT ACCESS", W / 2, H * 0.68, H * 0.14, "#3dff8b", W * 0.9); centre(g, "welcome, 0xDEAF", W / 2, H * 0.86, H * 0.08, "#ffffff", W * 0.9); return; }
     if (K === "WEBSITE HACKED") { g.fillStyle = p > 0.5 ? "#0b3b18" : "#0b1020"; g.fillRect(0, 0, W, H); check(g, W / 2, H * 0.36, H * 0.18); centre(g, "WEBSITE HACKED", W / 2, H * 0.74, H * 0.13, "#3dff8b", W * 0.9); return; }
     if (K.startsWith("BEDTIME")) { // the tablet's playlist: the real channels' thumbnails and avatars, YouTube style
       g.fillStyle = "#0f0f0f"; g.fillRect(0, 0, W, H); centre(g, "🌙 BEDTIME PLAYLIST", W / 2, H * 0.05, H * 0.04, "#ffd166");
@@ -213,6 +219,16 @@ export function fanFlag(size = 1.6) {
   cloth.position.set(size * 0.68, size * 1.0, 0.01); g.add(cloth);
   const back = poster("kurenaif", size * 1.3, size * 1.05, "FAN CLUB", "#6b2fb3"); back.rotation.y = Math.PI; back.position.set(size * 0.68, size * 1.0, -0.01); g.add(back);
   return g;
+}
+
+/** A hacker username floating over someone's head (a camera-facing sprite: green on black, like a terminal). */
+export function nameTag(name: string, colour = "#3dff8b") {
+  const W = 640, H = 170, c = canvas(W, H), g = c.getContext("2d")!;
+  g.fillStyle = "rgba(5,10,8,0.82)"; g.beginPath(); g.roundRect(8, 8, W - 16, H - 16, 36); g.fill(); g.strokeStyle = colour; g.lineWidth = 8; g.stroke();
+  centre(g, "@" + name, W / 2, H / 2 + 4, H * 0.5, colour, W * 0.88);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(c), toneMapped: false, depthTest: false, transparent: true }));
+  sprite.renderOrder = 9; sprite.scale.set(2.4, 2.4 * (H / W), 1); sprite.userData.noCollide = true; sprite.visible = false;
+  return sprite;
 }
 
 /** The countdown above my head (docs/story.md `timer:`), a camera-facing sprite: big red digits, a line under them. */
