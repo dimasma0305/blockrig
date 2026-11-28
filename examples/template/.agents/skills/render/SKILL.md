@@ -9,12 +9,12 @@ description: Render the final video and its share copies - npm run render (out/<
 2. `npm run render` → `out/<slug>.mp4` (1080×1920, 60 fps, H.264 CRF 18). Run it in the background. It prints an ffprobe summary (a missing audio stream means no voice yet) and where the time went.
    Renders are cached, so re-render freely:
    - **The bundle** is built once and reused by stills, collide and render until the code changes (`scripts/bundle.mjs`; assets are linked, so new audio or textures don't need a new bundle).
-   - **Every shot** is its own video segment in `out/.cache/shots`, keyed by the bundle, the shot's frames, the visible assets and the settings. An unchanged shot is never rendered again.
+   - **Every shot** is its own video segment in `out/.cache/shots`. Its key is the code (not the story data), the story's shared settings, the shot's own story entry and voice clip, its length in frames, the visible assets and the settings. A shot's frames depend only on the shot, not on where it sits: re-voicing or rewriting one line re-renders that shot only, even though every later shot moves. So animation must use the shot's clock (`shotClock(shot, local)`, or `local`), never the video frame or absolute time. Anything `Video.tsx` reads across shots goes in `shared` in `scripts/render.mjs`.
    - **The soundtrack** is mixed by ffmpeg (no browser) once per voice or music change.
    - **The MP4** is the segments joined without re-encoding.
 
-   Changed only some shots' code? `npm run render -- --only s03,s05` re-renders those and reuses every other shot's latest segment. `--fresh` ignores the cache.
-   Measured on the template (980 frames, RTX 4060): first render 72–157 s (the frame rate varies between runs), no change 3 s, one shot re-rendered 43 s (before: 168 s every time).
+   Changed code, but it only affects some shots? `npm run render -- --only s03,s05` re-renders those and reuses every other shot's latest segment. `--fresh` ignores the cache.
+   Measured on the template (980 frames, RTX 4060): first render 72–157 s (the frame rate varies between runs), no change 3 s, one shot re-rendered 43 s, one line re-voiced 51 s (before: 168 s every time).
 3. `node scripts/render.mjs --debug` → `out/<slug>-debug.mp4` with the overlay burned in, for reviewing framing with the user (never for posting).
 4. `npm run preview -- --to <dir> [--start s --len s]` → a 720p MP4 and a short GIF (GitHub shows GIFs inline, not MP4s from a repo).
 5. Pull a frame sheet from the MP4 and look at it (review skill), and scan it for black frames:

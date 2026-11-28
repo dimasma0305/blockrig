@@ -5,10 +5,16 @@
 //
 //   const T = createTimeline(story, timings);
 //   const { shot, local, p } = T.shotAt(frame / T.FPS);   // the shot at this time, seconds into it, progress 0..1
+//   shotClock(shot, local)                                // a clock for animation that doesn't depend on the shot's position
 //   T.CAPTIONS                                            // each pops in on its first spoken word
 //   speakersOf(T, { mom: { name: "MOM", colour: "#d6457a" } })   // shot id -> speaker tag for dialogue lines
 
 const words = (s) => (s ? s.split(/\s+/).filter(Boolean).length : 0);
+/** A stable number 0..999 from a string (a shot id): seeds that stay the same wherever the shot sits. */
+export function seedOf(str) { let h = 2166136261; for (const c of String(str)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1000; }
+/** A clock for a shot: seconds into it plus the shot's own seed, so animation (clouds, particles, shake) looks the same
+ *  wherever the shot sits in the video, and differs from shot to shot. */
+export const shotClock = (shot, local) => shot.seed + local;
 
 /**
  * @param {object} story `{ fps, width, height, voice?: { gapSeconds }, shots: [{ id, narration, captions?, speaker?, minSeconds?, ... }] }`
@@ -19,16 +25,21 @@ export function createTimeline(story, timings) {
   const clips = timings?.clips ?? {};
   const gap = story.voice?.gapSeconds ?? 0.12;
 
-  let t = 0;
+  // Every shot is a whole number of frames, counted on from the shot before: a shot's frames then depend only on the
+  // shot itself (its own voice and notes), never on where earlier shots ended. That is what lets a render reuse a shot
+  // when another line is re-voiced (the template's render cache).
+  let frames = 0;
   const SHOTS = story.shots.map((s, idx) => {
     const clip = clips[s.id];
     const est = words(s.narration) / 2.7;
-    const dur = Math.max((clip?.duration ?? est) + gap, s.minSeconds ?? 0, 0.5);
-    const shot = { ...s, idx, faces: s.faces ?? {}, start: t, end: t + dur, dur, startFrame: Math.round(t * FPS), endFrame: Math.round((t + dur) * FPS), audio: clip ? `audio/${s.id}.wav` : null };
-    t += dur;
+    const seconds = Math.max((clip?.duration ?? est) + gap, s.minSeconds ?? 0, 0.5), n = Math.max(1, Math.round(seconds * FPS));
+    const shot = { ...s, idx, faces: s.faces ?? {}, start: frames / FPS, end: (frames + n) / FPS, dur: n / FPS, startFrame: frames, endFrame: frames + n, audio: clip ? `audio/${s.id}.wav` : null,
+      // a seed of the shot's own, for anything that wants a clock or randomness that is the same wherever the shot sits
+      seed: seedOf(s.id) };
+    frames += n;
     return shot;
   });
-  const TOTAL = t, TOTAL_FRAMES = Math.max(1, Math.round(t * FPS));
+  const TOTAL_FRAMES = Math.max(1, frames), TOTAL = TOTAL_FRAMES / FPS;
 
   function shotAt(time) {
     let shot = SHOTS[SHOTS.length - 1];

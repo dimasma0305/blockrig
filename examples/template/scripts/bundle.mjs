@@ -1,6 +1,6 @@
 // The Remotion bundle, built once and reused by stills, collide and render until the code changes. A bundle takes
 // 20-40 s; most runs change no code (a new voice, another still, a re-render). Keyed by a hash of everything that goes
-// into it: this video's src/ (story.json included), BlockRig's src/, package-lock and the webpack settings. The
+// into it: this video's src/ (story.json and timings.json included), BlockRig's src/, package-lock and the webpack settings. The
 // public folder (assets/) is linked (a junction on Windows), not copied, so new audio or textures never need a new bundle.
 //   const { serveUrl, hash, reused } = await getBundle()
 import fs from "node:fs";
@@ -27,9 +27,18 @@ export function importedFromOutside() {
   return [...out];
 }
 
-/** A hash of every file the bundle is built from (contents, so a touch without a change keeps the bundle). */
-export function bundleHash() {
-  const files = [...new Set([...walk("src"), ...walk("../../src"), ...importedFromOutside(), "package-lock.json", "package.json", "scripts/webpack.mjs", "remotion.config.ts"])].filter((f) => fs.existsSync(f)).sort();
+/** The story data the bundle is built with: the shot list and the measured narration. */
+export const STORY_DATA = ["src/generated/story.json", "assets/audio/timings.json"];
+const same = (a, b) => path.resolve(a) === path.resolve(b);
+
+/**
+ * A hash of every file the bundle is built from (contents, so a touch without a change keeps the bundle).
+ * `{ data: false }` leaves the story data out: the code hash, which render.mjs keys each shot by together with that
+ * shot's own story entry and voice clip, so a re-voiced or rewritten line re-renders that shot only.
+ */
+export function bundleHash({ data = true } = {}) {
+  const files = [...new Set([...walk("src"), ...walk("../../src"), ...importedFromOutside(), "package-lock.json", "package.json", "scripts/webpack.mjs", "remotion.config.ts"])]
+    .filter((f) => fs.existsSync(f) && (data || !STORY_DATA.some((d) => same(d, f)))).sort();
   const h = crypto.createHash("sha1");
   for (const f of files) { h.update(f.replace(/\\/g, "/")); h.update(fs.readFileSync(f)); }
   return h.digest("hex").slice(0, 16);

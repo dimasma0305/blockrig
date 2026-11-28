@@ -10,17 +10,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { renderStill, selectComposition, ensureBrowser } from "@remotion/renderer";
+import { createTimeline } from "blockrig/video";
 import { getBundle } from "./bundle.mjs";
 
 const story = JSON.parse(fs.readFileSync("src/generated/story.json", "utf8"));
 const timings = JSON.parse(fs.readFileSync("assets/audio/timings.json", "utf8"));
-const gap = story.voice?.gapSeconds ?? 0.12;
-let t = 0;
-const shots = story.shots.map((s) => {
-  const est = s.narration ? s.narration.split(/\s+/).filter(Boolean).length / 2.7 : 0;
-  const d = Math.max((timings.clips?.[s.id]?.duration ?? est) + gap, s.minSeconds ?? 0, 0.5);
-  const r = { id: s.id, start: t, dur: d }; t += d; return r;
-});
+// the shots as the video places them (blockrig/video createTimeline)
+const shots = createTimeline(story, timings).SHOTS.map((s) => ({ id: s.id, start: s.start, dur: s.dur }));
 const args = process.argv.slice(2), ci = args.indexOf("--comp"), compId = ci >= 0 ? args[ci + 1] : "Story";
 const only = args.filter((a, i) => !a.startsWith("--") && !(ci >= 0 && i === ci + 1));
 const inputProps = { debug: !!process.env.DEBUG, roblox: process.env.ROBLOX !== "0" && fs.existsSync("assets/roblox/cast.json"), ...(process.env.PROPS ? JSON.parse(process.env.PROPS) : {}) }; // ROBLOX=0: without Roblox items; PROPS='{"post":false}': more props (Sandbox)

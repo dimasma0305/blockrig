@@ -3,7 +3,7 @@
 // video's own dependencies, passed in where needed. Everything is frame-pure (a frame is a function of its time),
 // so Remotion can render frames in any order and in parallel tabs.
 export { rng, clamp01, smooth, easeInOut, easeOut, lerp } from "./motion.js";
-export { createTimeline, speakersOf } from "./timeline.js";
+export { createTimeline, speakersOf, seedOf, shotClock } from "./timeline.js";
 export { V, move, pushIn, orbit, follow, lowAngle, topDown, applyCamera } from "./camera.js";
 export { frame, screenOf } from "./frame.js";
 export { poseAt, groundRig, FEET, KNEEL, SEAT, ON_SEAT } from "./pose.js";

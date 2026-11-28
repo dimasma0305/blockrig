@@ -1,7 +1,10 @@
 // Full render to out/<slug>.mp4 (1080x1920, 60 fps, H.264 CRF 18), with caching so a re-render only redoes what changed:
 //   - the bundle is reused until the code changes (scripts/bundle.mjs);
-//   - every shot is rendered into its own video segment, cached under out/.cache/shots by a key made of the bundle,
-//     the shot's frame range, the assets it can see and the render settings: an unchanged shot is never rendered twice;
+//   - every shot is rendered into its own video segment, cached under out/.cache/shots by a key made of the code (not
+//     the story data), the story's shared settings, the shot's own story entry and voice clip, its length in frames,
+//     the assets it can see and the render settings. A shot's frames depend only on the shot (blockrig/video
+//     shotClock), not on where it sits: re-voicing or rewriting one line re-renders that shot only, even though every
+//     later shot moves;
 //   - the soundtrack is mixed by ffmpeg (no browser) once per voice / music change;
 //   - the final MP4 is the cached segments joined without re-encoding, plus the soundtrack (seconds).
 //   node scripts/render.mjs [--debug] [--no-roblox] [--only s03,s05] [--fresh]
@@ -17,7 +20,8 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { selectComposition, renderFrames, ensureBrowser, openBrowser } from "@remotion/renderer";
-import { getBundle } from "./bundle.mjs";
+import { createTimeline } from "blockrig/video";
+import { getBundle, bundleHash } from "./bundle.mjs";
 
 const args = process.argv.slice(2), has = (f) => args.includes(f), after = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : null; };
 const T0 = Date.now(), times = [], lap = (what, t) => times.push(`${what} ${((Date.now() - t) / 1000).toFixed(1)} s`);
@@ -37,7 +41,7 @@ const visualAssets = sha(...walk("assets").filter((f) => !/[\\/]audio[\\/].*\.(w
 const audioKey = sha(...walk("assets/audio").sort().map((f) => { const s = fs.statSync(f); return `${f}|${s.size}|${s.mtimeMs}`; }));
 
 let t = Date.now();
-const { serveUrl, hash, reused } = await getBundle();
+const { serveUrl, reused } = await getBundle();
 lap(reused ? "bundle (cached)" : "bundle", t);
 const browserExecutable = fs.existsSync(".browser-path") ? fs.readFileSync(".browser-path", "utf8").trim() : null;
 await ensureBrowser({ browserExecutable });
@@ -47,24 +51,25 @@ const browser = await openBrowser("chrome", { browserExecutable, chromiumOptions
 const composition = await selectComposition({ serveUrl, id: "Story", browserExecutable, chromiumOptions, inputProps, puppeteerInstance: browser });
 const fps = composition.fps, total = composition.durationInFrames;
 
-// ---- each shot's frames, as the video's timeline places them (voice lengths + gap, at least `min`)
-const timings = JSON.parse(fs.readFileSync("assets/audio/timings.json", "utf8")), gap = story.voice?.gapSeconds ?? 0.12;
-let sec = 0;
-const shots = story.shots.map((s) => {
-  const est = s.narration ? s.narration.split(/\s+/).filter(Boolean).length / 2.7 : 0;
-  const d = Math.max((timings.clips?.[s.id]?.duration ?? est) + gap, s.minSeconds ?? 0, 0.5);
-  // frame f shows the shot whose [start, end) holds f / fps (the timeline's shotAt): the first frame at or after its start
-  const first = (x) => Math.ceil(x * fps - 1e-9);
-  const r = { id: s.id, start: first(sec), end: Math.min(total, first(sec + d)) }; sec += d; return r;
-}).filter((s) => s.end > s.start);
-const settings = { w: composition.width, h: composition.height, fps, CRF, inputProps, v: 3 };
+// ---- each shot's frames, from the same timeline the video uses (whole frames per shot)
+const timings = JSON.parse(fs.readFileSync("assets/audio/timings.json", "utf8"));
+const T = createTimeline(story, timings);
+if (T.TOTAL_FRAMES !== total || T.FPS !== fps) throw new Error(`timeline ${T.TOTAL_FRAMES} frames at ${T.FPS} fps, composition ${total} at ${fps}: rebuild (npm run docs)`);
+const shots = T.SHOTS.map((s) => ({ id: s.id, start: s.startFrame, end: s.endFrame }));
+const settings = { w: composition.width, h: composition.height, fps, CRF, inputProps, v: 4 };
+// what every shot can see of the story: its settings (cast, look, voice...) and what the video reads across shots
+// (any shot naming a light preset turns soft shadows on everywhere). Add here anything Video.tsx reads across shots.
+const shared = { ...story, shots: undefined, anyLight: story.shots.some((s) => s.light) };
+const code = bundleHash({ data: false });
 const latestFile = path.join(SHOTS, "latest.json"), latest = fs.existsSync(latestFile) ? JSON.parse(fs.readFileSync(latestFile, "utf8")) : {};
 for (const s of shots) {
-  s.key = sha(hash, visualAssets, s.id, s.start, s.end, settings);
+  const entry = story.shots.find((x) => x.id === s.id), clip = timings.clips?.[s.id] ?? null;
+  // --debug burns the frame number in: there the absolute position is part of the picture
+  s.key = sha(code, shared, entry, clip, s.end - s.start, visualAssets, settings, debug ? s.start : 0);
   s.file = path.join(SHOTS, `${s.key}.mp4`);
   // --only: other shots may reuse their latest segment if it covers the same frames
   const prev = latest[`${s.id}|${JSON.stringify(inputProps)}`];
-  if (only.length && !only.includes(s.id) && !fs.existsSync(s.file) && prev && prev.start === s.start && prev.end === s.end && fs.existsSync(prev.file)) { s.file = prev.file; s.reusedOld = true; }
+  if (only.length && !only.includes(s.id) && !fs.existsSync(s.file) && prev && prev.frames === s.end - s.start && fs.existsSync(prev.file)) { s.file = prev.file; s.reusedOld = true; }
   s.cached = !fresh && !only.includes(s.id) && fs.existsSync(s.file);
 }
 const todo = shots.filter((s) => !s.cached);
@@ -97,7 +102,7 @@ for (const run of runs) {
   for (const s of run) {
     const files = []; for (let f = s.start; f < s.end; f++) { const p = frames.get(f) ?? frames.get(f - a); if (!p) throw new Error(`frame ${f} missing`); files.push(p); }
     encodeSegment(dir, files, s.file);
-    latest[`${s.id}|${JSON.stringify(inputProps)}`] = { file: s.file, start: s.start, end: s.end };
+    latest[`${s.id}|${JSON.stringify(inputProps)}`] = { file: s.file, frames: s.end - s.start };
   }
   lap(`encode ${run.length} segment(s)`, t2);
   fs.rmSync(dir, { recursive: true, force: true });

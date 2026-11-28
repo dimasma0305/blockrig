@@ -55,7 +55,7 @@ export function GlitchCut({ timeline, shots, colours = ["255,46,136", "25,227,19
   const frame = useCurrentFrame();
   const hit = timeline.SHOTS.find((s) => shots.includes(s.id) && frame >= s.startFrame && frame < s.startFrame + 9);
   if (!hit) return null;
-  const k = frame - hit.startFrame, r = rng(hit.startFrame * 31 + k), fade = 1 - k / 9;
+  const k = frame - hit.startFrame, r = rng((hit.seed ?? hit.startFrame) * 31 + k), fade = 1 - k / 9; // seeded by the shot, not its position
   return h(AbsoluteFill, { style: { pointerEvents: "none", mixBlendMode: "screen" } },
     ...Array.from({ length: 7 }, (_, i) => h("div", { key: i, style: { position: "absolute", left: 0, right: 0, top: `${r() * 100}%`, height: `${2 + r() * 7}%`, transform: `translateX(${(r() - 0.5) * 30}%)`, background: `rgba(${colours[i % 2]},${0.55 * fade})` } })),
     h(AbsoluteFill, { style: { background: `rgba(255,255,255,${0.35 * fade * (k < 2 ? 1 : 0)})` } }));

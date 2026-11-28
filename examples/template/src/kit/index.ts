@@ -4,7 +4,7 @@
 // maps, the staging check, drawn boards, the 2D layout plan, ground layers and per-location lamps. What stays here
 // needs React / Remotion / post-processing, or is this template's own look (houses, weather, textures). Fix shared things in BlockRig (src/video/) so every video gets them.
 export {
-  createTimeline, speakersOf, rng, clamp01, smooth, easeInOut, easeOut, lerp,
+  createTimeline, speakersOf, seedOf, shotClock, rng, clamp01, smooth, easeInOut, easeOut, lerp,
   poseAt, groundRig, FEET, KNEEL, SEAT, ON_SEAT,
   V, move, pushIn, orbit, follow, lowAngle, topDown, applyCamera, frame,
   LOOK, applyLook, avatarAmbient, TIMES, daylight, mixDaylight, createLighting,

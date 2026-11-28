@@ -35,16 +35,35 @@ const story = {
 };
 const timings = { clips: { s01: { duration: 2, words: [{ word: "one", start: 0.1, end: 0.3 }, { word: "two", start: 0.4, end: 0.6 }, { word: "three", start: 1.2, end: 1.4 }, { word: "four", start: 1.5, end: 1.9 }] } }, music: [], total: 0 };
 
-test("video: shot lengths come from the voice (plus the gap), else 2.7 words a second", () => {
+test("video: shot lengths come from the voice (plus the gap), else 2.7 words a second, in whole frames", () => {
   const T = createTimeline(story, timings);
   close(T.SHOTS[0].dur, 2.2); assert.equal(T.SHOTS[0].audio, "audio/s01.wav");
-  close(T.SHOTS[1].dur, 2 / 2.7 + 0.2, 1e-9, "no clip yet: estimated"); assert.equal(T.SHOTS[1].audio, null);
+  assert.equal(T.SHOTS[1].endFrame - T.SHOTS[1].startFrame, Math.round((2 / 2.7 + 0.2) * 30), "no clip yet: estimated, rounded to whole frames"); assert.equal(T.SHOTS[1].audio, null);
   assert.equal(T.SHOTS[2].dur, 3, "minSeconds");
-  close(T.TOTAL, 2.2 + 2 / 2.7 + 0.2 + 3); assert.equal(T.TOTAL_FRAMES, Math.round(T.TOTAL * 30));
-  assert.equal(T.SHOTS[1].startFrame, Math.round(2.2 * 30));
+  assert.equal(T.TOTAL_FRAMES, 66 + 28 + 90); close(T.TOTAL, T.TOTAL_FRAMES / 30);
+  assert.equal(T.SHOTS[1].startFrame, 66); close(T.SHOTS[1].start, 66 / 30);
   const at = T.shotAt(2.3); assert.equal(at.shot.id, "s02"); close(at.local, 0.1);
   assert.equal(T.shotAt(999).shot.id, "s03"); assert.equal(T.shotAt(999).p, 1);
   assert.equal(T.byId("s03").idx, 2);
+});
+
+test("video: re-voicing one line leaves every other shot's frames alone (what the render cache relies on)", async () => {
+  const { shotClock } = await import("../src/video/index.js");
+  const a = createTimeline(story, timings);
+  const longer = { ...timings, clips: { ...timings.clips, s01: { ...timings.clips.s01, duration: 2.537 } } }, b = createTimeline(story, longer);
+  for (const i of [1, 2]) {
+    const x = a.SHOTS[i], y = b.SHOTS[i];
+    assert.equal(y.endFrame - y.startFrame, x.endFrame - x.startFrame, `${x.id}: the same number of frames`);
+    assert.ok(y.startFrame > x.startFrame, "it moved later");
+    for (let k = 0; k < x.endFrame - x.startFrame; k += 7) {
+      const p = a.shotAt((x.startFrame + k) / 30), q = b.shotAt((y.startFrame + k) / 30);
+      assert.equal(q.shot.id, x.id); close(q.local, p.local, 1e-9); close(q.p, p.p, 1e-9);
+      close(shotClock(q.shot, q.local), shotClock(p.shot, p.local), 1e-9, "the same animation clock");
+    }
+  }
+  const cap = (T, id) => T.CAPTIONS.filter((c) => c.shot === id).map((c) => c.start - T.byId(id).start);
+  assert.deepEqual(cap(b, "s02"), cap(a, "s02"), "captions pop at the same moment of the shot");
+  assert.notEqual(a.SHOTS[0].seed, a.SHOTS[1].seed);
 });
 
 test("video: captions pop in on their first spoken word and carry the speaker", () => {

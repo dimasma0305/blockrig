@@ -11,6 +11,8 @@ BlockRig's purpose is now making Roblox-style story videos fast and good: the ch
   - one browser serves the whole render;
   - the MP4 is joined without re-encoding.
 
+  - A shot's frames depend on the shot, not on its place in the video. Shots are whole frames (`startFrame`/`endFrame` exact). Each shot has a `seed`, and `shotClock(shot, local)` is its own clock (world time, camera shake and `GlitchCut` use it). The render keys each shot by the code hash without the story data, plus that shot's own entry and clip. Re-voicing one line re-renders only that shot (51 s against 129 s for a full render), and `stills.mjs` and `render.mjs` take shot ranges from `createTimeline`.
+
   On the template: a no-change re-render takes 3 s, one shot 43 s; before, every render took 168 s. `scripts/bench.mjs` measures render settings.
 - Removed lip sync (`mouthAt`, `talk`, `faceFor`) and the timeline's per-shot `words`: unused.
 

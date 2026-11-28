@@ -5,7 +5,7 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig, delayRender, continueRen
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { applyLook, Captions, CAPTION_TOP, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera, useAssetLibrary, type AssetLibrary } from "./kit";
+import { applyLook, Captions, CAPTION_TOP, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera, shotClock, useAssetLibrary, type AssetLibrary } from "./kit";
 import { ASSETS } from "./world/assets";
 import { createProbe, loadRapier } from "./kit/collide";
 import { usePost, POST_DEFAULTS } from "./kit/post";
@@ -32,10 +32,13 @@ function Scene({ lib, rb, rapier, post = true }: { lib: AssetLibrary; rb: Roblox
   const { shot, local, p } = T.shotAt(time);
   const state = perform(shot, local, p, cast, world);
   for (const q of cast.all) q.rig.object.updateMatrixWorld(true);
-  applyCamera(camera, cameraFor(shot, p, local, cast, world), frame);
+  // clocks and seeds from the shot itself (shotClock), not from where it sits in the video: a re-voiced line before it
+  // moves the shot but leaves its frames identical, so the render cache can reuse it
+  const clock = shotClock(shot, local);
+  applyCamera(camera, cameraFor(shot, p, local, cast, world), Math.round(clock * T.FPS));
   camera.updateMatrixWorld(true);
   const light = (shot as any).light as string | undefined; // docs/story.md "- light: golden": a lighting preset for this shot
-  world.update({ location: shot.location ?? "street", weather: weatherAt(shot, p), daylight: daylightAt(shot, p), time, local, camera, cloudAt: state.cloudAt, ownLight: !!(light && LIGHT_PRESETS[light]) });
+  world.update({ location: shot.location ?? "street", weather: weatherAt(shot, p), daylight: daylightAt(shot, p), time: clock, local, camera, cloudAt: state.cloudAt, ownLight: !!(light && LIGHT_PRESETS[light]) });
   // colliders are rebuilt for every shot from what is visible and where it stands then: props that move or show
   // only in some shots would otherwise leave ghost colliders from the first frame (npm run collide)
   const lastProbe = useRef<any>(null);

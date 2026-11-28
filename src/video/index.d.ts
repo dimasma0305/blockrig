@@ -28,6 +28,8 @@ export type StoryFile = {
 export type Timings = { clips: Record<string, { duration: number; words: Word[] }>; music: { file: string | null; from: number; to: number; theme: string }[]; total: number };
 export type Shot = StoryShot & {
   idx: number; faces: Record<string, string>; start: number; end: number; dur: number; startFrame: number; endFrame: number; audio: string | null;
+  /** 0..999 from the shot id: for clocks and randomness that stay the same wherever the shot sits */
+  seed: number;
 };
 export type Caption = { text: string; highlight: string; start: number; end: number; shot: string; speaker: string | null };
 export type SpeakerTag = { name: string; colour: string };
@@ -40,6 +42,9 @@ export interface Timeline {
   MUSIC: Timings["music"];
 }
 export function createTimeline(story: StoryFile, timings?: Timings | null): Timeline;
+export function seedOf(str: string): number;
+/** Seconds into the shot plus its seed: animation that looks the same wherever the shot sits. */
+export function shotClock(shot: Shot, local: number): number;
 export function speakersOf<T extends SpeakerTag>(timeline: Timeline, roster: Record<string, T>): Record<string, T>;
 
 // ---- camera
