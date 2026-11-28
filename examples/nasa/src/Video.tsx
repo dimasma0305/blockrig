@@ -1,6 +1,6 @@
 // The video: a ThreeCanvas with the world, the cast and the camera, then the 2D layers (lightning, vignette,
 // glitch cuts, captions), the soundtrack, and the debug overlay when { debug: true }.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, delayRender, continueRender, cancelRender } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
@@ -18,6 +18,7 @@ import { buildWorld } from "./world/World";
 import { perform } from "./direction/performance";
 import { cameraFor } from "./direction/camera";
 import { Layers2D, speakersOf } from "./direction/Layers2D";
+import { useBrands } from "./world/brands";
 import { GlitchCut } from "./kit";
 const SPEAKER_TAGS = speakersOf(T);
 
@@ -40,12 +41,15 @@ function Scene({ lib, rb, rapier, post = true, cam }: { lib: AssetLibrary; rb: R
   camera.updateMatrixWorld(true);
   const light = (shot as any).light as string | undefined; // docs/story.md "- light: golden": a lighting preset for this shot
   world.update({ location: shot.location ?? "room", weather: weatherAt(shot, p), daylight: daylightAt(shot, p), time, local, camera, confetti: state.confetti, ownLight: !!(light && LIGHT_PRESETS[light]) });
-  const probe = useMemo(() => (rapier ? createProbe(rapier, world.root) : null), [rapier, world]);
+  // colliders are rebuilt for every shot from what is visible and where it stands then: props that move or show
+  // only in some shots would otherwise leave ghost colliders from the first frame (npm run collide)
+  const lastProbe = useRef<any>(null);
+  const probe = useMemo(() => { lastProbe.current?.free?.(); lastProbe.current = rapier ? createProbe(rapier, world.root) : null; return lastProbe.current; }, [rapier, world, shot.id]);
   if (probe) console.log("COLLIDE " + JSON.stringify({ frame, shot: shot.id, issues: probe.check(camera, cast.all) }));
   return (
     <>
       {/* soft (PCSS) shadows for the whole video when any shot names a preset; that shot's image-based light */}
-      {USES_LIGHT_PRESETS && <SoftShadows size={18} samples={16} focus={0.6} />}
+      {USES_LIGHT_PRESETS && <SoftShadows size={18} samples={10} focus={0.6} />}
       {light && LIGHT_PRESETS[light] && <LightRig key={light} preset={light} softShadows={false} />}
       {cast.all.map((q, i) => <primitive key={i} object={q.rig.object} />)}
     </>
@@ -74,9 +78,10 @@ export const Video: React.FC<VideoProps> = ({ debug, roblox, collide, post, cam 
   const lib = useAssetLibrary(ASSETS);
   const rb = useRobloxCast(!!roblox); // undefined while loading, null when off
   const rapier = useRapier(!!collide);
+  const brands = useBrands(); // real avatars, logos and thumbnails for the boards (src/world/brands.ts)
   return (
     <AbsoluteFill style={{ background: "#0b0d14" }}>
-      {lib && rb !== undefined && rapier !== undefined && <ThreeCanvas width={width} height={height} shadows dpr={1}
+      {lib && brands && rb !== undefined && rapier !== undefined && <ThreeCanvas width={width} height={height} shadows dpr={1}
         gl={{ antialias: post === false, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
         camera={{ fov: 50, near: 0.3, far: 2000, position: [0, 10, 30] }}>
         <Scene lib={lib} rb={rb} rapier={rapier} post={post !== false} cam={cam} />

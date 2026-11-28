@@ -61,12 +61,12 @@ if (musicOnly) {
 } else {
   // Chatterbox loads a large model, so every line is voiced in one run of its own Python environment
   if (engine === "chatterbox") {
-    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.say || s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
+    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.say || s.narration, emotion: s.emotion, speaker: s.speaker, out: `${outDir}/${s.id}.wav` }));
     fs.writeFileSync(`${outDir}/lines.json`, JSON.stringify(lines));
     execFileSync(voicePy, ["scripts/voice/make_voice_chatterbox.py", "--lines", `${outDir}/lines.json`, "--config", JSON.stringify(story.voice?.chatterbox || {})], { stdio: ["ignore", "inherit", "ignore"] });
   }  // the same voice in plain Node, no Python (scripts/voice-js): Chatterbox via onnxruntime-node, Whisper via Transformers.js
   if (engine === "chatterbox-js") {
-    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.say || s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
+    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.say || s.narration, emotion: s.emotion, speaker: s.speaker, out: `${outDir}/${s.id}.wav` }));
     fs.writeFileSync(`${outDir}/lines.json`, JSON.stringify(lines));
     execFileSync(process.execPath, ["scripts/voice-js/make_voice.mjs", "--lines", `${outDir}/lines.json`, "--config", JSON.stringify(story.voice?.chatterbox || {})], { stdio: "inherit" });
   }

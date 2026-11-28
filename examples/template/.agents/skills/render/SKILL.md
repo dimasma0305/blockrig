@@ -25,3 +25,17 @@ description: Render the final video and its share copies - npm run render (out/<
 - Windows: if the browser fails with a misleading `ENOENT`, the path is too long: copy `chrome-headless-shell` to a short path and put that path in `.browser-path`.
 - `THREE.Clock deprecated` warnings from three r184 are harmless.
 - You can check frames but not hear audio: say so when handing over. Posting is the user's job.
+
+## Preview before rendering
+
+The user can watch it live before any render: Remotion Studio (`npm run studio`, or preview_start with a
+.claude/launch.json entry `npm --prefix <video> run studio -- --port 3123 --no-open`), composition Story with the
+`roblox` prop on (this video's Root sets it by default). Offer it whenever the user wants to check changes.
+
+## Speed
+
+Measured on the nasa video (8 tabs, RTX 4060): a 2:32 video at 60 fps took 11 min 18 s (~13.5 frames/s, about 45 s
+of it bundling and browser start). Lights switched per location plus soft-shadow samples 16 → 10 saved 11% on the
+same 600 room frames (85 s → 76 s). The frame rate is the big lever: 30 fps halves the frames (the user chose it
+there; ask first, it is a quality call). Post effects off (`{ post: false }`) only for drafts. Time an A/B on the same
+frames (`npx remotion render Story out/bench.mp4 --frames=a-b --props=out/props.json`) before claiming a speed-up.

@@ -4,6 +4,7 @@
 // each `set(key, p)` redraws only when what it shows changes (frame-pure: the picture is a function of key and p).
 import * as THREE from "three";
 import { rng } from "../kit/rng";
+import { BRAND, type BrandName } from "./brands";
 
 const FONT = "Arial Black, Arial, sans-serif";
 const canvas = (w: number, h: number) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
@@ -33,6 +34,23 @@ const check = (g: CanvasRenderingContext2D, x: number, y: number, s: number) => 
   g.fillStyle = "#1fd15a"; g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.fill();
   g.strokeStyle = "#fff"; g.lineWidth = s * 0.25; g.lineCap = "round"; g.lineJoin = "round"; g.beginPath(); g.moveTo(x - s * 0.5, y); g.lineTo(x - s * 0.12, y + s * 0.4); g.lineTo(x + s * 0.55, y - s * 0.4); g.stroke();
 };
+/** A real image (src/world/brands.ts) cover-fitted into a box, or a circle; a grey box when it is missing. */
+const pic = (g: CanvasRenderingContext2D, name: BrandName, x: number, y: number, w: number, h: number, round = false, crop = 1) => {
+  const img = BRAND[name]; g.save(); g.beginPath();
+  if (round) g.arc(x + w / 2, y + h / 2, Math.min(w, h) / 2, 0, Math.PI * 2); else g.rect(x, y, w, h);
+  g.clip();
+  if (img) { const k = Math.max(w / img.width, h / img.height) / crop, iw = img.width * k, ih = img.height * k; g.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih); }
+  else { g.fillStyle = "#555"; g.fillRect(x, y, w, h); }
+  g.restore();
+};
+/** A YouTube-style video card: thumbnail, round channel avatar, title and channel name. */
+const videoCard = (g: CanvasRenderingContext2D, thumb: BrandName, avatar: BrandName, title: string, channel: string, x: number, y: number, w: number, dark = true) => {
+  const th = w * 9 / 16; pic(g, thumb, x, y, w, th);
+  g.fillStyle = "rgba(0,0,0,0.8)"; g.fillRect(x + w - w * 0.17, y + th - w * 0.09, w * 0.15, w * 0.07); g.font = `700 ${w * 0.045}px Arial`; g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("12:34", x + w - w * 0.095, y + th - w * 0.055);
+  const a = w * 0.13; pic(g, avatar, x, y + th + w * 0.03, a, a, true);
+  g.textAlign = "left"; g.font = `800 ${w * 0.058}px Arial`; g.fillStyle = dark ? "#fff" : "#111"; g.fillText(title, x + a + w * 0.04, y + th + w * 0.075);
+  g.font = `600 ${w * 0.05}px Arial`; g.fillStyle = dark ? "#aaa" : "#555"; g.fillText(channel + " ✓", x + a + w * 0.04, y + th + w * 0.15);
+};
 /** A browser window: dark frame, tab strip with these titles, page area returned for drawing. */
 const browser = (g: CanvasRenderingContext2D, W: number, H: number, tabs: string[], active = 0) => {
   g.fillStyle = "#1b1f2a"; g.fillRect(0, 0, W, H);
@@ -53,14 +71,25 @@ export function screen(w = 3.4, h = 2.1) {
     }
     if (K === "TCP1P") { const r = browser(g, W, H, ["target-site", "notes"]); for (let i = 0; i < 7; i++) left(g, ["$ nmap target", "80/tcp open http", "$ sqlmap -u ...", "[+] injectable!", "> dumping...", "", ""][i], 30, r.y + 50 + i * 70, 44, "#3dff8b"); return; }
     if (K === "WEBSITE HACKED") { g.fillStyle = p > 0.5 ? "#0b3b18" : "#0b1020"; g.fillRect(0, 0, W, H); check(g, W / 2, H * 0.36, H * 0.18); centre(g, "WEBSITE HACKED", W / 2, H * 0.74, H * 0.13, "#3dff8b", W * 0.9); return; }
-    if (K.startsWith("BEDTIME")) { // the tablet's playlist
-      g.fillStyle = "#14121f"; g.fillRect(0, 0, W, H); centre(g, "BEDTIME PLAYLIST", W / 2, H * 0.12, H * 0.08, "#ffd166");
-      [["LiveOverflow", "#2f6fd6"], ["John Hammond", "#d62f2f"]].forEach(([name, c], i) => {
-        const y = H * (0.3 + i * 0.34); g.fillStyle = "#232036"; g.fillRect(W * 0.06, y, W * 0.88, H * 0.27);
-        g.fillStyle = c; g.fillRect(W * 0.08, y + H * 0.03, W * 0.3, H * 0.21); g.fillStyle = "#fff"; g.beginPath(); g.moveTo(W * 0.2, y + H * 0.07); g.lineTo(W * 0.26, y + H * 0.135); g.lineTo(W * 0.2, y + H * 0.2); g.fill();
-        left(g, name, W * 0.42, y + H * 0.1, H * 0.08, "#fff"); left(g, i ? "up next" : "now playing", W * 0.42, y + H * 0.19, H * 0.05, "#a9a3c9");
-      });
-      centre(g, "↓", W / 2, H * 0.6, H * 0.06, "#ffd166"); return;
+    if (K.startsWith("BEDTIME")) { // the tablet's playlist: the real channels' thumbnails and avatars, YouTube style
+      g.fillStyle = "#0f0f0f"; g.fillRect(0, 0, W, H); centre(g, "🌙 BEDTIME PLAYLIST", W / 2, H * 0.05, H * 0.04, "#ffd166");
+      videoCard(g, "thumbLO2", "liveoverflow", "Zenbleed: Novel CPU Fuzzing", "LiveOverflow", W * 0.06, H * 0.09, W * 0.88);
+      videoCard(g, "thumbJH", "johnhammond", "Inside the Dark Web", "John Hammond", W * 0.06, H * 0.55, W * 0.88);
+      return;
+    }
+    if (K === "SCHEDULE") { // what he really learned: her streaming schedule
+      g.fillStyle = "#1a0f24"; g.fillRect(0, 0, W, H); pic(g, "kurenaif", W * 0.04, H * 0.06, H * 0.3, H * 0.3, true);
+      left(g, "kurenaif", W * 0.04 + H * 0.34, H * 0.15, H * 0.1, "#ff7ad9"); left(g, "STREAM SCHEDULE", W * 0.04 + H * 0.34, H * 0.28, H * 0.07, "#fff");
+      [["MON", "21:00  LIVE crypto"], ["WED", "21:00  LIVE pwn"], ["SAT", "15:00  CTF writeup"]].forEach(([d, t], i) => { const y = H * (0.46 + i * 0.17); g.fillStyle = "#3a2252"; g.fillRect(W * 0.04, y, W * 0.92, H * 0.14); left(g, d, W * 0.07, y + H * 0.07, H * 0.075, "#ffd166"); left(g, t, W * 0.25, y + H * 0.07, H * 0.075, "#fff"); g.strokeStyle = "#3dff8b"; g.lineWidth = 8; g.beginPath(); g.moveTo(W * 0.86, y + H * 0.07); g.lineTo(W * 0.89, y + H * 0.1); g.lineTo(W * 0.94, y + H * 0.03); g.stroke(); });
+      return;
+    }
+    if (K === "KURENAIF") { // my best friend's screen: a kurenaif crypto video, YouTube style
+      g.fillStyle = "#0f0f0f"; g.fillRect(0, 0, W, H);
+      const w = W * 0.62, th = w * 9 / 16; pic(g, "kfCrypto", W * 0.04, H * 0.06, w, th);
+      pic(g, "kurenaif", W * 0.04, H * 0.06 + th + H * 0.04, H * 0.14, H * 0.14, true);
+      left(g, "CTF Crypto 超入門", W * 0.04 + H * 0.17, H * 0.06 + th + H * 0.08, H * 0.065, "#fff"); left(g, "kurenaif ✓", W * 0.04 + H * 0.17, H * 0.06 + th + H * 0.16, H * 0.05, "#aaa");
+      ["kfReed", "kfDefcon", "kfHeap"].forEach((t, i) => pic(g, t as BrandName, W * 0.69, H * (0.06 + i * 0.31), W * 0.28, W * 0.28 * 9 / 16));
+      return;
     }
     if (K.startsWith("PRESCHOOL")) return lobby(g, W, H, p);
     if (K.startsWith("FINAL")) { g.fillStyle = "#1a0d24"; g.fillRect(0, 0, W, H); centre(g, "FINAL CHALLENGE", W / 2, H * 0.32, H * 0.14, "#ffd166", W * 0.9); centre(g, "ONE FLAG LEFT", W / 2, H * 0.6, H * 0.12, "#ff5d8f", W * 0.9); g.fillStyle = "#3dff8b"; g.fillRect(W * 0.15, H * 0.78, W * 0.7 * 0.92, H * 0.06); g.strokeStyle = "#fff"; g.lineWidth = 4; g.strokeRect(W * 0.15, H * 0.78, W * 0.7, H * 0.06); return; }
@@ -87,10 +116,13 @@ function lobby(g: CanvasRenderingContext2D, W: number, H: number, _p: number) {
   g.fillStyle = "#1a1030"; g.fillRect(0, 0, W, H);
   centre(g, "PRESCHOOL CTF LEAGUE", W / 2, H * 0.1, H * 0.075, "#ffd166", W * 0.92);
   const teams = [["Project SEKAI", 9850], ["PPP", 9620], ["DiceGang", 9410], ["TokyoWesterns", 9300], ["MILK DEPENDENCY", 9295]];
+  const logos: Record<string, BrandName> = { "Project SEKAI": "sekai", PPP: "ppp" };
   teams.forEach(([n, s], i) => {
-    const y = H * (0.22 + i * 0.15), ours = i === 4;
-    g.fillStyle = ours ? "#3a2a10" : "#261a40"; g.fillRect(W * 0.05, y, W * 0.9, H * 0.12);
-    left(g, `${i + 1}.  ${n}`, W * 0.08, y + H * 0.06, H * 0.06, ours ? "#ffd166" : "#fff"); g.textAlign = "right"; g.fillStyle = "#9fe08a"; g.fillText(String(s), W * 0.92, y + H * 0.06);
+    const y = H * (0.2 + i * 0.155), ours = i === 4, rowH = H * 0.135, logo = logos[n as string];
+    g.fillStyle = ours ? "#3a2a10" : logo ? "#3a2266" : "#261a40"; g.fillRect(W * 0.04, y, W * 0.92, rowH);
+    if (logo) { g.fillStyle = "#fff"; g.fillRect(W * 0.06, y + rowH * 0.08, rowH * 0.84, rowH * 0.84); pic(g, logo, W * 0.06, y + rowH * 0.08, rowH * 0.84, rowH * 0.84); }
+    else { g.fillStyle = ours ? "#ffd166" : "#55407a"; g.fillRect(W * 0.06, y + rowH * 0.08, rowH * 0.84, rowH * 0.84); centre(g, ours ? "🍼" : String(n)[0], W * 0.06 + rowH * 0.42, y + rowH / 2, rowH * 0.5, ours ? "#3a2a10" : "#fff"); }
+    left(g, `${i + 1}. ${n}`, W * 0.06 + rowH, y + rowH / 2, H * 0.065, ours ? "#ffd166" : "#fff"); g.textAlign = "right"; g.fillStyle = "#9fe08a"; g.fillText(String(s), W * 0.94, y + rowH / 2);
   });
 }
 function certificate(g: CanvasRenderingContext2D, W: number, H: number) {
@@ -124,13 +156,62 @@ export function banner(lines: string[], w: number, h: number, bg = "#14213d", fg
   m.set("x"); return m;
 }
 
-/** The kurenaif fan-club flag (plain text, the friend's running gag), on a stick held +Y up. */
+/** A poster or wallpaper: a real image filling the panel, with an optional caption strip. */
+export function poster(name: BrandName, w: number, h: number, caption = "", bg = "#6b2fb3", glow = false) {
+  const m = panel(w, h, 1024, (g, W, H) => {
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const capH = caption ? H * 0.16 : 0; pic(g, name, W * 0.03, W * 0.03, W * 0.94, H - capH - W * 0.06);
+    if (caption) centre(g, caption, W / 2, H - capH / 2 - W * 0.01, capH * 0.62, "#fff", W * 0.9);
+  }, glow);
+  m.set("x"); return m;
+}
+
+/** The full-body kurenaif standee (a cardboard cutout): her real avatar art for the head, a drawn body in her
+ *  colours (pink hair, black witch hat, black-and-white dress), cut out with alpha, on a cardboard stand. */
+export function standee(height = 6.5) {
+  const W = 512, H = 1280, c = canvas(W, H), g = c.getContext("2d")!;
+  const cx = W / 2;
+  // hair falling behind the body
+  g.fillStyle = "#f08cc8"; g.beginPath(); g.moveTo(cx - 150, 330); g.quadraticCurveTo(cx - 210, 640, cx - 150, 760); g.lineTo(cx + 150, 760); g.quadraticCurveTo(cx + 210, 640, cx + 150, 330); g.fill();
+  // dress: black bodice, white collar and apron, a flared skirt with pink trim
+  g.fillStyle = "#1c1424"; g.beginPath(); g.moveTo(cx - 95, 420); g.lineTo(cx + 95, 420); g.lineTo(cx + 120, 640); g.lineTo(cx + 215, 960); g.lineTo(cx - 215, 960); g.lineTo(cx - 120, 640); g.closePath(); g.fill();
+  g.fillStyle = "#ff7ad9"; g.fillRect(cx - 215, 940, 430, 22);
+  g.fillStyle = "#ffffff"; g.beginPath(); g.moveTo(cx - 70, 420); g.lineTo(cx + 70, 420); g.lineTo(cx + 30, 500); g.lineTo(cx - 30, 500); g.fill();
+  g.beginPath(); g.moveTo(cx - 60, 560); g.lineTo(cx + 60, 560); g.lineTo(cx + 110, 900); g.lineTo(cx - 110, 900); g.closePath(); g.fill();
+  g.fillStyle = "#d61f6a"; g.beginPath(); g.moveTo(cx, 470); g.lineTo(cx - 40, 445); g.lineTo(cx - 40, 495); g.closePath(); g.moveTo(cx, 470); g.lineTo(cx + 40, 445); g.lineTo(cx + 40, 495); g.closePath(); g.fill();
+  // arms (one holding a little key), legs, boots
+  g.fillStyle = "#1c1424"; g.save(); g.translate(cx - 100, 440); g.rotate(0.35); g.fillRect(-28, 0, 56, 220); g.restore(); g.save(); g.translate(cx + 100, 440); g.rotate(-0.6); g.fillRect(-28, 0, 56, 200); g.restore();
+  g.fillStyle = "#fbe4dc"; g.beginPath(); g.arc(cx - 172, 640, 30, 0, Math.PI * 2); g.fill(); g.beginPath(); g.arc(cx + 214, 600, 30, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#ffd166"; g.fillRect(cx + 230, 560, 14, 70); g.beginPath(); g.arc(cx + 237, 552, 20, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#fbe4dc"; g.fillRect(cx - 70, 960, 44, 200); g.fillRect(cx + 26, 960, 44, 200);
+  g.fillStyle = "#1c1424"; g.fillRect(cx - 82, 1110, 68, 90); g.fillRect(cx + 14, 1110, 68, 90);
+  // the head: her real avatar art in a circle, with a black witch hat on top
+  g.fillStyle = "#ffffff"; g.beginPath(); g.arc(cx, 270, 178, 0, Math.PI * 2); g.fill();
+  pic(g, "kurenaif", cx - 170, 100, 340, 340, true, 1.05);
+  // name plate
+  g.fillStyle = "#6b2fb3"; g.fillRect(cx - 170, 1205, 340, 70); centre(g, "kurenaif", cx, 1241, 52, "#ffffff", 320);
+  // a white cardboard border round the whole cut-out (drawn behind: dilate by stroking the alpha shape)
+  const out = canvas(W, H), o = out.getContext("2d")!;
+  for (let a = 0; a < 16; a++) o.drawImage(c, Math.cos((a / 16) * Math.PI * 2) * 9, Math.sin((a / 16) * Math.PI * 2) * 9);
+  o.globalCompositeOperation = "source-in"; o.fillStyle = "#f4f1ea"; o.fillRect(0, 0, W, H); o.globalCompositeOperation = "source-over"; o.drawImage(c, 0, 0);
+  const t = tex(out), w = height * (W / H);
+  const grp = new THREE.Group();
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(w, height), new THREE.MeshStandardMaterial({ map: t, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.7 }));
+  face.position.y = height / 2 + 0.05; face.castShadow = true; face.receiveShadow = true;
+  face.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: 0.5 });
+  grp.add(face);
+  const foot = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.1, 0.9), new THREE.MeshStandardMaterial({ color: "#b48a5a", roughness: 0.9 })); foot.position.set(0, 0.05, -0.3); foot.castShadow = true; grp.add(foot);
+  return grp;
+}
+
+/** The kurenaif fan-club flag (her real avatar and FAN CLUB, the friend's running gag), on a stick held +Y up. */
 export function fanFlag(size = 1.6) {
   const g = new THREE.Group();
   const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, size * 1.6, 8), new THREE.MeshStandardMaterial({ color: "#8a5a2b", roughness: 0.7 }));
   stick.position.y = size * 0.5; stick.castShadow = true; g.add(stick);
-  const cloth = banner(["kurenaif", "FAN CLUB"], size * 1.3, size * 0.8, "#6b2fb3", "#ffffff", "#ff7ad9");
-  (cloth.material as THREE.Material).side = THREE.DoubleSide; cloth.position.set(size * 0.68, size * 1.0, 0); g.add(cloth);
+  const cloth = poster("kurenaif", size * 1.3, size * 1.05, "FAN CLUB", "#6b2fb3");
+  cloth.position.set(size * 0.68, size * 1.0, 0.01); g.add(cloth);
+  const back = poster("kurenaif", size * 1.3, size * 1.05, "FAN CLUB", "#6b2fb3"); back.rotation.y = Math.PI; back.position.set(size * 0.68, size * 1.0, -0.01); g.add(back);
   return g;
 }
 

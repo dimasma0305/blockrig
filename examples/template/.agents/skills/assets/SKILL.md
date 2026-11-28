@@ -85,3 +85,18 @@ head's cage, not by its attachment: pick classic hair (SpecialMesh or MeshPart w
 `addLayeredClothing({ wrap })`. Signed CDN links expire within hours: fetch soon after resolving.
 
 `npm run check` notes any source file that loads `roblox/` so it never slips into a published render.
+
+## Real creator images (channel avatars, team logos, video thumbnails)
+
+When the story names real YouTube channels or CTF teams and the user asks to show them "like their real video or
+profile picture": download them, never redraw them.
+- Channel avatar: `https://www.youtube.com/@<handle>` → `<meta property="og:image" content="...">` (ask for `=s400-c-k-c0x00ffffff-no-rj`);
+  the channel banner is the `yt3.googleusercontent.com/...=w2120-fcrop64=...` link in the same page.
+- Video thumbnails: the page's `"videoId":"<11 chars>"` → `https://i.ytimg.com/vi/<id>/hqdefault.jpg`. Look at them
+  before choosing (a channel's latest thumbnail may not show the person).
+- CTF team logos: `https://ctftime.org/team/<id>` → `/media/team/<file>`.
+- Save them in `assets/brands/` and git-ignore it: they are the creators' own images (videos only, like Roblox
+  items; tell the user posting them is their call). Load them before the canvas mounts (nasa `src/world/brands.ts`)
+  and draw them on boards (`pic()`, `videoCard()`, `poster()`, `standee()` in nasa `src/world/boards.ts`).
+- No full-body art exists? Make a cardboard standee: the real avatar as the head over a drawn body in the
+  character's colours, alpha cut-out with a white border (nasa `standee()`).

@@ -10,10 +10,10 @@ import { layer, checkGround } from "../kit/ground";
 import { restOn } from "../kit/surfaces";
 import type { RobloxCast } from "../cast/roblox";
 import { HOUSES } from "./assets";
-import { screen, banner, fanFlag, calendar, timerTag } from "./boards";
+import { screen, banner, fanFlag, calendar, timerTag, poster, standee } from "./boards";
 import * as P from "./storyProps";
 
-export const LOCATIONS = { room: new THREE.Vector3(0, 0, 0), nursery: new THREE.Vector3(600, 0, 0), preschool: new THREE.Vector3(1200, 0, 0), hall: new THREE.Vector3(1800, 0, 0), friend: new THREE.Vector3(2400, 0, 0) };
+export const LOCATIONS = { room: new THREE.Vector3(0, 0, 0), nursery: new THREE.Vector3(600, 0, 0), preschool: new THREE.Vector3(1200, 0, 0), hall: new THREE.Vector3(1800, 0, 0), friend: new THREE.Vector3(2400, 0, 0), town: new THREE.Vector3(3000, 0, 0) };
 // Roblox rooms, in the map's own studs (read off map.json / MapLab): the floor centre, and the inner faces of the walls
 const ROOM = { map: "mapBedroomA", floor: new THREE.Vector3(80.7, 1.25, 192.4), inner: new THREE.Box3(new THREE.Vector3(69.1, 1.25, 181.3), new THREE.Vector3(92.4, 13.5, 203.6)) };
 const NURSERY = { map: "mapBedroomB", floor: new THREE.Vector3(-307.8, 1.0, -29.6), inner: new THREE.Box3(new THREE.Vector3(-321, 1.0, -45), new THREE.Vector3(-293.5, 20, -15.2)) };
@@ -51,15 +51,21 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   if (!roomMap) throw new Error("this video needs the Roblox rooms: run npm run roblox");
   // the curtain behind the desk is left out so the window shows the yard where the kids play; the side monitor,
   // a speaker and the pen cup on the desk corner are left out too: they stood between the cameras and me
-  const rm = buildRobloxMap(roomMap.data, { ...roomMap, pbr: (n) => lib.pbr(n) }, { skip: (p) => (p.name === "Curtain" && p.cframe.pos[0] > 80) || /^(Speaker|CupHolder|Monitor)$/.test(p.model ?? "") || (p.model === "Model" && Math.abs(p.cframe.pos[0] - 88.2) < 0.8 && Math.abs(p.cframe.pos[2] - 191.9) < 0.8) });
+  const rm = buildRobloxMap(roomMap.data, { ...roomMap, pbr: (n) => lib.pbr(n) }, { skip: (p) => (p.name === "Curtain" && p.cframe.pos[0] > 80) || /^(Speaker|CupHolder|Monitor)$/.test(p.model ?? "") || (p.model === "Model" && Math.abs(p.cframe.pos[0] - 88.2) < 0.8 && Math.abs(p.cframe.pos[2] - 191.9) < 0.8)
+    || (p.model === "Desk" && p.size[0] > 10) });
   const shift = R.clone().sub(ROOM.floor); rm.group.position.copy(shift); root.add(rm.group);
   const M = (x: number, y: number, z: number) => V3(x, y, z).add(shift); // map studs -> world
+  // the desk top along the monitor wall (the map's L-shaped CSG top, drawn as its bounding box, covered the chair)
+  const top = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.2, 12.2), new THREE.MeshStandardMaterial({ color: "#26262b", roughness: 0.5 }));
+  top.position.copy(M(89.5, 4.2, 196.4)); top.castShadow = true; top.receiveShadow = true; top.userData.label = "Desk/top"; root.add(top);
+  // the gaming chair is the seat I sit in: its one-box-per-part colliders would swallow me (check faces in stills)
+  rm.group.userData.colliders = (rm.group.userData.colliders ?? []).filter((b: { name: string; size: number[] }) => !/^GamingChair/.test(b.name) || (b.name === "GamingChair/Pillow" && b.size[2] > 2)); // keep the seat cushion
   const chairBox = rm.find(/GamingChair/).translate(shift);
   const room = {
     box: ROOM.inner.clone().translate(shift).expandByScalar(-0.8),
     // the open floor between the bed, the desk and the window: room cameras stay in it, so no chair back, desk or bed blocks them
-    open: new THREE.Box3(V3(-0.2, 1.4, -10.3), V3(10.8, 10.5, -2.7)).translate(R),
-    chair: V3((chairBox.min.x + chairBox.max.x) / 2 - 0.2, 0, (chairBox.min.z + chairBox.max.z) / 2), seat: chairBox.min.y + 2.05,
+    open: new THREE.Box3(V3(-0.2, 1.4, -9.4), V3(10.8, 10.5, -2.7)).translate(R),
+    chair: V3((chairBox.min.x + chairBox.max.x) / 2 - 0.2, 0, (chairBox.min.z + chairBox.max.z) / 2), seat: restOn(M(85.2, 4.0, 195.8).y, "cushion"), // on the seat cushion (top at 4.0 in map studs), sinking in a little
     keys: M(87.6, 4.45, 195.6), screenAt: M(90.42, 5.35, 195.95),
     window: M(86.4, 7, 181.3), door: M(88, 0, 186), pkg: M(78.5, 0, 186.5), stand: M(80.5, 0, 191), behind: M(82.3, 0, 195.6),
     side: M(84.6, 0, 191.6), outside: M(84, 0, 168),
@@ -68,7 +74,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   // my laptop on the front edge of the desk, facing the room (the hook: NASA: LOCKED over my shoulder)
   const lapAt = V3(3.2, 3.05, -1.5).add(R), lapRot = 2.34;
   const lapBase = at(lib.model("laptop", { width: 2.6 }), lapAt.x, lapAt.y, lapAt.z, lapRot + Math.PI); root.add(lapBase);
-  const lap = screen(2.3, 1.45); lap.position.copy(lapAt).add(V3(Math.sin(lapRot) * -0.55, 1.0, Math.cos(lapRot) * -0.55)); lap.rotation.set(0, lapRot, 0); root.add(lap); lap.userData.base = lapBase;
+  const lap = screen(2.3, 1.45); lap.position.copy(lapAt).add(V3(Math.sin(lapRot) * -0.55, 1.0, Math.cos(lapRot) * -0.55)); lap.rotation.set(0, lapRot, 0); root.add(lap); lap.userData.base = lapBase; lap.userData.noCollide = lapBase.userData.noCollide = true; // only in the hook
   const mon = screen(3.55, 2.6); mon.position.copy(room.screenAt); mon.rotation.y = -Math.PI / 2; root.add(mon);
   // story props in the room (shown per shot by performance.ts)
   const props = {
@@ -80,6 +86,8 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     books: [P.book("OSEP", "#1d3557", 1.4, 1.9), P.book("OSED", "#e63946", 1.4, 1.9)], phone: P.phone(), sandwich: P.sandwich(), cert: P.sheet(1.6, 1.1),
     plush: P.dragonPlush(0.42), fanFlag: fanFlag(0.9), milk: P.milkBottle(), badges: [P.badge("DEF CON CTF"), P.badge("SECCON", "#1d3557")], badgeWall: banner(["CTF BADGES"], 2.4, 1.4, "#14213d", "#fff", "#fca311"),
   };
+  const moving = (o: any) => { if (Array.isArray(o)) o.forEach(moving); else if (o?.isObject3D) o.userData.noCollide = true; };
+  Object.values(props).forEach(moving);
   props.pkgLabel.position.set(0, 2.2, 1.98); props.pkg.add(props.pkgLabel); // the box's front, in its own frame (height 4.2)
   for (let i = 0; i < 14; i++) { const j = P.juiceBox(); const q = rng(300 + i); j.position.set((q() - 0.5) * 1.6, Math.floor(i / 5) * 0.75, (q() - 0.5) * 1.2); j.rotation.y = q() * 3; props.juicePile.add(j); }
   props.juicePile.position.copy(M(88.4, 4.3, 201.2));
@@ -136,8 +144,8 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     const ch = at(lib.model("chair", { height: 3.2 }), x, 0, z + 0.9, Math.PI); root.add(ch);
     pre.seats.push({ at: V3(x, 0, z + 0.9), seat: 1.55 });
   }
-  const kfFlagWall = banner(["kurenaif", "FAN CLUB"], 2.2, 1.3, "#6b2fb3", "#fff", "#ff7ad9"); kfFlagWall.position.set(S.x - 7, 1.4, S.z - 3.25); kfFlagWall.rotation.x = -0.4; root.add(kfFlagWall); // his kurenaif notebook on the desk
-  const kfPencil = banner(["kurenaif"], 1.0, 0.35, "#ff7ad9", "#fff", "#6b2fb3"); kfPencil.position.set(S.x - 8.2, 2.36, S.z - 2.4); kfPencil.rotation.x = -Math.PI / 2; root.add(kfPencil);
+  const kfNote = poster("kurenaif", 1.5, 1.7, "kurenaif", "#6b2fb3"); kfNote.position.set(S.x - 7.6, 2.36, S.z - 2.6); kfNote.rotation.x = -Math.PI / 2; root.add(kfNote); // his kurenaif notebook
+  const kfStand = standee(5.2); kfStand.position.set(S.x - 11.2, 0, S.z - 2.4); kfStand.rotation.y = 0.35; root.add(kfStand); // a kurenaif standee by his desk
   root.add(at(lib.model("bookcaseOpen", { height: 6 }), S.x + 15, 0, S.z - 9, -Math.PI / 2), at(lib.model("pottedPlant", { height: 4 }), S.x - 15.5, 0, S.z - 12));
   const preLight = new THREE.PointLight("#fff1dc", 30, 50, 1.2); preLight.position.set(S.x, 8, S.z); root.add(preLight);
 
@@ -157,12 +165,38 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
 
   // ---------------------------------------------------------------- my best friend's room (Kenney): kurenaif everywhere
   const F = LOCATIONS.friend;
-  kenneyRoom(lib, root, F, 3, 3, (side, i) => (side === "back" && i === 1 ? "wallWindow" : "wall"));
+  kenneyRoom(lib, root, F, 3, 3, () => "wall");
   root.add(at(lib.model("bedSingle", { length: 9 }), F.x - 6.5, 0, F.z - 5), at(lib.model("desk", { height: 3 }), F.x + 6, 0, F.z - 8.6), at(lib.model("computerScreen", { height: 2.2 }), F.x + 6, 3, F.z - 9.2));
-  [[F.x - 2, "#6b2fb3"], [F.x + 5.5, "#ff7ad9"]].forEach(([x, c], i) => { const p = banner(["kurenaif", i ? "LIVE 21:00" : "FAN CLUB"], 3, 2, c as string, "#fff", i ? "#6b2fb3" : "#ff7ad9"); p.position.set(x as number, 6, F.z - 10.2); root.add(p); });
+  // kurenaif everywhere: her banner art as wallpaper across the back wall, real video thumbnails as posters,
+  // a full-body standee, and her crypto video on his monitor
+  const wall = poster("kurenaifBanner", 20, 7.5, "", "#2a1020"); wall.position.set(F.x, 5.2, F.z - 10.15); root.add(wall);
+  ([["kfCrypto", -10.15, -6, "CTF Crypto 超入門"], ["kfReed", -10.15, 0, "LIVE"], ["kfDefcon", -10.15, 5.5, "DEF CON CTF"]] as const).forEach(([n, x, z, cap]) => { const pp = poster(n, 4.2, 3.2, cap, "#6b2fb3"); pp.position.set(F.x + x, 5.5, F.z + z); pp.rotation.y = Math.PI / 2; root.add(pp); });
+  const kStand = standee(6.4); kStand.position.set(F.x - 3.2, 0, F.z - 7.6); kStand.rotation.y = 0.25; root.add(kStand);
+  const fScreen = screen(2.6, 1.6); fScreen.position.set(F.x + 6, 4.15, F.z - 8.95); fScreen.set("KURENAIF"); root.add(fScreen);
   const fFlag = fanFlag(1.2); fFlag.position.set(F.x - 9, 0, F.z - 8.8); fFlag.scale.setScalar(1.4); root.add(fFlag);
   const friendRoom = { spot: V3(F.x + 1.5, 0, F.z - 3) };
   const fLight = new THREE.PointLight("#fff1dc", 22, 40, 1.3); fLight.position.set(F.x, 8.5, F.z); root.add(fLight);
+
+  // ---------------------------------------------------------------- the town (the hook: a world where everyone is hacking)
+  const TW = LOCATIONS.town;
+  const road = layer(strip(lib, "asphalt", 140, 12, 8), 2, 0); road.position.set(TW.x, road.position.y, TW.z); root.add(road);
+  for (const s of [-1, 1]) { const sw = layer(strip(lib, "concrete", 140, 6, 4), 1, 0); sw.position.set(TW.x, sw.position.y, TW.z + s * 9); root.add(sw); }
+  for (let i = 0; i < 5; i++) for (const s of [-1]) { // the far side only: the crane comes down over the near side
+    const h = lib.model(HOUSES[(i + (s > 0 ? 2 : 0)) % HOUSES.length], { scale: 15 }); root.add(at(h, TW.x - 44 + i * 22, 0, TW.z + s * 30, s > 0 ? Math.PI : 0));
+    root.add(at(lib.model(i % 2 ? "treeSmall" : "treeLarge", { scale: 13 }), TW.x - 33 + i * 22, 0, TW.z + s * 17, i));
+  }
+  const billboard = new THREE.Group(); billboard.position.set(TW.x + 6, 0, TW.z - 15); root.add(billboard);
+  const bb = banner(["HACK NASA BEFORE 10", "OR GET DELETED"], 18, 7.5, "#0b1020", "#ffffff", "#ff2d3d"); bb.position.y = 12; billboard.add(bb);
+  for (const x of [-6, 6]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.6, 12, 0.6), new THREE.MeshStandardMaterial({ color: "#3a3f48", roughness: 0.6 })); post.position.set(x, 6, -0.4); post.castShadow = true; billboard.add(post); }
+  const bigScreen = screen(9, 5.4); bigScreen.position.set(TW.x - 16, 9, TW.z - 14.5); bigScreen.set("NASA: LOCKED"); root.add(bigScreen);
+  const bigPole = new THREE.Mesh(new THREE.BoxGeometry(0.7, 9, 0.7), new THREE.MeshStandardMaterial({ color: "#3a3f48" })); bigPole.position.set(TW.x - 16, 4.5, TW.z - 15); bigPole.castShadow = true; root.add(bigPole);
+  // everyone's laptop (a Kenney laptop and a glowing screen, carried in front of them by performance.ts)
+  const townLaptops = Array.from({ length: 9 }, (_, i) => {
+    const g = new THREE.Group(); const m = lib.model("laptop", { width: 1.5 }); m.rotation.y = Math.PI; g.add(m);
+    const sc = screen(1.3, 0.8); sc.position.set(0, 0.55, 0.35); sc.rotation.set(-0.25, 0, 0); (sc.material as THREE.Material).side = THREE.DoubleSide; sc.set(["TCP1P", "PRACTICE TABS", "BUG BOUNTY TABS"][i % 3], 0.3 + i * 0.07); g.add(sc);
+    g.visible = false; g.userData.noCollide = true; root.add(g); return g;
+  });
+  const town = { spots: [V3(-14, 0, 8), V3(-9, 0, 9.5), V3(-4, 0, 8.2), V3(1, 0, 9.3), V3(6.5, 0, 8), V3(12, 0, 9), V3(-11, 0, -8.5), V3(-2, 0, -8.2), V3(9, 0, -9)].map((v) => v.add(TW)), laptops: townLaptops };
 
   // confetti for the birthday: seeded boxes that fall through the shot (frame-pure)
   const confetti = new THREE.InstancedMesh(new THREE.BoxGeometry(0.22, 0.04, 0.14), new THREE.MeshBasicMaterial({ toneMapped: false }), 240);
@@ -178,13 +212,20 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   const env = (name: string) => (envs[name] ??= pmrem.fromEquirectangular(lib.sky(name)).texture);
   const timer = timerTag(); timer.visible = false; root.add(timer);
   checkGround(root);
+  // render speed: every light costs every pixel of every material, wherever it is, so each place's lamps are only on
+  // while the camera is there (the nearest location owns a light; the sun is shared)
+  const lamps: { light: THREE.Light; at: string }[] = [];
+  root.updateMatrixWorld(true);
+  root.traverse((o: any) => { if (!o.isLight || o.isDirectionalLight || o.isHemisphereLight || o.isAmbientLight) return; const p = o.getWorldPosition(new THREE.Vector3());
+    let best = "room", bd = Infinity; for (const [k, v] of Object.entries(LOCATIONS)) { const d = Math.hypot(p.x - v.x, p.z - v.z); if (d < bd) { bd = d; best = k; } } lamps.push({ light: o, at: best }); });
   scene.add(root);
 
   const skyFor = (d: Daylight) => (d.stars > 0.6 ? "night" : d.sunDir[1] < 0.5 ? "golden" : "day");
   return {
-    root, lib, room, lap, nursery, pre, hall, friendRoom, props, mon, babyScreen, babyLaptop, tcp, tablet, lobbyBoard, timer, restOn,
+    root, lib, room, lap, nursery, town, pre, hall, friendRoom, props, mon, babyScreen, babyLaptop, tcp, tablet, lobbyBoard, timer, restOn,
     update(o: { location: string; weather: Weather; daylight: Daylight; time: number; local: number; camera: THREE.Camera; ownLight?: boolean; confetti?: { at: THREE.Vector3; t: number } | null }) {
       const focus = (LOCATIONS as any)[o.location] ?? LOCATIONS.room;
+      for (const l of lamps) l.light.visible = l.at === o.location;
       const skyName = skyFor(o.daylight);
       scene.background = lib.sky(skyName); if (!o.ownLight) scene.environment = env(skyName);
       scene.backgroundIntensity = 1; scene.environmentIntensity = LOOK.env * 0.7;

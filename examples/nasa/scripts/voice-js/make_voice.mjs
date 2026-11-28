@@ -121,21 +121,29 @@ console.log("loading Kokoro, Chatterbox and Whisper (ONNX, CPU)...");
 const kokoro = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "fp32", device: "cpu" });
 const cb = await loadChatterbox();
 const asr = await pipeline("automatic-speech-recognition", "onnx-community/whisper-small.en_timestamped", { dtype: "fp32" });
-// the one voice sample every line copies
-const k = await kokoro.generate(cfg.prompt, { voice: cfg.voice, speed: 0.95 });
-fs.writeFileSync(`${tmp}/k.wav`, Buffer.from(k.toWav()));
-ff(`${tmp}/k.wav`, `${tmp}/prompt.wav`, `rubberband=pitch=${cfg.pitch}:formant=shifted`, SR);
-const promptPcm = readPcm(`${tmp}/prompt.wav`, SR);
-await cb.setVoice(promptPcm);
+// the voice samples: the narrator's (every line), or a speaker's own from cfg.voices (dialogue: Mom, Dad...)
+const VOICES = cfg.voices ?? {}, voiceOf = (L) => (L.speaker && VOICES[L.speaker] ? L.speaker : "narrator");
+async function useVoice(who) {
+  const v = who === "narrator" ? { voice: cfg.voice, pitch: cfg.pitch } : VOICES[who];
+  const k = await kokoro.generate(cfg.prompt, { voice: v.voice, speed: 0.95 });
+  fs.writeFileSync(`${tmp}/k.wav`, Buffer.from(k.toWav()));
+  ff(`${tmp}/k.wav`, `${tmp}/prompt.wav`, Math.abs(v.pitch - 1) > 1e-3 ? `rubberband=pitch=${v.pitch}:formant=shifted` : "anull", SR);
+  await cb.setVoice(readPcm(`${tmp}/prompt.wav`, SR));
+}
+lines.sort((a, b) => voiceOf(a).localeCompare(voiceOf(b)));
 // one narrator = what npm run check measures: the median pitch of the lines already voiced (when VOICE_ONLY
 // re-voices a few), else the voice prompt's own pitch
-const voiced = JSON.parse(fs.readFileSync(arg("--lines"), "utf8")).filter((l) => !only?.has(l.id)).map((l) => {
-  try { return JSON.parse(fs.readFileSync(l.out + ".json", "utf8")).pitch || 0; } catch { return 0; }
-}).filter(Boolean).sort((a, b) => a - b);
-const refPitch = voiced.length >= 3 ? voiced[voiced.length >> 1] : pitch(readPcm(`${tmp}/prompt.wav`, 16000));
-console.log(`narrator pitch ${refPitch.toFixed(0)} Hz${voiced.length >= 3 ? " (median of the other lines)" : ""}`);
-
+// each voice = what npm run check measures: the median pitch of that voice's lines already voiced (when VOICE_ONLY
+// re-voices a few), else its prompt's own pitch
+const ALL = JSON.parse(fs.readFileSync(arg("--lines"), "utf8"));
+let current = null, refPitch = 0;
 for (const L of lines) {
+  if (voiceOf(L) !== current) {
+    current = voiceOf(L); await useVoice(current);
+    const voiced = ALL.filter((l) => voiceOf(l) === current && !only?.has(l.id)).map((l) => { try { return JSON.parse(fs.readFileSync(l.out + ".json", "utf8")).pitch || 0; } catch { return 0; } }).filter(Boolean).sort((a, b) => a - b);
+    refPitch = voiced.length >= 3 ? voiced[voiced.length >> 1] : pitch(readPcm(`${tmp}/prompt.wav`, 16000));
+    console.log(`${current} pitch ${refPitch.toFixed(0)} Hz${voiced.length >= 3 ? " (median of its other lines)" : ""}`);
+  }
   const mood = L.emotion || (L.text.trim().endsWith("!") ? "panic" : "neutral"), emo = EMOTIONS[mood] ?? EMOTIONS.neutral;
   let best = null;
   for (let take = 0; take < cfg.takes; take++) {
@@ -159,7 +167,7 @@ for (const L of lines) {
   const shipped = readPcm(L.out, 48000), b = breathe(shipped, 48000, wordsFor(L.text, best.heard.chunks ?? [], best.dur));
   if (b.n) writeWav(L.out, b.x, 48000);
   const duration = b.x.length / 48000;
-  fs.writeFileSync(L.out + ".json", JSON.stringify({ duration: +duration.toFixed(3), engine: "chatterbox-js", emotion: mood, match: +best.match.toFixed(3), pitch: +best.hz.toFixed(1), words: b.words }));
+  fs.writeFileSync(L.out + ".json", JSON.stringify({ duration: +duration.toFixed(3), engine: "chatterbox-js", voice: current, emotion: mood, match: +best.match.toFixed(3), pitch: +best.hz.toFixed(1), words: b.words }));
   best.dur = duration; best.pauses = b.n;
   console.log(`${L.id}  chatterbox-js ${mood.padEnd(8)} match ${best.match.toFixed(2)}  ${best.hz.toFixed(0).padStart(4)} Hz  ${best.dur.toFixed(2)}s  ${best.pauses ? "+" + best.pauses + " pause " : ""}${L.text}`);
 }

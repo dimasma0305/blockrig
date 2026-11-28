@@ -10,12 +10,12 @@ import { Sandbox, SANDBOX_DEFAULTS } from "./debug/Sandbox";
 type ShotProps = { shot: string; debug: boolean };
 const ShotView: React.FC<ShotProps> = ({ shot, debug }) => {
   const s = T.byId(shot) ?? T.SHOTS[0];
-  return <Sequence from={-s.startFrame}><Video debug={debug} /></Sequence>;
+  return <Sequence from={-s.startFrame}><Video debug={debug} roblox /></Sequence>;
 };
 
 export const RemotionRoot: React.FC = () => (
   <>
-    <Composition id="Story" component={Video} durationInFrames={TOTAL_FRAMES} fps={FPS} width={WIDTH} height={HEIGHT} defaultProps={{ debug: false } as VideoProps} />
+    <Composition id="Story" component={Video} durationInFrames={TOTAL_FRAMES} fps={FPS} width={WIDTH} height={HEIGHT} defaultProps={{ debug: false, roblox: true } as VideoProps} />
     <Folder name="Debug">
       <Composition id="Shot" component={ShotView} fps={FPS} width={WIDTH} height={HEIGHT} durationInFrames={1}
         defaultProps={{ shot: T.SHOTS[0].id, debug: true } as ShotProps}

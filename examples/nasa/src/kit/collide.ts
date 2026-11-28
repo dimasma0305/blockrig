@@ -66,6 +66,7 @@ export function createProbe(R: R, root: THREE.Object3D) {
   };
 
   return {
+    free: () => world.free(),
     colliders: names.size,
     /** Everything wrong in this frame. `people` are the characters placed in the scene (hidden ones are skipped). */
     check(camera: THREE.PerspectiveCamera, people: Probed[]): Issue[] {

@@ -34,7 +34,7 @@ The comment at the top of `docs/story.md` is the format. Per shot:
 - `mood:` one word, for music and colour.
 - `light:` (optional) a lighting preset for the shot: day, golden, night, indoor, studio (world skill). Leave it out for the sky's own light.
 
-- `speaker:` (dialogue): who says the line (me, mom, dad...). The one narrator voices it with the line's `emotion:`, and the caption gets a small tag in that character's colour (Captions `speakers`). Never a second voice.
+- `speaker:` (dialogue): who says the line (me, mom, dad...). It gets that character's own voice (docs/audio.md "## Voices", voice skill) and the caption a small tag in their colour (Captions `speakers`). The narrator keeps one voice; one voice for every character was "hard to understand" (nasa video).
 - `say:` how the narrator pronounces a name or acronym ("C-T-Fs", "O-S-C-P", "kurenaifu"), same word count as the line; the captions keep the real spelling. Dialogue sketches with many silent beats read slower: `npm run check` measures pace over the spoken shots only.
 - In docs/audio.md "Music", `- s54: none` is silence ("the music stops").
 
@@ -44,3 +44,14 @@ The comment at the top of `docs/story.md` is the format. Per shot:
 
 Read the narration at speed and count words against the budget. Show the user the hook and one-line plot; let them
 redirect before voicing.
+
+## Make it easy to follow (the user found a jargon-heavy short "hard to understand")
+
+- **Show the rule, don't only say it.** The hook "In this world, everyone…" gets an establishing shot of that world
+  (a street where everyone does the thing, a billboard with the rule), then the hero.
+- **One idea per joke, readable with the sound off.** A joke that needs insider knowledge or a chain of small actions
+  (a plush swapped for a trophy in a suitcase) gets cut, or gets a visual punchline: the thing on a screen, a sign,
+  a receipt. Ask "would a 12-year-old who never heard of X get it?"
+- **Explain jargon on screen**: `- note: CTF = a hacking competition` (a white sticker under the title card).
+- **Real things look real**: when the story names real channels, teams or brands and the user wants them shown,
+  use their real avatars, logos and video thumbnails (assets skill, "Real creator images"), not drawn stand-ins.

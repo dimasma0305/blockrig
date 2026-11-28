@@ -55,6 +55,15 @@ const voice = {
   chatterbox: { voice: vb.voice ?? "am_adam", pitch: num(vb.pitch) ?? 1.35, exaggeration: num(vb.exaggeration) ?? 0.9, cfg: num(vb.cfg) ?? 0.35, tempo: num(vb.tempo) ?? 1, commaPause: num(vb.commaPause) ?? 0.22, stopPause: num(vb.stopPause) ?? 0.4, panic: sub(vb.panic) },
   kokoro: { voice: vb.voice ?? "am_adam", pitch: num(vb.pitch) ?? 1.35, speed: num(vb.speed) ?? 1.0 },
 };
+// "## Voices": a voice sample per dialogue speaker ("- mom: af_heart 1.0" = Kokoro voice, pitch); the narrator and
+// speakers not listed use the narrator's sample
+voice.chatterbox.voices = Object.fromEntries(Object.entries(bullets(section("Voices"))).map(([who, v]) => { const [kv, p] = v.split(/\s+/); return [who, { voice: kv, pitch: Number(p ?? 1) }]; }));
+// "## Voices": a voice sample per dialogue speaker ("- mom: af_heart 1.0" = Kokoro voice, pitch); the narrator and
+// speakers not listed use the narrator's sample
+voice.chatterbox.voices = Object.fromEntries(Object.entries(bullets(section("Voices"))).map(([who, v]) => { const [kv, p] = v.split(/\s+/); return [who, { voice: kv, pitch: Number(p ?? 1) }]; }));
+// "## Voices": a voice sample per dialogue speaker ("- mom: af_heart 1.0" = Kokoro voice, pitch); the narrator and
+// speakers not listed use the narrator's sample
+voice.chatterbox.voices = Object.fromEntries(Object.entries(bullets(section("Voices"))).map(([who, v]) => { const [kv, p] = v.split(/\s+/); return [who, { voice: kv, pitch: Number(p ?? 1) }]; }));
 const music = Object.entries(bullets(section("Music"))).map(([fromShot, theme]) => ({ theme, fromShot }));
 
 // ---- checks ----

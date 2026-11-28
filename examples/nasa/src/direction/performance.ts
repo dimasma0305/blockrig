@@ -67,7 +67,7 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
   const R = world.room, room = shot.location === "room";
 
   // kids playing in the yard outside my window (seen through it)
-  if (room) kids.forEach((k, i) => { const at = R.outside.clone().add(V(-6 + i * 9, 0, i * 3)); place(k, at.x, at.z, i ? -2.4 : 2.2); k.rig.object.scale.setScalar(0.85); act(k, [{ clip: i ? C.cheer : C.celebrate, at: -i * 0.3, speed: 0.8 }], (local + i) % 1.8, "laugh"); });
+  if (room && id !== "s01") kids.forEach((k, i) => { const at = R.outside.clone().add(V(-6 + i * 9, 0, i * 3)); place(k, at.x, at.z, i ? -2.4 : 2.2); k.rig.object.scale.setScalar(0.85); act(k, [{ clip: i ? C.cheer : C.celebrate, at: -i * 0.3, speed: 0.8 }], (local + i) % 1.8, "laugh"); });
 
   /** Me in the gaming chair: facing the screen (+X) or turned `turn` radians toward the room. */
   const chair = (q: Person, layers: Layer[], face: string, turn = 0) => {
@@ -77,9 +77,23 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
   const toMe = (q: THREE.Vector3) => facing(q, R.chair);
   const momSide = V(2.4, 0, 0.6), momBack = V(2.4, 0, 0.6), CAM = V(3.5, 0, -10), cheat = (q: THREE.Vector3, to: THREE.Vector3) => { const a = facing(q, to), b = facing(q, CAM); return a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * 0.75; };
 
+  for (const l of world.town.laptops) l.visible = false;
   switch (true) {
+    // ------------------------------------------------ the hook: a world where everyone hacks (grown-ups, kids, everyone)
+    case id === "s01": {
+      const folks = [dad, mom, kids[0], tm1, kids[1], friend, tm2, cast.pj, cast.hero], faces = ["determined", "smug", "grin", "determined", "laugh", "determined", "smug", "grin", "scared"];
+      folks.forEach((q, i) => {
+        const at = world.town.spots[i], rot = (i % 3 === 0 ? 0.6 : i % 3 === 1 ? -0.5 : 0.1) + (at.z < LOCATIONS.town.z ? Math.PI : 0);
+        q.rig.object.scale.setScalar(q === dad || q === mom ? 1 : 0.8);
+        stand(q, at, rot, [{ clip: C.idle, at: -i * 0.4 }, { clip: C.type, at: -i * 0.13 }], faces[i]);
+        // the laptop rides in front of the chest, between the hands
+        q.rig.jointPosition("LeftHand", tmp); const lh = tmp.clone(); q.rig.jointPosition("RightHand", tmp); const mid = lh.add(tmp).multiplyScalar(0.5);
+        const l = world.town.laptops[i]; l.visible = true; l.position.copy(mid).add(V(0, -0.15, 0)); l.rotation.set(0, rot + PI, 0); l.scale.setScalar(q.rig.object.scale.y);
+      });
+      break;
+    }
     // ------------------------------------------------ 1 the hook: frozen at the desk, three seconds left
-    case n <= 3: {
+    case n >= 2 && n <= 3: {
       chair(me, [{ clip: C.gasp, weight: 0.8 }], faceOf(shot, "hero", "scared"), HOOK_TURN);
       P.ball.visible = true; P.ball.position.set(R.chair.x - 1.6, 0, R.chair.z + 1.9);
       break;
@@ -103,7 +117,7 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
       const seats = world.pre.seats, sit = (q: Person, i: number, layers: Layer[], face: string, turn = 0) => { const st = seats[i]; place(q, st.at.x, st.at.z, PI + turn); act(q, [{ clip: C.sit }, ...layers], local, face, st.seat, ON_SEAT); };
       for (const h of cast.headsets) h.visible = true;
       world.lobbyBoard.set(id === "s15" ? "FINAL CHALLENGE" : id === "s18" ? "MIC DISCONNECTED" : "PRESCHOOL CTF LEAGUE", p);
-      world.pre.laptops.forEach((l, i) => l.set(i === 1 && n >= 15 ? "FINAL CHALLENGE" : "TCP1P", 0));
+      world.pre.laptops.forEach((l, i) => l.set(i === 0 ? (id === "s14" ? "SCHEDULE" : "KURENAIF") : i === 1 && n >= 15 ? "FINAL CHALLENGE" : "TCP1P", 0));
       const flag = world.props.fanFlag, flagUp = n >= 11 && !(id === "s14" && p > 0.55);
       sit(friend, 0, [{ clip: C.type, weight: id === "s11" || id === "s12" || id === "s14" ? 0 : 0.7 }, ...(n >= 11 && n <= 14 ? [{ clip: flagUp ? C.flagUp : C.flagDown, fade: 0.3 }] : [])], faceOf(shot, "friend", "determined"), id === "s13" || id === "s14" ? -0.7 : 0);
       if (n >= 11 && n <= 14) inHand(flag, friend, "RightHand", V(0, -0.15, 0.1)); else flag.visible = false;
@@ -119,7 +133,7 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
         if (id === "s17") {
           mom.rig.jointPosition("UpperTorso", tmp);
           place(me, tmp.x, tmp.z, mom.rig.object.rotation.y + PI, 0);
-          me.rig.object.position.add(V(Math.sin(mom.rig.object.rotation.y), 0, Math.cos(mom.rig.object.rotation.y)).multiplyScalar(0.9));
+          me.rig.object.position.add(V(Math.sin(mom.rig.object.rotation.y), 0, Math.cos(mom.rig.object.rotation.y)).multiplyScalar(1.5));
           act(me, [{ clip: C.kick }], local, faceOf(shot, "hero", "furious"), 0, []);
           me.rig.object.position.y = tmp.y - 1.3;
         }

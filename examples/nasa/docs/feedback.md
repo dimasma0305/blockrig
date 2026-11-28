@@ -38,6 +38,13 @@ undone later. One line per item: date, what they said, what we did, where.
 
 ## This video
 
+- 2026-11-28 "Make the render faster" → lights switched per location and soft-shadow samples 16 → 10 (11% faster, measured), and 30 fps (user's choice; half the frames).
+- 2026-11-28 "So many things collide" → npm run collide: the desk's CSG top (a 13x12 slab over the chair) replaced, the gaming chair kept as a seat (cushion collider only), crane path cleared, props that move are not colliders, colliders rebuilt per shot. Result: nothing found.
+
+- 2026-11-28 "Hard to understand": same voice for everyone, and the jokes unclear → a voice per character (audio.md "Voices", make_voice.mjs `voices`), explainer labels for the jargon (story.md `note:`), the dinosaur/suitcase bit (old s24-s27) cut.
+- 2026-11-28 More real visuals for PPP, Project SEKAI, LiveOverflow, kurenaif, "like their real YouTube video or profile picture" → real avatars, team logos and video thumbnails (assets/brands, git-ignored; src/world/brands.ts) on the lobby board, the bedtime playlist, his screens; kurenaif: full-body standee, wallpaper and posters in his room, a standee by his preschool desk, her avatar on the flag.
+- 2026-11-28 "In this world" should show a world where everyone is hacking → s01 is a street of hackers (World.ts town).
+
 - 2026-11-28 Script from the user (11 scenes, verbatim in the request): kept every beat, on-screen text and gag. Dialogue is voiced by the one narrator with the emotion noted, and its caption carries a speaker tag (docs/story.md, kit/Captions.tsx `speakers`). Names are pronounced with `say:` (C-T-Fs, O-S-C-P, kurenaifu...).
 - Real brand and event names only as plain text, no recreated logos → src/world/boards.ts draws text only.
 - "The music stops" (s54) and "fades to room tone" (s68) → audio.md music theme `none` (silence).

@@ -4,7 +4,7 @@ What "Hack NASA Before Ten" looks like. The code follows this file; when the loo
 
 ## Format
 
-- 1080×1920, 60 fps, H.264 CRF 18. Captions at 62% of the height; dialogue captions carry a speaker tag
+- 1080×1920, 30 fps (half the render time of 60; the user chose it, 2026-11-28), H.264 CRF 18. Captions at 62% of the height; dialogue captions carry a speaker tag
   (ME, MOM, DAD, BEST FRIEND, SYSTEM) in that character's colour (src/direction/Layers2D.tsx).
 - Keep faces and key action out of the app zones: right 14% (buttons), bottom 16% (caption, username), top 7%.
 - On-screen text: `title:` (AGE 0, 2, 3, 4, 5, 9, 10) pops in at the top; `timer:` floats above my head as a red

@@ -38,8 +38,10 @@ function shotCamera(shot: Shot, p: number, local: number, cast: Cast, world: Wor
   const { mom, dad, friend, tm1 } = cast, me = meFor(shot.id, cast), R = world.room, id = shot.id, e = easeInOut(p);
   const scr = R.screenAt.clone();
   switch (id) {
-    // ---- the hook: frozen, from the screen side
-    case "s01": case "s54": { const L = world.lap.position, t = head(me).lerp(L, 0.45); return { pos: L.clone().add(V(-3.2, 2.4, -6.2).multiplyScalar(1 - 0.15 * e)), target: t.add(V(0, 0.2, 0)), fov: 52, shake: 0 }; }
+    // ---- the hook: the street where everyone hacks, crane down from above to street level
+    case "s01": { const T = LOCATIONS.town; return move([V(T.x - 26, 30, T.z + 34), V(T.x - 2, 2, T.z - 2)], [V(T.x - 10, 4.2, T.z + 21), V(T.x - 1, 6.5, T.z - 8)], p, 56); }
+    // ---- frozen at the desk, from the screen side
+    case "s54": { const L = world.lap.position, t = head(me).lerp(L, 0.45); return { pos: L.clone().add(V(-3.2, 2.4, -6.2).multiplyScalar(1 - 0.15 * e)), target: t.add(V(0, 0.2, 0)), fov: 52, shake: 0 }; }
     case "s02": { const L = world.lap.position, t = head(me).lerp(L, 0.25); return { pos: L.clone().add(V(-2.2, 1.8, -4.2).multiplyScalar(1 - 0.1 * e)), target: t.add(V(0, 0.3, 0)), fov: 46, shake: 0 }; }
     case "s03": { const h = head(me); return move([h.clone().add(V(2.6, 0.3, -1.4)), h.clone().add(V(0, -0.5, 0))], [V(-1.5, 6.5, -9.5), V(1.6, 2.8, -1.2)], p, 50); }
     // ---- nursery
@@ -50,11 +52,11 @@ function shotCamera(shot: Shot, p: number, local: number, cast: Cast, world: Wor
     case "s08": return on(mom, -0.25, 6.5, 0.2, 40, p, 0.1);
     // ---- preschool
     case "s09": { const S = LOCATIONS.preschool; return move([V(S.x + 3, 10, S.z + 21), V(S.x, 3.5, S.z - 6)], [V(S.x + 1, 6.5, S.z + 14), V(S.x, 3.5, S.z - 7)], p, 52); }
-    case "s10": { if (p < 0.45) { const h = head(me), b = world.pre.board.clone(); return { pos: h.clone().add(V(1.2, 0.8, 2.6)), target: b.clone().add(V(0, -0.8, 0)), fov: 46, shake: 0 }; } return on(me, 0.25, 3.6, 0.2, 40); }
+    case "s10": { if (p < 0.45) { const b = world.pre.board.clone(); return { pos: b.clone().add(V(0, -1.0, 15)), target: b.clone().add(V(0, -0.6, 0)), fov: 46, shake: 0 }; } return on(me, 0.25, 3.6, 0.2, 40); }
     case "s11": return on(friend, 0.45, 6.5, 2.2, 42, p, 0.25);
-    case "s12": return on(friend, -0.45, 3.8, 1.6, 40);
+    case "s12": { const h = head(friend), l = world.pre.laptops[0].position; return { pos: h.clone().add(V(0.9, 0.7, 2.0)), target: l.clone().lerp(h, 0.25), fov: 46, shake: 0 }; }
     case "s13": return two(friend, me, -1, 5.5, 0.8, 44, 0.65);
-    case "s14": return two(friend, me, 1, 7.5, 0.6, 44);
+    case "s14": { const h = head(friend), l = world.pre.laptops[0].position; return { pos: h.clone().add(V(-0.9, 1.9, 1.1)), target: l.clone(), fov: 44, shake: 0 }; }
     case "s15": return { ...on(me, 0.35, 3, 0.4, 44), shake: 0.03 };
     case "s16": { const S = LOCATIONS.preschool; return { pos: V(S.x + 9, 6, S.z + 13), target: head(me).lerp(head(mom), 0.5).add(V(0, -1.5, 0)), fov: 50, shake: 0 }; }
     case "s17": return shaken(on(mom, 0.9, 9, 1.2, 48), 0.04);
@@ -87,7 +89,8 @@ function shotCamera(shot: Shot, p: number, local: number, cast: Cast, world: Wor
     case "s41": { const h = head(me); return move([h.clone().add(V(-1, 1.2, -8)), h.clone().add(V(0.5, -0.8, 0))], [h.clone().add(V(4, 1.6, -7.5)), h.clone().lerp(scr, 0.4).add(V(0, -0.6, 0))], p, 48); }
     case "s42": return { pos: V(-1.5, 6.2, -2.5), target: V(6.5, 3.6, 3.6), fov: 54, shake: 0 };
     // ---- the friend's call
-    case "s43": case "s45": return on(friend, 0.2, 4.2, 0.3, 40);
+    case "s43": return on(friend, 0.2, 4.2, 0.3, 40);
+    case "s45": { const h = head(friend); return { pos: h.clone().add(V(4.5, 1.0, 9)), target: h.clone().add(V(-2.2, -0.8, -2)), fov: 50, shake: 0 }; } // wide enough for the standee and the wallpaper
     case "s44": case "s46": return fromFloor(head(me), 0.3, 0.5, 34);
     // ---- the final minute
     case "s47": return fromFloor(mid2(me, mom), 0.2, 1.4, 46);

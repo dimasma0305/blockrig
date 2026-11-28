@@ -25,7 +25,7 @@ shot or a full render.
    - held torches, flags and swords upright (equipTool + toolHold, look skill); mouths whole (no head showing through);
    - no flickering ground: the build fails on overlapping ground layers (world skill), but also watch a few frames
      of wide shots across ground seams.
-3. `npm run collide` (with the Roblox items by default; `-- --no-roblox` for the all-original cut): Rapier checks every 6th frame of the real render
+3. `npm run collide` (run it with the FIRST stills, not after a render: on the nasa video it found the hero inside a desk in 40 shots that looked "fine" at contact-sheet size) (with the Roblox items by default; `-- --no-roblox` for the all-original cut): Rapier checks every 6th frame of the real render
    (src/kit/collide.ts) and prints each problem with its shot and frames:
    - camera inside a wall or prop (blank or wall-back frames);
    - a character's face hidden from the camera by something solid;
@@ -53,3 +53,7 @@ Open it in the browser pane with captions on and record each caption change with
 poll the caption DOM every 80 ms, in chunks under 45 s per script call). Count words over the spoken span → wpm.
 Write the link and numbers in `docs/references.md`. Keep its text and audio local (out/ref, git-ignored); copy pace
 and format, never content.
+
+The probe rebuilds its colliders for every shot (Video.tsx `probe`, keyed on the shot): props that move or show
+only in some shots used to leave ghost colliders from the very first frame ("face hidden by laptop" where no laptop
+was). Things that move WITHIN a shot (a box being carried) still need `userData.noCollide`.

@@ -139,3 +139,19 @@ chill, cyber, triumph, `memory` / `memory-faded` (a worn 1930s record; "not good
 Never download chart songs or copyrighted albums ("Everywhere at the End of Time" was refused for reuse; Content ID
 claims it); the user adds trending sounds in the app. Pick themes per shot in docs/audio.md "Music", then `node scripts/voice.mjs --music-only` rebuilds the music without re-voicing. You cannot hear it: check loudness and
 bands (`ffmpeg ... volumedetect` per band) and ask the user to listen.
+
+## Dialogue: a voice per character
+
+Narration is one voice. Dialogue (shots with `speaker:`) uses that character's own sample when docs/audio.md has it:
+
+```md
+## Voices
+- mom: af_heart 1.0
+- dad: am_michael 0.95
+- friend: am_puck 1.3
+- system: bf_emma 1.0
+```
+
+(Kokoro voice, pitch.) make_voice.mjs voices each speaker's lines with its own sample, and the pitch checks (here
+and in `npm run check`) compare a line only with the same speaker's other lines. Re-voice just those lines with
+`VOICE_ONLY=<their ids>`. Lines spoken by the hero as a kid stay in the narrator's voice (the narrator is him).

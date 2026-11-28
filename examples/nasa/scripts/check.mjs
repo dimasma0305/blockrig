@@ -26,14 +26,18 @@ for (const s of story.shots) {
   }
 }
 // one narrator: every clip's median pitch should sit near the others (a big jump sounds like another person)
-const pitches = story.shots.filter((s) => s.narration && fs.existsSync(`assets/audio/${s.id}.wav.json`)).map((s) => [s.id, JSON.parse(fs.readFileSync(`assets/audio/${s.id}.wav.json`, "utf8")).pitch]).filter(([, p]) => p > 0);
+// (dialogue speakers with their own voice, docs/audio.md "## Voices", are checked against their own lines)
+const VOICES = story.voice?.chatterbox?.voices ?? {}, voiceOf = (s) => (s.speaker && VOICES[s.speaker] ? s.speaker : "narrator");
+for (const who of new Set(story.shots.filter((s) => s.narration).map(voiceOf))) {
+const pitches = story.shots.filter((s) => s.narration && voiceOf(s) === who && fs.existsSync(`assets/audio/${s.id}.wav.json`)).map((s) => [s.id, JSON.parse(fs.readFileSync(`assets/audio/${s.id}.wav.json`, "utf8")).pitch]).filter(([, p]) => p > 0);
 if (pitches.length > 2) {
   const sorted = pitches.map(([, p]) => p).sort((a, b) => a - b), median = sorted[Math.floor(sorted.length / 2)];
-  notes.push(`voice pitch: median ${median.toFixed(0)} Hz, range ${sorted[0].toFixed(0)}-${sorted.at(-1).toFixed(0)} Hz`);
+  notes.push(`${who} pitch: median ${median.toFixed(0)} Hz, range ${sorted[0].toFixed(0)}-${sorted.at(-1).toFixed(0)} Hz`);
   // measured on viral narrators (scripts/voice/analyze_ref.py): high-energy lines jump 30-50% up and still sound
   // like the same person; drifting down is what sounded like another voice ("sad" spike), so that stays strict
   const LOUD = new Set(["panic", "shocked", "excited", "angry", "happy"]), emo = Object.fromEntries(story.shots.map((s) => [s.id, s.emotion ?? "neutral"]));
   for (const [id, p] of pitches) { const d = p / median - 1, limit = d > 0 && LOUD.has(emo[id]) ? 0.35 : 0.2; if (Math.abs(d) > limit) problems.push(`${id}: voice pitch ${p.toFixed(0)} Hz is ${(d * 100).toFixed(0)}% off the narrator's ${median.toFixed(0)} Hz (sounds like another voice)`); else if (Math.abs(d) > 0.12) notes.push(`${id}: voice pitch ${(d * 100).toFixed(0)}% off the median`); }
+}
 }
 if (!timings.placeholder && timings.total) {
   // silent beats (shots with no line, held for their "min") are deliberate: pace is measured over the spoken shots

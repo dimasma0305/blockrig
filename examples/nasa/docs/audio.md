@@ -30,6 +30,16 @@ Engines (`npm run setup-voice` installs the offline ones):
 
 Each shot's `emotion:` in story.md picks how the narrator says it (see the voice skill's table); a line ending in "!" without one is `panic`.
 
+## Voices
+
+The user found one voice for everyone hard to follow (2026-11-28): each dialogue speaker has their own voice sample
+(Kokoro voice, pitch); the narrator and "me" (the narrator as a kid) keep the narrator's. Kokoro voices are Apache 2.0.
+
+- mom: af_heart 1.0
+- dad: am_michael 0.95
+- friend: am_puck 1.3
+- system: bf_emma 1.0
+
 ## Music
 
 - s01: suspense

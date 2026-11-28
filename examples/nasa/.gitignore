@@ -17,3 +17,6 @@ assets/github/
 assets/hdri/
 assets/polypizza/
 assets/credits.json
+
+# third-party channel avatars, team logos and video thumbnails (the creators' own images): never commit
+assets/brands/

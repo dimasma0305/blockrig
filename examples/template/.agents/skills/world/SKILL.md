@@ -152,3 +152,18 @@ for the same reason: depth precision.
 `npm run stills -- --comp WeatherLab 0` (and other frames) for weather; PlanLab for the layout; stills of every
 outdoor shot; then `npm run collide` (review skill): it finds cameras inside walls, faces hidden behind trees or
 poles, and characters inside props or floating.
+
+## Roblox maps: check the unions (learned on the nasa video)
+
+Unions (CSG) are drawn as their bounding box. An L-shaped desk top became one 13 x 12 stud slab that covered the
+chair, so the hero sat through the desk in every shot. Before staging in a map, list its UnionOperations with
+their sizes (map.json, `cls`/`union`); a large one over the acting area is skipped (`buildRobloxMap(..., { skip })`)
+and replaced with a simple box where the real shape is. `npm run collide` names them ("inside Desk/Union").
+A seat the hero sits in (a gaming chair) is one box per part to the collision check: drop its colliders
+(`group.userData.colliders`) and check the face in stills instead.
+
+## Render speed: lights per place
+
+Every light costs every pixel of every material, wherever it is. With five places each lit by its own lamps, all of
+them were shading every frame. Switch each place's lights on only while the camera is there (nasa World.ts
+`lamps`: the nearest location owns a light; the sun is shared).

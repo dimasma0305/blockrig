@@ -1,6 +1,6 @@
 // The video: a ThreeCanvas with the world, the cast and the camera, then the 2D layers (lightning, vignette,
 // glitch cuts, captions), the soundtrack, and the debug overlay when { debug: true }.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, delayRender, continueRender, cancelRender } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
@@ -36,7 +36,10 @@ function Scene({ lib, rb, rapier, post = true }: { lib: AssetLibrary; rb: Roblox
   camera.updateMatrixWorld(true);
   const light = (shot as any).light as string | undefined; // docs/story.md "- light: golden": a lighting preset for this shot
   world.update({ location: shot.location ?? "street", weather: weatherAt(shot, p), daylight: daylightAt(shot, p), time, local, camera, cloudAt: state.cloudAt, ownLight: !!(light && LIGHT_PRESETS[light]) });
-  const probe = useMemo(() => (rapier ? createProbe(rapier, world.root) : null), [rapier, world]);
+  // colliders are rebuilt for every shot from what is visible and where it stands then: props that move or show
+  // only in some shots would otherwise leave ghost colliders from the first frame (npm run collide)
+  const lastProbe = useRef<any>(null);
+  const probe = useMemo(() => { lastProbe.current?.free?.(); lastProbe.current = rapier ? createProbe(rapier, world.root) : null; return lastProbe.current; }, [rapier, world, shot.id]);
   if (probe) console.log("COLLIDE " + JSON.stringify({ frame, shot: shot.id, issues: probe.check(camera, cast.all) }));
   return (
     <>

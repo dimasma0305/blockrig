@@ -1,7 +1,7 @@
 ---
 title: Hack NASA Before Ten
 slug: nasa
-fps: 60
+fps: 30
 size: 1080x1920
 ---
 
@@ -11,8 +11,9 @@ size: 1080x1920
 - **Plot:** A kid raised as a hacker from the crib (CTFs at two, OSCP at three, bug bounties at five) has nine years to hack NASA, while Mom "invests" his $5,000 bounty and every "Can I go play?" gets "After NASA"; with three seconds left Dad tells him to press Enter, he passes, and the $5,000 turns out to be one bottle of sunscreen for the next objective: hack the Sun before eleven.
 - **Twist:** Mom's big investment is a tiny sunscreen, because the next rule is "hack the SUN before ELEVEN" ("After the Sun").
 - **Comment bait:** what will Mom buy for the Sun?
-- **Length:** ~3 min, 70 shots (one line each; 21 silent beats), 5 locations (my room, nursery, preschool, conference hall, friend's room).
+- **Length:** ~3 min, 66 shots (one line each; 20 silent beats), 5 locations (my room, nursery, preschool, conference hall, friend's room).
 - **Dialogue:** every line, narration and dialogue, is spoken by the one narrator voice with the emotion noted; a dialogue line's caption carries a speaker tag (`speaker:`: ME, MOM, DAD, BEST FRIEND, SYSTEM). `say:` is how the narrator pronounces a name (same word count as the line); captions show the real spelling.
+- **Explainers** (`note:`): a short label under the age card that says what the jargon means, so every joke reads without hacker knowledge.
 - **On-screen text** (`title:` age card, `timer:` countdown above my head, `screen:` what the laptop or board shows): real brand and event names are plain text only, never logos.
 
 <!--
@@ -30,19 +31,16 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 ## Shots
 
-### s01 · room
+### s01 · town
 > In this world, everyone has to hack NASA before they turn ten.
 
 - captions: IN THIS *WORLD*, | EVERYONE HAS TO | HACK *NASA* | BEFORE THEY TURN *TEN*.
-- action: I sit frozen at my laptop, terrified, hands up off the keys
-- camera: close front, slightly low, slow push in (freeze frame)
+- action: a sunny street where everyone hacks: grown-ups and kids on the sidewalks, all typing on glowing laptops; a billboard HACK NASA BEFORE 10 / OR GET DELETED, a big public screen NASA: LOCKED
+- camera: high crane down the street to the billboard
 - emotion: flat
-- faces: hero=scared
-- timer: 00:03 UNTIL DELETION
-- screen: NASA: LOCKED
 - time: day
 - mood: tense
-- light: studio
+- light: day
 
 ### s02 · room
 > If you fail... you get deleted.
@@ -144,6 +142,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: BY *TWO*, | WE'RE ALREADY COMPETING | IN *CTFs*.
 - say: By two, we're already competing in C-T-Fs.
+- note: CTF = a hacking competition
 - action: toddlers at miniature gaming setups, milk bottles beside the keyboards
 - camera: high wide over the rows, crane down
 - emotion: neutral
@@ -159,6 +158,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - captions: PROJECT *SEKAI*? | *PPP*? | THIS IS *PRESCHOOL*!
 - speaker: me
 - say: Project Sekai? P-P-P? This is preschool!
+- note: the best hacking teams in the world
 - action: the PRESCHOOL CTF LEAGUE lobby board (Project SEKAI, PPP, DiceGang, TokyoWesterns, MILK DEPENDENCY); I look from the board to the milk bottle in my hand
 - camera: past me onto the lobby board, then close on my face
 - emotion: shocked
@@ -212,9 +212,10 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: THE *STREAMING* | SCHEDULE.
 - speaker: friend
+- say: The streaming... schedule.
 - action: instant and proud; I stare; he slowly lowers the flag
 - camera: two-shot, side by side at the desks
-- emotion: happy
+- emotion: neutral
 - faces: friend=grin, hero=neutral
 - time: day
 - mood: funny
@@ -279,6 +280,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - captions: MOM! | I PASSED *OSCP*!
 - speaker: me
 - say: Mom! I passed O-S-C-P!
+- note: OSCP = a famous hacking exam (for adults)
 - action: I hold up a certificate OSCP: PASSED; juice box, yogurt cup and an OSWE workbook on the desk
 - camera: front, my certificate up close
 - emotion: happy
@@ -330,6 +332,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: AT *FOUR*, | OUR SCHOOL TRIPS WERE | *CODEGATE* IN KOREA, | *SECCON* IN JAPAN, | AND *DEF* CON CTF.
 - say: At four, our school trips were Codegate in Korea, Seccon in Japan, and Def Con C-T-F.
+- note: the biggest hacking contests in the world
 - action: montage in a conference hall: three banners in plain text, badges, tiny rolling suitcases, oversized trophies
 - camera: track along the three banners, one beat each
 - emotion: excited
@@ -339,61 +342,11 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: happy
 - light: studio
 
-### s24 · room
-> Laptop? Charger? Everything important?
-
-- captions: *LAPTOP*? | *CHARGER*? | EVERYTHING *IMPORTANT*?
-- speaker: mom
-- action: Mom checks my suitcase: DEF CON CTF badge on the handle, CODEGATE and SECCON stickers on the lid
-- camera: top-down on the open suitcase, Mom's hands
-- emotion: neutral
-- faces: mom=neutral
-- time: day
-- mood: funny
-- light: indoor
-
-### s25 · room
-> My dinosaur?
-
-- captions: MY *DINOSAUR*?
-- speaker: me
-- action: small and hopeful, I hold up the dragon plush
-- camera: close on me and the plush, low
-- emotion: sad
-- faces: hero=sad
-- time: day
-- mood: funny
-- light: indoor
-- min: 1
-
-### s26 · room
-> No room.
-
-- captions: NO *ROOM*.
-- speaker: mom
-- action: Mom is already turning away
-- camera: over my shoulder onto Mom
-- emotion: flat
-- faces: mom=neutral
-- time: day
-- mood: funny
-- light: indoor
-- min: 1
-
-### s27 · room
-
-- action: I quietly take a huge trophy out and put the plush in its place; tiny satisfied smile
-- camera: top-down on the suitcase, then my smile
-- faces: hero=smug
-- time: day
-- mood: funny
-- light: indoor
-- min: 2
-
 ### s28 · room
 > By five, we're doing bug bounties.
 
 - captions: BY *FIVE*, | WE'RE DOING | BUG *BOUNTIES*.
+- note: bug bounty = companies pay you for finding bugs
 - action: dinosaur pyjamas; tabs HackerOne, Bugcrowd, PortSwigger Web Security Academy; Burp Suite sticker next to the TCP1P sticker
 - camera: over my shoulder onto the screen
 - emotion: neutral
@@ -472,6 +425,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: *EXPLAIN* THIS.
 - speaker: mom
+- note: NASA: F
 - action: Mom reads my progress report and points at the NASA grade; I hold my red ball; CTF badges, books OSEP and OSED, a TRY HARDER sticky note behind
 - camera: close on the report: OSCP PASSED, OSWE PASSED, NASA F
 - emotion: serious
@@ -834,6 +788,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 
 - captions: NEW *OBJECTIVE*: | HACK THE *SUN* | BEFORE *ELEVEN*.
 - speaker: system
+- note: the next rule
 - action: a cheerful notification; a new countdown appears above my head
 - camera: push in on the screen, then my face
 - emotion: excited
