@@ -28,8 +28,6 @@ export type StoryFile = {
 export type Timings = { clips: Record<string, { duration: number; words: Word[] }>; music: { file: string | null; from: number; to: number; theme: string }[]; total: number };
 export type Shot = StoryShot & {
   idx: number; faces: Record<string, string>; start: number; end: number; dur: number; startFrame: number; endFrame: number; audio: string | null;
-  /** the spoken words in video time (for mouthAt) */
-  words: Word[];
 };
 export type Caption = { text: string; highlight: string; start: number; end: number; shot: string; speaker: string | null };
 export type SpeakerTag = { name: string; colour: string };
@@ -83,13 +81,6 @@ export function surfaces(root: THREE.Object3D): Surfaces;
 /** Rest a rig on the surface under (x, z) (feet, or hips with ON_SEAT), sunk by its softness (restOn). */
 export function placeOn(rig: any, ground: Surfaces, x: number, z: number, contacts?: Contacts, o?: { below?: number; skip?: (o: THREE.Object3D) => boolean }): SurfaceHit | null;
 
-// ---- faces that follow the voice
-export const EMOTION_FACE: Record<string, string>;
-export function faceFor(emotion: string | undefined, fallback?: string): string;
-/** Mouth openness 0..1 at time t: one open-close per syllable of the word being spoken. */
-export function mouthAt(words: Word[] | undefined, t: number, o?: { strength?: number }): number;
-/** Set the expression with the mouth opened by `open` (drawn faces: mouthOpen; dynamic heads: JawDrop). False for image faces. */
-export function talk(rig: any, open: number, expressionName?: string): boolean;
 
 // ---- surfaces
 export type Surface = { name: string; sink: number };

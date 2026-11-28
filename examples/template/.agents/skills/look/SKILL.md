@@ -52,10 +52,6 @@ body under it automatically (HSR), so nothing pokes through.
 
 ## Faces
 
-Faces talk: `performance.ts` lip-syncs whoever says the line (its `speaker:`, else the first-person hero) from the
-voice's word timings (`mouthAt`, `talk`), in that shot's face or the line's emotion (`faceFor`). Drawn faces and
-dynamic heads move; face accessories are pictures and can't, so for a talking close-up prefer a dynamic head.
-
 `createFace({ expression, seed })`; per shot `faces:` in docs/story.md, applied by `act()` in performance.ts.
 
 ## Real Roblox items

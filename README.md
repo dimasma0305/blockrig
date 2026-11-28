@@ -65,7 +65,6 @@ What's in `blockrig/video`:
 | camera | `pushIn`, `orbit`, `move`, `follow`, `lowAngle`, `topDown`, `applyCamera` | Camera recipes for shorts; shake is seeded by frame. |
 | frame | `frame`, `screenOf`, `ZONES`, `captionBand` | Framing by where faces should land: give the faces and the side to shoot from, and the camera's distance and height put every face at the chosen height, inside the margins (clear of the app buttons, shoulders included) and out of the caption band. |
 | place | `surfaces`, `placeOn` | Characters rest on whatever is under them by raycast (Roblox map part boxes, meshes): feet on the floor, hips sunk into a soft bed. No hand-measured heights. |
-| talk | `mouthAt`, `talk`, `faceFor` | Lip sync from the voice's word timings (one open-close per syllable) on drawn faces and dynamic heads, and the line's emotion as the face. Timeline shots carry their `words`. |
 | lighting | `createLighting`, `TIMES`, `daylight`, `mixDaylight`, `LOOK`, `applyLook`, `avatarAmbient` | Sky dome, sun with soft shadows, fill and lightning; times of day (day, golden, dusk, night, storm) that blend across a shot. |
 | surfaces | `surfaceOf`, `restOn` | How far a body sinks into a bed, sofa, pillow, grass or floor, from the part's name or its Roblox `Material`. |
 | robloxMap | `buildRobloxMap`, `partGeometry`, `facePlane`, `materialLook`, `swallowingUnions`, `trimUnion` | Draws a Roblox map or model from its part list: Part shapes, wedges, mesh modifiers, MeshParts, Decals and Textures on `NormalId` faces, lights. Parts are merged per material. Also exports one solid collider box per visible part. Desk and table tops that are unions (drawn as one box) are trimmed so they don't cover the chair standing in them. |
@@ -167,7 +166,6 @@ Every problem the videos' feedback logs (`examples/*/docs/feedback.md`) recorded
 | The pitch tracker read every voice ~7% low (found while moving it) | YIN walks to the bottom of the dip | `medianPitch` (voice) |
 | Every shot's camera hand-placed; captions over faces (template s01, s07) | Framing by where faces land: `frame()` keeps them in the upper third, inside the margins, out of the captions | `frame` (video) |
 | Seat and floor heights measured by hand (nasa) | Characters placed on what is under them by raycast | `surfaces`, `placeOn` (video) |
-| Faces frozen while the narrator talks | Lip sync from the word timings, the face from the line's emotion | `mouthAt`, `talk`, `faceFor` (video) |
 | Captions, soundtrack, overlays and post effects copied into every video, and drifting apart | One tested copy | `blockrig/remotion`, `blockrig/remotion/post` |
 | Re-voicing everything after a one-word change (CPU Chatterbox is slow) | Takes are kept while their text, voice and mood are unchanged | template `make_voice.mjs` (take key) |
 | A take passed the voice script but failed `npm run check` (judged against the voice sample, checked against the median of the finished takes) | The checker lists outliers, and the voice script re-voices them against the median | `pitchReport` `outliers` (voice) |
@@ -189,7 +187,7 @@ Every problem the videos' feedback logs (`examples/*/docs/feedback.md`) recorded
 | Frames that differ between render tabs | Seeded randomness, frame-pure posing and boards | `rng`, `poseAt`, `panel` (video) |
 | Body parts poking through clothes; beards at the wrong size; the head showing through face accessories; torches held backwards; gaps at elbows and knees | Character fixes | `blockrig` (see the [CHANGELOG](CHANGELOG.md)) |
 
-Some fixes are still in each video: the look (ACES, low sun, little fill), Roblox face skin colours, roads turned to run along the street, and the voice models themselves. Face accessories (pictures) can't lip sync; drawn faces and dynamic heads can.
+Some fixes are still in each video: the look (ACES, low sun, little fill), Roblox face skin colours, roads turned to run along the street, and the voice models themselves.
 
 ## Made with BlockRig
 
@@ -249,7 +247,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` and `CurveAnimation` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **191 tests** (characters, packs, the video toolkit and the voice), including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **190 tests** (characters, packs, the video toolkit and the voice), including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency (Rapier is yours to install only for the staging check). ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Characters: quick start
@@ -644,7 +642,7 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 191 unit + regression tests (node:test, no browser needed)
+npm test             # 190 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
 npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html, faces.html, clothing.html and ik.html)

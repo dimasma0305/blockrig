@@ -8,7 +8,6 @@ export { V, move, pushIn, orbit, follow, lowAngle, topDown, applyCamera } from "
 export { frame, screenOf } from "./frame.js";
 export { poseAt, groundRig, FEET, KNEEL, SEAT, ON_SEAT } from "./pose.js";
 export { surfaces, placeOn } from "./place.js";
-export { mouthAt, talk, faceFor, EMOTION_FACE } from "./talk.js";
 export { surfaceOf, restOn } from "./surfaces.js";
 export { LOOK, applyLook, avatarAmbient, TIMES, daylight, mixDaylight, createLighting } from "./lighting.js";
 export { buildRobloxMap, partGeometry, facePlane, materialLook, swallowingUnions, trimUnion } from "./robloxMap.js";

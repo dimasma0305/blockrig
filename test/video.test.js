@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { createRig, clips, cframeToMatrix, createFace, EXPRESSIONS } from "../src/index.js";
+import { createRig, clips, cframeToMatrix } from "../src/index.js";
 import {
   rng, easeInOut, smooth, createTimeline, speakersOf, V, pushIn, orbit, applyCamera, poseAt, groundRig, FEET, ON_SEAT,
   surfaceOf, restOn, daylight, mixDaylight, TIMES, createLighting, avatarAmbient, buildRobloxMap, partGeometry, facePlane, materialLook,
@@ -381,22 +381,6 @@ test("video: placeOn rests feet on the floor and hips in a soft bed, from a rayc
   assert.equal(g.at(100, 100), null);
 });
 
-// ---- faces that follow the voice
-import { mouthAt, talk, faceFor } from "../src/video/index.js";
-
-test("video: the mouth opens on every syllable of the spoken words, and the face takes the line's emotion", () => {
-  const words = [{ word: "hello", start: 1, end: 1.5 }, { word: "there", start: 1.7, end: 2 }];
-  assert.equal(mouthAt(words, 0.5), 0, "before the line"); assert.equal(mouthAt(words, 1.6), 0, "between words");
-  assert.ok(mouthAt(words, 1.125) > 0.5, "mid first syllable of hel-lo"); assert.ok(mouthAt(words, 1.249) < 0.1, "between its syllables");
-  assert.ok(mouthAt(words, 1.775) > 0.5, "mid first syllable of the-re");
-  assert.equal(faceFor("panic"), "scared"); assert.equal(faceFor("smug"), "smug"); assert.equal(faceFor(undefined), "neutral");
-  const T = createTimeline(story, timings);
-  close(T.SHOTS[0].words[0].start, T.SHOTS[0].start + 0.1, 1e-9, "shots carry their words in video time");
-  // a drawn face: mouthOpen follows
-  const face = createFace({ expression: "neutral", blink: false }), rig = createRig({ face });
-  assert.ok(talk(rig, 0.8, "happy")); close(face.params().mouthOpen, 0.8, 1e-9); assert.equal(face.params().mouthCurve, EXPRESSIONS.happy.mouthCurve);
-  talk(rig, 0, "happy"); close(face.params().mouthOpen, EXPRESSIONS.happy.mouthOpen ?? 0, 1e-9, "closed: the expression's own mouth");
-});
 
 test("video: one set of frame zones for captions, the app buttons, frame() and the staging check", async () => {
   const { ZONES, captionBand } = await import("../src/video/index.js");
