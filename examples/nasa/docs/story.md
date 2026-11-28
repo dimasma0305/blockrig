@@ -7,35 +7,34 @@ size: 1080x1920
 
 # Hack NASA Before Ten
 
-- **Hook (first 2 s):** In this world, everyone has to hack NASA before they turn ten. If you fail... the government removes you.
-- **Plot:** A kid raised as a hacker from the crib (a hacker name as a baby, CTFs at two, OSCP at three) has nine years to hack NASA while every "Can I go play?" gets "After NASA"; with three seconds left Dad tells him to press Enter, he passes, and Dad's "OPEN AFTER NASA" box holds one bottle of sunscreen for the next objective: hack the Sun before eleven.
-- **Twist:** the big box after NASA is a tiny sunscreen, because the next rule is "hack the SUN before ELEVEN" ("After the Sun").
+- **Hook (first 2 s):** In this world, every kid has to hack NASA before they turn ten. If you fail... the government removes you.
+- **Plot:** Raised to hack NASA, I try every real trick for nine years (Mitnick's phone con, aircrack-ng, Log4Shell, Heartbleed) while my best friend hunts UFOs like Gary McKinnon; with three seconds left Dad, eating a sandwich, asks if I tried admin/admin. It works. The next objective is the Sun.
+- **Twist:** nine years of training, beaten by the default password; then "hack the Sun before eleven" ("After the Sun").
+- **Real references** (each explained on screen): Jonathan James (NASA, 1999), sudo and the xkcd sandwich, Kevin Mitnick's social engineering, aircrack-ng, Log4Shell, Heartbleed, Gary McKinnon's UFO hunt, SQL injection, phishing, zero-days, default passwords; CTFs with Project SEKAI and PPP; kurenaif.
 - **Comment bait:** what's your hacker name?
-- **Length:** ~1:35, fast-paced: 45 shots, only the silent beats the story needs (the typing panic, Dad walking in, pressing Enter, the box, the last shot).
-- **Dialogue:** every line, narration and dialogue, is spoken by the one narrator voice with the emotion noted; a dialogue line's caption carries a speaker tag (`speaker:`: ME, MOM, DAD, BEST FRIEND, SYSTEM). `say:` is how the narrator pronounces a name (same word count as the line); captions show the real spelling.
-- **Explainers** (`note:`): a short label under the age card that says what the jargon means, so every joke reads without hacker knowledge.
-- **On-screen text** (`title:` age card, `timer:` countdown above my head, `screen:` what the laptop or board shows): real brand and event names are plain text only, never logos.
+- **Length:** ~1:45, 37 shots, every line with its own speaker voice; one silent beat (the last shot).
+- **Dialogue:** a dialogue line (`speaker:` me, mom, dad, friend, helpdesk, system) is spoken in that character's voice (docs/audio.md "Voices") and its caption carries a speaker tag; narration is the narrator's one voice. `say:` is how a name is pronounced (same word count); captions show the real spelling.
+- **Explainers** (`note:`): a white sticker that says what the real thing is, so every joke reads without hacker knowledge.
+- **On-screen text** (`title:` age card, `timer:` countdown above my head, `screen:` what the screens show): real names as plain text, plus the real creator images in assets/brands.
 
 <!--
 How to write a shot (scripts/docs.mjs compiles this file into src/generated/story.json):
 
 ### <id> · <location>
-> Narration, one or two sentences. Leave the quote out for a silent reaction shot, and give it a "min".
+> Narration, one or two sentences. Leave the quote out for a silent shot, and give it a "min".
 
 - captions: 2-4 WORDS | PER CAPTION | *ONE* WORD IN STARS IS HIGHLIGHTED   (must cover the narration, in order)
-- speaker: me | mom | dad | friend | system   (dialogue: a tag on the caption; leave out for the narrator)
-- say: the line as the narrator pronounces it (same number of words), when a name needs help
+- speaker / say / note / title / timer / screen: see above
 - action, camera, emotion, faces, time, mood, light, min: see the template
-- title / timer / screen: on-screen text (see above)
 -->
 
 ## Shots
 
 ### s01 · town
-> In this world, everyone has to hack NASA before they turn ten.
+> In this world, every kid has to hack NASA before they turn ten.
 
-- captions: IN THIS *WORLD*, | EVERYONE HAS TO | HACK *NASA* | BEFORE THEY TURN *TEN*.
-- action: a sunny street where everyone hacks: grown-ups and kids on the sidewalks, all typing on glowing laptops; a billboard HACK NASA BEFORE 10 / OR GET DELETED, a big public screen NASA: LOCKED
+- captions: IN THIS *WORLD*, | EVERY KID HAS TO | HACK *NASA* | BEFORE THEY TURN *TEN*.
+- action: a sunny street where everyone hacks: grown-ups and kids on the sidewalks, all typing on glowing laptops; billboard HACK NASA BEFORE 10 / OR GET DELETED, a big public screen NASA: LOCKED
 - camera: high crane down the street to the billboard
 - emotion: flat
 - time: day
@@ -46,53 +45,97 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 > If you fail... the government removes you.
 
 - captions: IF YOU *FAIL*... | THE *GOVERNMENT* | REMOVES YOU.
-- note: by order of the government
-- action: same frozen frame, tighter
-- camera: extreme close on my face and the timer
+- action: me frozen at my desk, terrified, three seconds left
+- camera: close three-quarter, my laptop with NASA: LOCKED beside me
 - emotion: flat
 - faces: hero=scared
 - timer: 00:03 UNTIL REMOVAL
 - screen: NASA: LOCKED
+- note: by order of the government
 - time: day
 - mood: tense
 - light: studio
 
-### s04 · nursery
-> Here, every baby gets a hacker name before a real one.
+### s03 · room
+> In real life, Jonathan James hacked NASA at fifteen.
 
-- captions: HERE, EVERY *BABY* | GETS A *HACKER* NAME | BEFORE A *REAL* ONE.
-- action: rewind cut; baby me types on a tiny laptop on the nursery rug; my hacker name 0xDEAF floats over my head and is painted on the wall sign; the laptop says LOGGED IN AS 0xDEAF
-- camera: wide low across the rug, slow push in
+- captions: IN REAL LIFE, | JONATHAN *JAMES* | HACKED *NASA* | AT *FIFTEEN*.
+- action: my monitor shows a 1999 newspaper: 15-YEAR-OLD HACKS NASA, NASA SHUTS DOWN FOR 3 WEEKS
+- camera: push in on the newspaper on the monitor
 - emotion: neutral
-- faces: hero=determined
-- title: AGE 0
-- screen: WHOAMI
+- faces: hero=scared
+- timer: 00:03 UNTIL REMOVAL
+- screen: NEWSPAPER
+- note: real: 1999, he took the space station's software
+- time: day
+- mood: tense
+- light: studio
+
+### s04 · room
+> Here, that makes you a late bloomer.
+
+- captions: HERE, THAT | MAKES YOU | A LATE *BLOOMER*.
+- action: the newspaper gets a red stamp: LATE BLOOMER
+- camera: same, a little tighter
+- emotion: smug
+- faces: hero=scared
+- timer: 00:03 UNTIL REMOVAL
+- screen: NEWSPAPER LATE
 - time: day
 - mood: funny
-- light: indoor
+- light: studio
 
 ### s05 · nursery
-> Our bedtime playlist was LiveOverflow and John Hammond.
+> My first word wasn't Mom. It was sudo.
 
-- captions: OUR *BEDTIME* PLAYLIST | WAS *LIVEOVERFLOW* | AND JOHN *HAMMOND*.
-- say: Our bedtime playlist was Live-Overflow and John Hammond.
-- action: a tablet on the crib shows the playlist; baby me watches, sleepy
-- camera: over the baby's shoulder onto the tablet
+- captions: MY FIRST *WORD* | WASN'T MOM. | IT WAS *SUDO*.
+- say: My first word wasn't Mom. It was soo-doo.
+- action: rewind cut; baby me at a tiny laptop on the nursery rug, @0xDEAF over my head; the laptop shows $ sudo
+- camera: wide low across the rug, slow push in
 - emotion: flat
-- faces: hero=sleepy
-- screen: BEDTIME PLAYLIST: LiveOverflow → John Hammond
+- faces: hero=determined
+- title: AGE 0
+- screen: SUDO
+- note: sudo = the command that makes a computer obey
 - time: day
 - mood: funny
 - light: indoor
 
-### s09 · preschool
-> By two, we're already competing in CTFs.
+### s06 · nursery
+> He said sudo!
 
-- captions: BY *TWO*, | WE'RE ALREADY COMPETING | IN *CTFs*.
-- say: By two, we're already competing in C-T-Fs.
-- note: CTF = a hacking competition
-- action: toddlers at miniature gaming setups, milk bottles beside the keyboards
-- camera: high wide over the rows, crane down
+- captions: HE SAID *SUDO*!
+- speaker: mom
+- say: He said soo-doo!
+- action: Mom by the door, hands on her cheeks, proud
+- camera: on Mom
+- emotion: excited
+- faces: mom=laugh, dad=neutral
+- time: day
+- mood: funny
+- light: indoor
+
+### s07 · nursery
+> Sudo... make me a sandwich.
+
+- captions: *SUDO*... | MAKE ME A *SANDWICH*.
+- speaker: dad
+- say: Soo-doo... make me a sandwich.
+- action: Dad, deadpan, holding out an empty plate to the baby
+- camera: two-shot, Dad and Mom
+- emotion: flat
+- faces: dad=neutral, mom=happy
+- time: day
+- mood: funny
+- light: indoor
+
+### s08 · preschool
+> By two, we played CTFs: capture the flag, but every flag is hidden inside a hacked computer.
+
+- captions: BY *TWO*, | WE PLAYED *CTFs*: | CAPTURE THE *FLAG*, | BUT EVERY FLAG | IS HIDDEN INSIDE | A HACKED *COMPUTER*.
+- say: By two, we played C-T-Fs: capture the flag, but every flag is hidden inside a hacked computer.
+- action: toddlers at miniature gaming setups with milk bottles; their screens show flag{...}
+- camera: from the board side, the toddlers facing the camera
 - emotion: neutral
 - faces: hero=determined, friend=determined
 - title: AGE 2
@@ -100,181 +143,199 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: funny
 - light: indoor
 
-### s10 · preschool
+### s09 · preschool
 > Project SEKAI? PPP? This is PRESCHOOL!
 
 - captions: PROJECT *SEKAI*? | *PPP*? | THIS IS *PRESCHOOL*!
 - speaker: me
 - say: Project Sekai? P-P-P? This is preschool!
-- note: the best hacking teams in the world
-- action: the PRESCHOOL CTF LEAGUE lobby board (Project SEKAI, PPP, DiceGang, TokyoWesterns, MILK DEPENDENCY); I look from the board to the milk bottle in my hand
-- camera: past me onto the lobby board, then close on my face
+- action: the PRESCHOOL CTF LEAGUE lobby with the real team logos; I look from the board to my milk bottle
+- camera: the lobby board, then my face
 - emotion: shocked
 - faces: hero=shocked
 - screen: PRESCHOOL CTF LEAGUE
+- note: the best hacking teams in the world
 - time: day
 - mood: funny
 - light: indoor
 
-### s11 · preschool
-> My best friend called himself our crypto specialist.
+### s10 · preschool
+> My best friend said he watches kurenaif for the cryptography.
 
-- captions: MY BEST *FRIEND* | CALLED HIMSELF | OUR CRYPTO *SPECIALIST*.
-- action: my best friend straightens a tiny kurenaif FAN CLUB flag; kurenaif wallpaper, notebook and pencil case
-- camera: slow push in on him and his desk
+- captions: MY BEST *FRIEND* SAID | HE WATCHES *KURENAIF* | FOR THE *CRYPTOGRAPHY*.
+- say: My best friend said he watches kurenaifu for the cryptography.
+- action: my best friend with his kurenaif flag, notebook and standee
+- camera: push in on him
 - emotion: neutral
 - faces: friend=smug
 - time: day
 - mood: funny
 - light: indoor
 
-### s12 · preschool
-> I watch kurenaif for the cryptography.
-
-- captions: I WATCH *KURENAIF* | FOR THE *CRYPTOGRAPHY*.
-- speaker: friend
-- say: I watch kurenaifu for the cryptography.
-- action: he says it suspiciously formally, flag held up
-- camera: close on him, front
-- emotion: serious
-- faces: friend=determined
-- time: day
-- mood: funny
-- light: indoor
-
-### s13 · preschool
+### s11 · preschool
 > What did you learn?
 
 - captions: WHAT DID | YOU *LEARN*?
 - speaker: me
 - action: I tilt my head
-- camera: over his shoulder onto me
+- camera: on me, the friend's flag in the corner
 - emotion: neutral
 - faces: hero=neutral
 - time: day
 - mood: funny
 - light: indoor
 
-### s14 · preschool
+### s12 · preschool
 > The streaming schedule.
 
 - captions: THE *STREAMING* | SCHEDULE.
 - speaker: friend
 - say: The streaming... schedule.
-- action: instant and proud; I stare; he slowly lowers the flag
-- camera: two-shot, side by side at the desks
+- action: his screen: kurenaif's stream schedule, every day ticked
+- camera: over his shoulder onto the schedule
 - emotion: neutral
-- faces: friend=grin, hero=neutral
+- faces: friend=grin
 - time: day
 - mood: funny
 - light: indoor
 
-### s15 · preschool
-> One more flag and we win!
+### s13 · room
+> At three, I learned Kevin Mitnick's rule: don't hack the computer, hack the person.
 
-- captions: ONE MORE *FLAG* | AND WE *WIN*!
-- speaker: me
-- action: scoreboard: FINAL CHALLENGE, ONE FLAG LEFT; I lean into the keyboard
-- camera: low behind the monitor, up at my face
-- emotion: excited
+- captions: AT *THREE*, | I LEARNED KEVIN | *MITNICK'S* RULE: | DON'T HACK THE *COMPUTER*, | HACK THE *PERSON*.
+- action: my monitor: Kevin Mitnick, the most wanted hacker in America, got in by phone
+- camera: over my shoulder onto the monitor
+- emotion: serious
 - faces: hero=determined
-- screen: FINAL CHALLENGE: ONE FLAG LEFT
-- time: day
-- mood: action
-- light: indoor
-
-### s16 · preschool
-> Nap time.
-
-- captions: *NAP* TIME.
-- speaker: mom
-- action: Mom enters with a blanket
-- camera: wide from the desks to the door
-- emotion: flat
-- faces: mom=happy, hero=shocked
+- title: AGE 3
+- screen: MITNICK
+- note: real: he talked his way in on the phone
 - time: day
 - mood: funny
 - light: indoor
 
-### s17 · preschool
-> Guys! My manager is taking me offline!
+### s14 · room
+> Hi, NASA help desk? I'm the new janitor. I forgot my password.
 
-- captions: GUYS! | MY *MANAGER* | IS TAKING ME | *OFFLINE*!
+- captions: HI, NASA HELP *DESK*? | I'M THE NEW *JANITOR*. | I FORGOT MY *PASSWORD*.
 - speaker: me
-- action: Mom carries me away; my legs kick toward the keyboard; I shout into the headset
-- camera: follow Mom carrying me toward the door
-- emotion: panic
-- faces: hero=furious, mom=neutral
+- action: me on a toy phone, putting on a grown-up voice
+- camera: close on me and the phone
+- emotion: serious
+- faces: hero=smug
+- screen: CALLING
 - time: day
-- mood: panic
+- mood: funny
+- light: indoor
+
+### s15 · room
+> Sir... how old are you?
+
+- captions: SIR... | HOW *OLD* ARE YOU?
+- speaker: helpdesk
+- action: the screen shows the call: NASA HELP DESK
+- camera: on the screen, the call
+- emotion: flat
+- faces: hero=shocked
+- screen: CALLING
+- time: day
+- mood: funny
+- light: indoor
+
+### s16 · room
+> Three.
+
+- captions: ...*THREE*.
+- speaker: me
+- action: click: CALL ENDED
+- camera: close on me
+- emotion: whisper
+- faces: hero=embarrassed
+- screen: CALL ENDED
+- time: day
+- mood: funny
+- light: indoor
+
+### s17 · room
+> At five, Mom changed the Wi-Fi password so I'd go outside.
+
+- captions: AT *FIVE*, MOM CHANGED | THE *WI-FI* PASSWORD | SO I'D GO *OUTSIDE*.
+- action: Mom at the router, typing a new password, looking pleased; kids play outside the window
+- camera: wide, Mom at the router, me at the desk
+- emotion: neutral
+- faces: mom=smug, hero=determined
+- title: AGE 5
+- screen: NO INTERNET
+- time: day
+- mood: funny
+- light: indoor
+
+### s18 · room
+> I cracked it with aircrack-ng before she put the router down.
+
+- captions: I *CRACKED* IT | WITH *AIRCRACK-NG* | BEFORE SHE PUT | THE ROUTER *DOWN*.
+- say: I cracked it with air-crack-N-G before she put the router down.
+- action: my screen: aircrack-ng, KEY FOUND! [ password123 ]; Mom freezes with the router
+- camera: over my shoulder, the screen and Mom behind
+- emotion: smug
+- faces: hero=smug, mom=shocked
+- screen: AIRCRACK
+- note: a real Wi-Fi password cracker
+- time: day
+- mood: funny
 - light: indoor
 
 ### s19 · room
-> Mom! I passed OSCP!
+> At seven, I tried Log4Shell on NASA. Patched. Heartbleed? Patched.
 
-- captions: MOM! | I PASSED *OSCP*!
-- speaker: me
-- say: Mom! I passed O-S-C-P!
-- note: OSCP = a famous hacking exam (for adults)
-- action: I hold up a certificate OSCP: PASSED; juice box, yogurt cup and an OSWE workbook on the desk
-- camera: front, my certificate up close
-- emotion: happy
-- faces: hero=laugh
-- title: AGE 3
-- screen: OSCP: PASSED
+- captions: AT *SEVEN*, | I TRIED *LOG4SHELL* | ON NASA. *PATCHED*. | *HEARTBLEED*? PATCHED.
+- say: At seven, I tried Log-for-Shell on NASA. Patched. Heartbleed? Patched.
+- action: screen: ${jndi:ldap://...} then PATCHED; a bleeding heart then PATCHED
+- camera: push in on the screen
+- emotion: neutral
+- faces: hero=angry
+- title: AGE 7
+- screen: PATCHED
+- note: two real bugs that broke half the internet
 - time: day
-- mood: happy
+- mood: funny
 - light: indoor
 
-### s20 · room
-> Good. Now OSWE.
+### s20 · friend
+> My best friend went Gary McKinnon's way: search NASA for UFOs.
 
-- captions: GOOD. | NOW *OSWE*.
-- speaker: mom
-- say: Good. Now O-S-W-E.
-- action: Mom slides the workbook over
-- camera: two-shot over the desk
-- emotion: flat
-- faces: mom=neutral, hero=neutral
+- captions: MY BEST FRIEND WENT | GARY *MCKINNON'S* WAY: | SEARCH NASA | FOR *UFOs*.
+- action: his monitor: NASA photos, a red circle round a dot
+- camera: over his shoulder onto the monitor
+- emotion: neutral
+- faces: friend=determined
+- screen: UFO SEARCH
+- note: real: he hunted UFO files inside NASA (2002)
+- time: day
+- mood: mystery
+- light: indoor
+
+### s21 · friend
+> I found one!
+
+- captions: I *FOUND* ONE!
+- speaker: friend
+- action: zoom on the UFO: it is a kurenaif sticker on the telescope
+- camera: close on his face, the screen beside him
+- emotion: excited
+- faces: friend=laugh
+- screen: UFO FOUND
 - time: day
 - mood: funny
 - light: indoor
 
 ### s22 · room
-> Certified professional. Still couldn't open a yogurt.
-
-- captions: CERTIFIED *PROFESSIONAL*. | STILL COULDN'T OPEN | A *YOGURT*.
-- action: Dad silently reaches in and opens it
-- camera: side two-shot, Dad's hand comes in
-- emotion: flat
-- faces: hero=embarrassed, dad=neutral
-- time: day
-- mood: funny
-- light: indoor
-
-### s23 · hall
-> At four, our school trips were CODEGATE in Korea, SECCON in Japan, and DEF CON CTF.
-
-- captions: AT *FOUR*, | OUR SCHOOL TRIPS WERE | *CODEGATE* IN KOREA, | *SECCON* IN JAPAN, | AND *DEF* CON CTF.
-- say: At four, our school trips were Codegate in Korea, Seccon in Japan, and Def Con C-T-F.
-- note: the biggest hacking contests in the world
-- action: montage in a conference hall: three banners in plain text, badges, tiny rolling suitcases, oversized trophies
-- camera: track along the three banners, one beat each
-- emotion: excited
-- faces: hero=happy, friend=happy
-- title: AGE 4
-- time: day
-- mood: happy
-- light: studio
-
-### s34 · room
 > Explain this.
 
 - captions: *EXPLAIN* THIS.
 - speaker: mom
-- note: NASA: F
-- action: Mom reads my progress report and points at the NASA grade; I hold my red ball; CTF badges, books OSEP and OSED, a TRY HARDER sticky note behind
-- camera: close on the report: OSCP PASSED, OSWE PASSED, NASA F
+- action: Mom holds my report card: OSCP PASSED, OSWE PASSED, NASA F; I hold my red ball
+- camera: on the report card
 - emotion: serious
 - faces: mom=angry, hero=scared
 - title: AGE 9
@@ -283,7 +344,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: tense
 - light: indoor
 
-### s35 · room
+### s23 · room
 > I'm only nine!
 
 - captions: I'M ONLY *NINE*!
@@ -296,25 +357,25 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: tense
 - light: indoor
 
-### s36 · room
-> Exactly. You've had nine years to prepare.
+### s24 · room
+> Exactly. Nine years.
 
-- captions: *EXACTLY*. | YOU'VE HAD NINE YEARS | TO *PREPARE*.
+- captions: *EXACTLY*. | NINE *YEARS*.
 - speaker: mom
 - action: quiet certainty
-- camera: low on Mom
+- camera: on Mom
 - emotion: serious
 - faces: mom=determined
 - time: day
 - mood: tense
 - light: indoor
 
-### s38 · room
+### s25 · room
 > Can I go play?
 
 - captions: CAN I GO *PLAY*?
 - speaker: me
-- action: soft and hopeful; turning the ball, angled toward the door
+- action: kids play outside the window; I turn the ball
 - camera: close, the window behind me
 - emotion: sad
 - faces: hero=sad
@@ -322,7 +383,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: calm
 - light: indoor
 
-### s39 · room
+### s26 · room
 > After NASA.
 
 - captions: AFTER *NASA*.
@@ -335,213 +396,87 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: calm
 - light: indoor
 
-### s41 · room
-> So I practiced. Every day.
+### s27 · room
+> Last minute: SQL injection, phishing, a zero-day I wrote in my sleep.
 
-- captions: SO I *PRACTICED*. | EVERY *DAY*.
-- action: I type; behind me the window goes from day to night
-- camera: slow orbit round my desk
-- emotion: serious
+- captions: LAST *MINUTE*: | *SQL* INJECTION, | *PHISHING*, | A *ZERO-DAY* I WROTE | IN MY *SLEEP*.
+- say: Last minute: sequel injection, phishing, a zero-day I wrote in my sleep.
+- action: I type like mad; the screen flashes ' OR 1=1 --, a fake login email, an exploit
+- camera: fast orbit round me at the desk
+- emotion: excited
 - faces: hero=determined
-- time: day -> night
-- mood: sad
-- light: indoor
-
-### s43 · friend
-> You've got this, bro. Please don't get removed.
-
-- captions: YOU'VE GOT THIS, *BRO*. | PLEASE DON'T | GET *REMOVED*.
-- speaker: friend
-- action: my best friend on a video call in his kurenaif room, flag in hand; my screen shows his avatar with the flag
-- camera: close on him holding the phone
-- emotion: happy
-- faces: friend=happy
-- time: day
-- mood: calm
-- light: indoor
-
-### s44 · room
-> Thanks.
-
-- captions: *THANKS*.
-- speaker: me
-- action: soft relief, phone in hand
-- camera: close on me
-- emotion: neutral
-- faces: hero=happy
-- time: day
-- mood: calm
-- light: indoor
-
-### s45 · friend
-> I need someone to watch kurenaif with.
-
-- captions: I NEED SOMEONE | TO WATCH *KURENAIF* WITH.
-- speaker: friend
-- say: I need someone to watch kurenaifu with.
-- action: equally sincere
-- camera: same close
-- emotion: happy
-- faces: friend=grin
-- time: day
-- mood: calm
-- light: indoor
-
-### s46 · room
-> There it is.
-
-- captions: THERE IT *IS*.
-- speaker: me
-- action: amused resignation; the call ends
-- camera: close on me, phone down
-- emotion: smug
-- faces: hero=smug
-- time: day
-- mood: calm
-- light: indoor
-
-### s47 · room
-> Your cousin finished when he was six.
-
-- captions: YOUR *COUSIN* | FINISHED WHEN | HE WAS *SIX*.
-- speaker: mom
-- action: Mom over my shoulder; the package nearby
-- camera: two-shot from the front, Mom behind me
-- emotion: smug
-- faces: mom=smug, hero=scared
-- timer: 10TH BIRTHDAY IN 00:59
-- time: day
-- mood: tense
-- light: studio
-
-### s48 · room
-> Then ask him to help!
-
-- captions: THEN ASK HIM | TO *HELP*!
-- speaker: me
-- action: urgent, turning round
-- camera: close on me
-- emotion: panic
-- faces: hero=furious
-- timer: 10TH BIRTHDAY IN 00:52
-- time: day
-- mood: tense
-- light: studio
-
-### s49 · room
-> He charges now.
-
-- captions: HE *CHARGES* NOW.
-- speaker: mom
-- action: a tiny shrug
-- camera: on Mom
-- emotion: flat
-- faces: mom=neutral
-- timer: 10TH BIRTHDAY IN 00:48
-- time: day
-- mood: tense
-- light: studio
-
-### s52 · room
-
-- action: I stare into the camera, then type like mad: dramatic light, spinning camera, rising music; countdown to 00:10; the screen reads READY TO SUBMIT
-- camera: fast orbit around me at the desk, pushing in
-- faces: hero=determined
-- timer: 10TH BIRTHDAY IN 00:10
-- screen: READY TO SUBMIT
+- timer: 10TH BIRTHDAY IN 00:59 -> 00:10
+- screen: ATTACKS
 - time: day
 - mood: action
 - light: studio
-- min: 1.4
 
-### s53 · room
-> Why is nothing happening?!
+### s28 · room
+> Why is nothing working?!
 
-- captions: WHY IS *NOTHING* | HAPPENING?!
+- captions: WHY IS *NOTHING* | WORKING?!
 - speaker: me
-- action: breathless panic, hands on my head
+- action: ACCESS DENIED; hands on my head
 - camera: close, shaking
 - emotion: panic
 - faces: hero=scared
 - timer: 10TH BIRTHDAY IN 00:05
-- screen: READY TO SUBMIT
+- screen: ACCESS DENIED
 - time: day
 - mood: panic
 - light: studio
 
-### s54 · room
+### s29 · room
+> Did you try admin, admin?
 
-- action: back to the opening shot at 00:03; Dad walks past eating a sandwich; the music stops
-- camera: the opening framing, Dad crossing behind
-- faces: hero=scared, dad=neutral
-- timer: 00:03 UNTIL REMOVAL
-- screen: READY TO SUBMIT
-- time: day
-- mood: silence
-- light: studio
-- min: 1
-
-### s55 · room
-> Press Enter.
-
-- captions: PRESS *ENTER*.
+- captions: DID YOU TRY | *ADMIN*, ADMIN?
 - speaker: dad
-- action: low and ordinary, mid-bite
+- action: Dad walks past behind me, eating a sandwich, and stops
 - camera: on Dad, sandwich in hand
 - emotion: flat
-- faces: dad=neutral
+- faces: dad=neutral, hero=shocked
 - timer: 00:03 UNTIL REMOVAL
+- screen: ACCESS DENIED
 - time: day
 - mood: silence
 - light: studio
 
-### s56 · room
+### s30 · room
 > Oh.
 
 - captions: ...*OH*.
 - speaker: me
-- action: a small exhale
-- camera: extreme close on me
+- action: I type admin / admin
+- camera: close on me
 - emotion: whisper
 - faces: hero=embarrassed
 - timer: 00:02 UNTIL REMOVAL
+- screen: LOGIN ADMIN
 - time: day
 - mood: silence
 - light: studio
 
-### s57 · room
+### s31 · room
+> Nine years of training. Beaten by the default password.
 
-- action: I press Enter: 00:01, ACCESS GRANTED, the countdown disappears, a green check
-- camera: close on my finger and the screen
-- faces: hero=shocked
-- timer: 00:01
+- captions: NINE YEARS | OF *TRAINING*. | BEATEN BY THE | DEFAULT *PASSWORD*.
+- action: 00:01, ACCESS GRANTED, a green check; the countdown disappears
+- camera: the screen, then me
+- emotion: flat
+- faces: hero=dazed
 - screen: ACCESS GRANTED
-- time: day
-- mood: triumph
-- light: studio
-- min: 1.2
-
-### s58 · room
-> I knew that.
-
-- captions: I *KNEW* THAT.
-- speaker: me
-- action: I straighten my shirt, avoiding Dad's eyes
-- camera: two-shot, Dad watching me
-- emotion: smug
-- faces: hero=smug, dad=neutral
-- screen: ACCESS GRANTED
+- note: real: default passwords start lots of real hacks
 - time: day
 - mood: triumph
 - light: indoor
 
-### s59 · room
+### s32 · room
 > Happy birthday, buddy.
 
 - captions: HAPPY *BIRTHDAY*, | BUDDY.
 - speaker: dad
-- action: AGE 10; confetti; Dad puts a birthday hat on me
-- camera: front two-shot, confetti falling
+- action: AGE 10; confetti; Dad puts a party hat on me
+- camera: two-shot, confetti falling
 - emotion: happy
 - faces: dad=happy, hero=happy
 - title: AGE 10
@@ -549,52 +484,28 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: happy
 - light: indoor
 
-### s60 · room
-> I passed! Can I open it now?
-
-- captions: I *PASSED*! | CAN I *OPEN* | IT NOW?
-- speaker: me
-- action: I relax for a moment, then notice the package and point at it
-- camera: past me to the package
-- emotion: excited
-- faces: hero=grin
-- time: day
-- mood: happy
-- light: indoor
-
-### s61 · room
-> New objective: hack the SUN before ELEVEN.
+### s33 · room
+> New objective: hack the Sun before eleven.
 
 - captions: NEW *OBJECTIVE*: | HACK THE *SUN* | BEFORE *ELEVEN*.
 - speaker: system
-- note: the next rule
-- action: a cheerful notification; a new countdown appears above my head
-- camera: push in on the screen, then my face
+- action: a cheerful notification; a new countdown over my head
+- camera: push in on me
 - emotion: excited
 - faces: hero=shocked
 - timer: 11TH BIRTHDAY IN 365 DAYS
 - screen: NEW OBJECTIVE: HACK THE SUN
+- note: the next rule
 - time: day
 - mood: funny
 - light: indoor
 
-### s63 · room
-
-- action: Dad opens the enormous package: inside, one tiny bottle of sunscreen; he puts it in my hand
-- camera: top-down into the open box
-- faces: dad=happy, hero=dazed
-- timer: 11TH BIRTHDAY IN 365 DAYS
-- time: day
-- mood: funny
-- light: indoor
-- min: 1.4
-
-### s64 · room
+### s34 · room
 > Start earlier this time.
 
 - captions: START *EARLIER* | THIS TIME.
 - speaker: dad
-- action: casual; the sunscreen in my hand
+- action: Dad hands me a tiny bottle of sunscreen
 - camera: two-shot, the bottle between us
 - emotion: neutral
 - faces: dad=happy, hero=dazed
@@ -603,13 +514,13 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: funny
 - light: indoor
 
-### s68 · room
+### s35 · room
 > Can I go play now?
 
 - captions: CAN I GO | *PLAY* NOW?
 - speaker: me
-- action: birthday hat on; I notice the red ball
-- camera: close, the ball in the foreground
+- action: party hat on, I look at the red ball
+- camera: close
 - emotion: sad
 - faces: hero=sad
 - timer: 11TH BIRTHDAY IN 365 DAYS
@@ -617,21 +528,21 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - mood: calm
 - light: indoor
 
-### s69 · room
+### s36 · room
 > After the Sun.
 
 - captions: AFTER THE *SUN*.
 - speaker: mom
 - say: After... the Sun.
-- action: same casual rhythm; already reading the next mission
-- camera: on Mom, not looking up
+- action: already reading the next mission
+- camera: on Mom
 - emotion: flat
 - faces: mom=neutral
 - time: day
 - mood: calm
 - light: indoor
 
-### s70 · room
+### s37 · room
 
 - action: I set the sunscreen by the keyboard and sit down: hat, countdown above me, the red ball untouched; cut to black
 - camera: slow pull back to a wide of the desk
@@ -641,4 +552,4 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - time: day
 - mood: calm
 - light: indoor
-- min: 2.2
+- min: 2

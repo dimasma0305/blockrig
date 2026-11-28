@@ -90,8 +90,8 @@ export const Video: React.FC<VideoProps> = ({ debug, roblox, collide, post, cam 
       </ThreeCanvas>}
       <Lightning />
       <Vignette strength={0.45} />
-      <FlashCut timeline={T} shots={["s06", "s29", "s57", "s59"]} />
-      <GlitchCut timeline={T} shots={["s04", "s54", "s61"]} />
+      <FlashCut timeline={T} shots={["s31", "s32"]} />
+      <GlitchCut timeline={T} shots={["s05", "s29", "s33"]} />
       <Layers2D timeline={T} />
       <Captions captions={T.CAPTIONS} speakers={SPEAKER_TAGS} />
       <Soundtrack timeline={T} />

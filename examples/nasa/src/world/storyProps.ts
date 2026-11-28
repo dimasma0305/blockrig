@@ -88,3 +88,11 @@ export function dragonPlush(s = 1) {
 /** The big sealed package (OPEN AFTER NASA), a Kenney cardboard box with a label on the front. */
 export function packageLabel() { return banner(["OPEN AFTER", "NASA"], 3.0, 1.6, "#fff3cf", "#c1121f", "#c1121f"); }
 export function stickyNote(text = "TRY HARDER") { return banner([text], 0.9, 0.9, "#ffe94d", "#222222", "#e0c200"); }
+
+/** The Wi-Fi router Mom changes the password on: a box with two antennas and blinking lights. */
+export function router() {
+  const g = grp(mesh(new THREE.BoxGeometry(1.4, 0.32, 0.9), std("#f2f2f2", { roughness: 0.4 }), 0, 0.16, 0));
+  for (const x of [-0.5, 0.5]) { const a = mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.9, 8), std("#222"), x, 0.75, -0.35); a.rotation.z = x * 0.3; g.add(a); }
+  for (let i = 0; i < 4; i++) g.add(mesh(new THREE.BoxGeometry(0.08, 0.05, 0.02), new THREE.MeshBasicMaterial({ color: i % 2 ? "#3dff8b" : "#7ad7ff", toneMapped: false }), -0.4 + i * 0.25, 0.2, 0.46, 0));
+  return g;
+}

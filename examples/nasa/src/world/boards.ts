@@ -70,6 +70,60 @@ export function screen(w = 3.4, h = 2.1) {
       lock(g, W / 2, H * 0.36, H * 0.26, "#ff2d3d"); centre(g, "NASA: LOCKED", W / 2, H * 0.75, H * 0.15, "#ff2d3d", W * 0.85); return;
     }
     if (K === "TCP1P") { const r = browser(g, W, H, ["target-site", "notes"]); for (let i = 0; i < 7; i++) left(g, ["$ nmap target", "80/tcp open http", "$ sqlmap -u ...", "[+] injectable!", "> dumping...", "", ""][i], 30, r.y + 50 + i * 70, 44, "#3dff8b"); return; }
+    if (K.startsWith("NEWSPAPER")) { // the 1999 story, plain text (Jonathan James)
+      g.fillStyle = "#f3efe2"; g.fillRect(0, 0, W, H); g.fillStyle = "#222"; g.fillRect(W * 0.05, H * 0.2, W * 0.9, 4);
+      centre(g, "THE DAILY BYTE", W / 2, H * 0.11, H * 0.1, "#222", W * 0.9); centre(g, "1999", W * 0.88, H * 0.27, H * 0.06, "#555");
+      centre(g, "15-YEAR-OLD HACKS NASA", W / 2, H * 0.4, H * 0.11, "#111", W * 0.9);
+      centre(g, "Space station software taken;", W / 2, H * 0.56, H * 0.06, "#333", W * 0.88); centre(g, "NASA shuts down for 3 weeks", W / 2, H * 0.66, H * 0.06, "#333", W * 0.88);
+      for (let i = 0; i < 4; i++) { g.fillStyle = "#bdb7a5"; g.fillRect(W * 0.08, H * (0.76 + i * 0.05), W * (0.84 - (i % 2) * 0.2), H * 0.02); }
+      if (K.endsWith("LATE")) { g.save(); g.translate(W * 0.5, H * 0.55); g.rotate(-0.18); g.strokeStyle = "#d61f2c"; g.lineWidth = 14; g.strokeRect(-W * 0.36, -H * 0.12, W * 0.72, H * 0.24); centre(g, "LATE BLOOMER", 0, 0, H * 0.13, "#d61f2c", W * 0.68); g.restore(); }
+      return;
+    }
+    if (K === "SUDO") { g.fillStyle = "#0b1020"; g.fillRect(0, 0, W, H); left(g, "0xDEAF@crib:~$", W * 0.06, H * 0.25, H * 0.09, "#13c4a3"); left(g, "sudo", W * 0.06, H * 0.5, H * 0.26, "#3dff8b"); left(g, "[sudo] password for 0xDEAF: ****", W * 0.06, H * 0.8, H * 0.06, "#a9b3c9"); return; }
+    if (K === "FLAG") { g.fillStyle = "#0b1020"; g.fillRect(0, 0, W, H); left(g, "$ cat flag.txt", W * 0.06, H * 0.3, H * 0.1, "#a9b3c9"); centre(g, "flag{m1lk_t1m3}", W / 2, H * 0.62, H * 0.15, "#3dff8b", W * 0.9); return; }
+    if (K === "MITNICK") { // Kevin Mitnick, plain text
+      g.fillStyle = "#14121f"; g.fillRect(0, 0, W, H); centre(g, "WANTED", W / 2, H * 0.14, H * 0.12, "#ff5a5a");
+      g.fillStyle = "#2a2540"; g.fillRect(W * 0.08, H * 0.26, W * 0.84, H * 0.4); centre(g, "☎", W / 2, H * 0.46, H * 0.28, "#ffd166");
+      centre(g, "KEVIN MITNICK", W / 2, H * 0.76, H * 0.1, "#fff", W * 0.9); centre(g, "got in by phone, not by code", W / 2, H * 0.89, H * 0.06, "#a9a3c9", W * 0.9); return;
+    }
+    if (K === "CALLING" || K === "CALL ENDED") {
+      g.fillStyle = K === "CALLING" ? "#0e2a1a" : "#2a0e12"; g.fillRect(0, 0, W, H); centre(g, "☎", W / 2, H * 0.32, H * 0.3, "#fff");
+      centre(g, "NASA HELP DESK", W / 2, H * 0.62, H * 0.1, "#fff", W * 0.9); centre(g, K === "CALLING" ? "connected 00:12" : "CALL ENDED", W / 2, H * 0.8, H * 0.08, K === "CALLING" ? "#3dff8b" : "#ff5a5a"); return;
+    }
+    if (K === "NO INTERNET") { g.fillStyle = "#1b1f2a"; g.fillRect(0, 0, W, H); centre(g, "📶✕", W / 2, H * 0.36, H * 0.24, "#ff5a5a"); centre(g, "NO INTERNET", W / 2, H * 0.66, H * 0.12, "#fff"); centre(g, "Wi-Fi password changed", W / 2, H * 0.82, H * 0.06, "#a9b3c9"); return; }
+    if (K === "AIRCRACK") {
+      g.fillStyle = "#050805"; g.fillRect(0, 0, W, H);
+      ["$ aircrack-ng -w words.txt home.cap", "[00:00:01] 1024 keys tested", "Current passphrase: password12", "", ""].forEach((l, i) => left(g, l, W * 0.04, H * (0.1 + i * 0.1), H * 0.055, "#3dff8b"));
+      g.fillStyle = "#3dff8b"; g.fillRect(W * 0.06, H * 0.56, W * 0.88, H * 0.26); centre(g, "KEY FOUND! [ password123 ]", W / 2, H * 0.69, H * 0.085, "#050805", W * 0.84); return;
+    }
+    if (K === "PATCHED") { // Log4Shell, then Heartbleed, both PATCHED
+      const second = p > 0.55; g.fillStyle = "#0b1020"; g.fillRect(0, 0, W, H);
+      if (!second) { left(g, "${jndi:ldap://0xdeaf/x}", W * 0.05, H * 0.24, H * 0.075, "#ffd166"); centre(g, "LOG4SHELL", W / 2, H * 0.45, H * 0.11, "#fff"); }
+      else { g.fillStyle = "#d61f2c"; g.beginPath(); const cx = W / 2, cy = H * 0.32, r = H * 0.12; g.arc(cx - r * 0.5, cy, r * 0.55, Math.PI, 0); g.arc(cx + r * 0.5, cy, r * 0.55, Math.PI, 0); g.lineTo(cx, cy + r * 1.1); g.closePath(); g.fill(); centre(g, "HEARTBLEED", W / 2, H * 0.55, H * 0.1, "#fff"); }
+      const k = ((second ? p - 0.55 : p) / 0.3); if (k > 0.5) { g.save(); g.translate(W / 2, H * 0.78); g.rotate(-0.12); g.strokeStyle = "#3dff8b"; g.lineWidth = 10; g.strokeRect(-W * 0.3, -H * 0.09, W * 0.6, H * 0.18); centre(g, "PATCHED", 0, 0, H * 0.12, "#3dff8b"); g.restore(); }
+      return;
+    }
+    if (K === "UFO SEARCH" || K === "UFO FOUND") { // the night sky from a NASA telescope; the "UFO" is a kurenaif sticker
+      g.fillStyle = "#04060f"; g.fillRect(0, 0, W, H); for (let i = 0; i < 160; i++) { const x = (i * 97) % W, y = (i * 61) % H; g.fillStyle = "rgba(255,255,255," + (0.3 + (i % 5) / 8) + ")"; g.fillRect(x, y, 3, 3); }
+      left(g, "NASA archive / telescope / IMG_0451", W * 0.03, H * 0.06, H * 0.045, "#a9b3c9");
+      const cx = W * 0.62, cy = H * 0.5, r = K === "UFO FOUND" ? H * 0.36 : H * 0.09;
+      if (K === "UFO FOUND") { pic(g, "kurenaif", cx - r * 0.8, cy - r * 0.8, r * 1.6, r * 1.6, true); centre(g, "it's a sticker", W * 0.25, H * 0.88, H * 0.07, "#ffd166"); }
+      else { g.fillStyle = "#cfd8ff"; g.beginPath(); g.ellipse(cx, cy, r * 0.5, r * 0.18, 0, 0, Math.PI * 2); g.fill(); centre(g, "UFO?", cx, cy + r * 1.5, H * 0.08, "#ff5a5a"); }
+      g.strokeStyle = "#ff2d3d"; g.lineWidth = 8; g.beginPath(); g.arc(cx, cy, r * 1.05, 0, Math.PI * 2); g.stroke(); return;
+    }
+    if (K === "ATTACKS") { // SQL injection, phishing, a zero-day, cycling with p
+      const k = Math.min(2, Math.floor(p * 3)); g.fillStyle = "#0b1020"; g.fillRect(0, 0, W, H);
+      if (k === 0) { centre(g, "SQL INJECTION", W / 2, H * 0.18, H * 0.08, "#ffd166"); g.fillStyle = "#1f2638"; g.fillRect(W * 0.12, H * 0.34, W * 0.76, H * 0.14); left(g, "' OR 1=1 --", W * 0.15, H * 0.41, H * 0.08, "#3dff8b"); centre(g, "login: NASA", W / 2, H * 0.66, H * 0.07, "#a9b3c9"); }
+      if (k === 1) { centre(g, "PHISHING", W / 2, H * 0.18, H * 0.08, "#ffd166"); g.fillStyle = "#f4f4f4"; g.fillRect(W * 0.1, H * 0.3, W * 0.8, H * 0.55); left(g, "From: it-support@nasa.gov.biz", W * 0.13, H * 0.38, H * 0.05, "#222"); left(g, "URGENT: reset your password", W * 0.13, H * 0.5, H * 0.055, "#d61f2c"); left(g, "[ click here ]", W * 0.13, H * 0.66, H * 0.06, "#1f6fe0"); }
+      if (k === 2) { centre(g, "ZERO-DAY", W / 2, H * 0.18, H * 0.08, "#ffd166"); ["$ ./exploit nasa.gov", "[*] sending payload...", "[*] written in my sleep", "[-] ..."].forEach((l, i) => left(g, l, W * 0.06, H * (0.36 + i * 0.12), H * 0.06, "#3dff8b")); }
+      return;
+    }
+    if (K === "ACCESS DENIED") { g.fillStyle = "#2a0508"; g.fillRect(0, 0, W, H); lock(g, W / 2, H * 0.34, H * 0.22, "#ff2d3d"); centre(g, "ACCESS DENIED", W / 2, H * 0.72, H * 0.13, "#ff2d3d", W * 0.9); return; }
+    if (K === "LOGIN ADMIN") { // the default password
+      g.fillStyle = "#0d1424"; g.fillRect(0, 0, W, H); centre(g, "NASA LOGIN", W / 2, H * 0.14, H * 0.09, "#fff");
+      [["user", "admin"], ["password", "admin"]].forEach(([l, v], i) => { const y = H * (0.3 + i * 0.22); left(g, l, W * 0.12, y, H * 0.06, "#a9b3c9"); g.fillStyle = "#fff"; g.fillRect(W * 0.12, y + H * 0.04, W * 0.76, H * 0.11); left(g, v, W * 0.15, y + H * 0.095, H * 0.08, "#111"); });
+      g.fillStyle = "#1f6fe0"; g.fillRect(W * 0.3, H * 0.8, W * 0.4, H * 0.12); centre(g, "LOG IN", W / 2, H * 0.86, H * 0.07, "#fff"); return;
+    }
     if (K === "WHOAMI") { // the baby's laptop: logged in under its hacker name
       g.fillStyle = "#0b1020"; g.fillRect(0, 0, W, H);
       left(g, "$ whoami", W * 0.07, H * 0.22, H * 0.1, "#3dff8b"); left(g, "0xDEAF", W * 0.07, H * 0.42, H * 0.17, "#ffffff");

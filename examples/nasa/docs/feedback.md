@@ -38,6 +38,9 @@ undone later. One line per item: date, what they said, what we did, where.
 
 ## This video
 
+- 2026-11-28 "Rework the story... still reference real-world hacking, more detailed" → v3 (37 shots, ~1:45): Jonathan James, sudo + the xkcd sandwich, Kevin Mitnick's phone con (help desk voice), aircrack-ng, Log4Shell and Heartbleed (PATCHED), Gary McKinnon's UFO hunt (the UFO is a kurenaif sticker), SQL injection / phishing / zero-day, and the finale admin/admin ("beaten by the default password"). Each real thing has an explainer sticker. Shots reuse the earlier staging through legacy ids (performance.ts `legacy`).
+- 2026-11-28 "Remove the animation at 0:14 ... fast paced" → silent beats cut to the ones the story needs (only the last shot is silent in v3).
+
 - 2026-11-28 Cut the $5,000 jokes (prologue, bug bounty, money, receipt, sunscreen lines), the "work remotely" bit and the prologue; "if you fail you get removed by the government" (s02, timers UNTIL REMOVAL, the friend's line); babies get hacker names instead of defacing websites (s04 line; @0xDEAF over the baby, @r00tkit, @nullbyte, @kur3n4if in the preschool; WHOAMI / ROOT ACCESS screens). 52 shots, 1:52.
 
 - 2026-11-28 "Render it again, now using our new things" → nasa runs on BlockRig's library: src/kit re-exports blockrig/video (timeline, pose, camera, lighting, Roblox maps, plan, ground layers, surfaces, collide probe), lights via lightsByLocation, scripts on blockrig/voice + compileStory (identical compiled story), collide also checks captions over faces (s01 and s09 re-aimed, one kid stepped back). Render 4 min 49 s.

@@ -10,7 +10,7 @@ const { fontFamily } = loadFont("normal", { weights: ["800"], subsets: ["latin"]
 
 export const SPEAKERS: Record<string, { name: string; colour: string }> = {
   me: { name: "ME", colour: "#1fa392" }, mom: { name: "MOM", colour: "#d6457a" }, dad: { name: "DAD", colour: "#2f6fd6" },
-  friend: { name: "BEST FRIEND", colour: "#7b3fc4" }, system: { name: "SYSTEM", colour: "#e08a00" },
+  friend: { name: "BEST FRIEND", colour: "#7b3fc4" }, system: { name: "SYSTEM", colour: "#e08a00" }, helpdesk: { name: "NASA HELP DESK", colour: "#5b6b8a" },
 };
 export const speakersOf = (T: Timeline) => Object.fromEntries(T.SHOTS.filter((s: any) => s.speaker && SPEAKERS[s.speaker]).map((s: any) => [s.id, SPEAKERS[s.speaker]]));
 
@@ -18,10 +18,10 @@ export const Layers2D: React.FC<{ timeline: Timeline }> = ({ timeline: T }) => {
   const frame = useCurrentFrame(), t = frame / T.FPS, { shot, local } = T.shotAt(t), fps = T.FPS, s = shot as any, n = +shot.id.slice(1);
   const out: React.ReactNode[] = [];
   // the freeze frame of the hook: a cold tint, a pause mark
-  if (n >= 2 && n <= 3) out.push(<AbsoluteFill key="freeze" style={{ background: "rgba(70,110,170,0.12)", mixBlendMode: "multiply" }} />,
+  if (n >= 2 && n <= 4) out.push(<AbsoluteFill key="freeze" style={{ background: "rgba(70,110,170,0.12)", mixBlendMode: "multiply" }} />,
     <div key="pause" style={{ position: "absolute", top: "9%", left: "7%", fontFamily, fontSize: 64, color: "#fff", WebkitTextStroke: "8px #000", paintOrder: "stroke fill", opacity: 0.85 }}>❚❚ PAUSED</div>);
   // the rewind: the last 0.9 s of s03 and the first 0.5 s of s04
-  const rewindIn = shot.id === "s02" ? local - (shot.dur - 0.9) : shot.id === "s04" ? 0.9 + local : -1;
+  const rewindIn = shot.id === "s04" ? local - (shot.dur - 0.9) : shot.id === "s05" ? 0.9 + local : -1;
   if (rewindIn >= 0 && rewindIn < 1.4) {
     const r = rng(frame * 7 + 1), k = rewindIn < 0.9 ? rewindIn / 0.9 : 1 - (rewindIn - 0.9) / 0.5;
     out.push(<AbsoluteFill key="rw" style={{ background: `rgba(20,10,40,${0.35 * k})` }}>
@@ -42,7 +42,7 @@ export const Layers2D: React.FC<{ timeline: Timeline }> = ({ timeline: T }) => {
       background: "#ffffff", color: "#111", border: "8px solid #111", borderRadius: 28, padding: "14px 34px", fontFamily, fontWeight: 800, fontSize: 58, lineHeight: 1.1, boxShadow: "0 10px 0 rgba(0,0,0,0.45)" }}>{s.note}</div>);
   }
   // ACCESS GRANTED: a green flash
-  if (shot.id === "s57" && local > 0.3 && local < 0.75) out.push(<AbsoluteFill key="ok" style={{ background: `rgba(40,255,120,${0.35 * (1 - (local - 0.3) / 0.45)})` }} />);
+  if (shot.id === "s31" && local > 0.3 && local < 0.75) out.push(<AbsoluteFill key="ok" style={{ background: `rgba(40,255,120,${0.35 * (1 - (local - 0.3) / 0.45)})` }} />);
   // the cut to black at the very end
   if (shot.idx === T.SHOTS.length - 1) { const k = interpolate(local, [shot.dur - 0.9, shot.dur - 0.25], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }); if (k > 0) out.push(<AbsoluteFill key="end" style={{ background: `rgba(0,0,0,${k})` }} />); }
   return <AbsoluteFill style={{ pointerEvents: "none" }}>{out}</AbsoluteFill>;

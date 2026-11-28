@@ -27,12 +27,21 @@ export const facing = (from: THREE.Vector3, to: THREE.Vector3) => Math.atan2(to.
 const faceOf = (shot: Shot, who: string, fallback = "neutral") => shot.faces?.[who] ?? fallback;
 
 /** How big I am at each age (the rig is a child body; the scale grows across the story). */
+/** The story was rewritten (v3, 37 shots); its shots reuse the staging of the matching earlier shots, by their old
+ *  ids. The new beats are s80-s90: Mitnick (s80), the help desk call (s81-s83), Mom's Wi-Fi (s84-s85), Log4Shell (s86),
+ *  the UFO hunt (s87-s88), the newspaper (s89-s90). */
+const LEGACY: Record<string, string> = { s01: "s01", s02: "s02", s03: "s89", s04: "s90", s05: "s04", s06: "s08", s07: "s07", s08: "s09", s09: "s10", s10: "s11",
+  s11: "s13", s12: "s14", s13: "s80", s14: "s81", s15: "s82", s16: "s83", s17: "s84", s18: "s85", s19: "s86", s20: "s87", s21: "s88", s22: "s34", s23: "s35",
+  s24: "s36", s25: "s38", s26: "s39", s27: "s52", s28: "s53", s29: "s55", s30: "s56", s31: "s57", s32: "s59", s33: "s61", s34: "s64", s35: "s68", s36: "s69", s37: "s70" };
+export const legacy = (id: string) => LEGACY[id] ?? id;
+
 export function ageScale(id: string) {
   const n = +id.slice(1);
+  if (n >= 80) return n <= 83 ? 0.68 : n <= 85 ? 0.75 : n === 86 ? 0.82 : n <= 88 ? 0.84 : 0.92;
   return n <= 3 ? 0.95 : n <= 8 ? 0.5 : n <= 18 ? 0.62 : n <= 22 ? 0.68 : n <= 27 ? 0.72 : n <= 33 ? 0.78 : n <= 58 ? 0.92 : 0.95;
 }
 /** Which of my rigs plays this shot: the baby (onesie), the dinosaur pyjamas at five, or me. */
-export const meFor = (id: string, cast: Cast) => { const n = +id.slice(1); return n >= 4 && n <= 8 ? cast.baby : n >= 28 && n <= 33 ? cast.pj : cast.hero; };
+export const meFor = (id: string, cast: Cast) => { const n = +id.slice(1); return n >= 4 && n <= 8 ? cast.baby : (n >= 28 && n <= 33) || n === 84 || n === 85 ? cast.pj : cast.hero; };
 
 const tmp = new THREE.Vector3();
 /** Put a prop in a hand (follows the hand joint every frame; frame-pure). */
@@ -47,7 +56,7 @@ export const HOOK_TURN = 0.9;
 export type Perform = { me: Person; confetti: { at: THREE.Vector3; t: number } | null };
 
 export function perform(shot: Shot, local: number, p: number, cast: Cast, world: World): Perform {
-  const { mom, dad, friend, tm1, tm2, kids } = cast, id = shot.id, n = +id.slice(1), s = shot as any;
+  const { mom, dad, friend, tm1, tm2, kids } = cast, id = legacy(shot.id), n = +id.slice(1), s = shot as any;
   for (const q of cast.all) { q.rig.object.visible = false; q.rig.object.scale.setScalar(1); }
   for (const h of cast.headsets) h.visible = false;
   cast.hat.visible = false;
@@ -56,12 +65,12 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
   for (const q of kids) q.rig.object.scale.setScalar(0.85);
   const P = world.props, out: Perform = { me, confetti: null };
   for (const k of ["ball", "juice", "yogurt", "workbook", "suitcase", "trophyBig", "plushInCase", "sunscreen", "receipt", "report", "phone", "sandwich", "cert", "plush", "pkgOpen"] as const) (P as any)[k].visible = false;
-  const nine = n <= 3 || n >= 34; // the room as it is at nine: books, badges, the TRY HARDER note, the package
+  const nine = (n <= 3 || n >= 34) && !(n >= 80 && n <= 86) || n >= 89; // the room as it is at nine: books, badges, the TRY HARDER note, the package
   P.pkg.visible = nine && !(n >= 63); P.pkgOpen.visible = n >= 63;
   P.juicePile.visible = n <= 3 || (n >= 42 && n <= 58); for (const b of P.books) b.visible = nine; P.sticky.visible = nine; P.badgeWall.visible = nine; P.calendar.visible = n >= 41;
   world.mon.set(s.screen ?? (n >= 34 ? "PRACTICE TABS" : ""), p); world.lap.set(s.screen ?? (n >= 34 ? "PRACTICE TABS" : ""), p);
   // the laptop on the desk edge is only in the hook and its return (it blocks the window-side cameras otherwise)
-  world.lap.visible = world.lap.userData.base.visible = n <= 3 || (n >= 54 && n <= 57);
+  world.lap.visible = world.lap.userData.base.visible = n <= 3 || (n >= 54 && n <= 57) || [80, 82, 85, 86].includes(n) || n >= 89; // my laptop: the hook and the shots that read its screen
   // the countdown above my head
   world.timer.visible = !!s.timer && !(id === "s57" && p > 0.45);
   const R = world.room, room = shot.location === "room";
@@ -78,7 +87,38 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
   const momSide = V(2.4, 0, 0.6), momBack = V(2.4, 0, 0.6), CAM = V(3.5, 0, -10), cheat = (q: THREE.Vector3, to: THREE.Vector3) => { const a = facing(q, to), b = facing(q, CAM); return a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * 0.75; };
 
   for (const l of world.town.laptops) l.visible = false;
+  P.router.visible = P.plate.visible = false;
+  world.friendRoom.screen.set(id === "s87" ? "UFO SEARCH" : id === "s88" ? "UFO FOUND" : "KURENAIF", p);
   switch (true) {
+    // ------------------------------------------------ v3: the newspaper (s89-s90), the hook's frozen desk
+    case n === 89 || n === 90: {
+      chair(me, [{ clip: C.gasp, weight: 0.8 }], faceOf(shot, "hero", "scared"), HOOK_TURN);
+      P.ball.visible = true; P.ball.position.set(R.chair.x - 1.6, 0, R.chair.z + 1.9);
+      break;
+    }
+    // ------------------------------------------------ v3: age 3, Mitnick's rule and the help desk call
+    case n === 80: { chair(me, [{ clip: C.type }], faceOf(shot, "hero")); break; }
+    case n >= 81 && n <= 83: {
+      chair(me, [{ clip: C.phoneEar, weight: n === 83 ? 0.4 : 1 }], faceOf(shot, "hero"), 0.9);
+      P.phone.visible = true; inHand(P.phone, me, "RightHand", V(0, 0.1, 0.1));
+      break;
+    }
+    // ------------------------------------------------ v3: age 5, Mom changes the Wi-Fi password; I crack it
+    case n === 84 || n === 85: {
+      chair(me, [{ clip: C.type }], faceOf(shot, "hero"), n === 85 ? 0.5 : 0);
+      const momAt = V(6.2, 0, -3.4); // across the desk from the camera side, so the screen reads past her
+      stand(mom, momAt, cheat(momAt, R.chair), n === 84 ? [{ clip: C.type, weight: 0.8 }] : [{ clip: C.holdUp, weight: 0.7 }], faceOf(shot, "mom"));
+      P.router.visible = true; if (n === 84) { P.router.position.set(5.6, 0, -2.5); P.router.rotation.set(0, -0.6, 0); } else inHand(P.router, mom, "RightHand", V(-0.4, -0.15, 0.35));
+      break;
+    }
+    // ------------------------------------------------ v3: age 7, Log4Shell and Heartbleed (both patched)
+    case n === 86: { chair(me, [{ clip: C.type }], faceOf(shot, "hero", "angry"), 0.35); break; }
+    // ------------------------------------------------ v3: my best friend hunts UFOs in NASA's photos
+    case n === 87 || n === 88: {
+      const at = world.friendRoom.desk;
+      stand(friend, at, n === 87 ? PI : PI + 2.6, n === 88 ? [{ clip: C.cheer, speed: 0.8 }] : [{ clip: C.type }], faceOf(shot, "friend"));
+      break;
+    }
     // ------------------------------------------------ the hook: a world where everyone hacks (grown-ups, kids, everyone)
     case id === "s01": {
       const folks = [dad, mom, kids[0], tm1, kids[1], friend, tm2, cast.pj, cast.hero], faces = ["determined", "smug", "grin", "determined", "laugh", "determined", "smug", "grin", "scared"];
@@ -105,10 +145,11 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
       place(me, b.x, b.z, rot);
       const flop = id === "s06";
       act(me, flop ? [{ clip: C.babyFlop, at: 0.35 }] : [{ clip: C.floorSit }, ...(id === "s04" ? [{ clip: C.type, weight: 0.6 }] : [])], local, flop ? (p < 0.5 ? "laugh" : p < 0.7 ? "shocked" : "dazed") : faceOf(shot, "hero"), 0, SEAT);
-      world.babyScreen.set(flop && local > 0.3 ? "ROOT ACCESS" : "WHOAMI", 0);
+      world.babyScreen.set(flop && local > 0.3 ? "ROOT ACCESS" : s.screen ?? "WHOAMI", 0);
       if (n >= 7) {
         stand(dad, N.dad, facing(N.dad, b) + (id === "s07" && p > 0.55 ? 0.9 : 0), id === "s08" ? [{ clip: C.idle }, { clip: C.nod, at: 1.1 }] : [{ clip: C.idle }], faceOf(shot, "dad"));
-        stand(mom, N.mom, facing(N.mom, b), [{ clip: C.idle }], faceOf(shot, "mom"));
+        stand(mom, N.mom, facing(N.mom, b), id === "s08" ? [{ clip: C.gasp, weight: 0.9 }] : [{ clip: C.idle }], faceOf(shot, "mom"));
+        if (id === "s07") { P.plate.visible = true; inHand(P.plate, dad, "RightHand", V(0, 0.05, 0.4)); } // "sudo... make me a sandwich": an empty plate
       }
       break;
     }
@@ -117,7 +158,7 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
       const seats = world.pre.seats, sit = (q: Person, i: number, layers: Layer[], face: string, turn = 0) => { const st = seats[i]; place(q, st.at.x, st.at.z, PI + turn); act(q, [{ clip: C.sit }, ...layers], local, face, st.seat, ON_SEAT); };
       for (const h of cast.headsets) h.visible = true;
       world.lobbyBoard.set(id === "s15" ? "FINAL CHALLENGE" : id === "s18" ? "MIC DISCONNECTED" : "PRESCHOOL CTF LEAGUE", p);
-      world.pre.laptops.forEach((l, i) => l.set(i === 0 ? (id === "s14" ? "SCHEDULE" : "KURENAIF") : i === 1 && n >= 15 ? "FINAL CHALLENGE" : "TCP1P", 0));
+      world.pre.laptops.forEach((l, i) => l.set(i === 0 ? (id === "s14" ? "SCHEDULE" : "KURENAIF") : i === 1 && n >= 15 ? "FINAL CHALLENGE" : "FLAG", 0)); // everyone has a captured flag on screen
       const flag = world.props.fanFlag, flagUp = n >= 11 && !(id === "s14" && p > 0.55);
       sit(friend, 0, [{ clip: C.type, weight: id === "s11" || id === "s12" || id === "s14" ? 0 : 0.7 }, ...(n >= 11 && n <= 14 ? [{ clip: flagUp ? C.flagUp : C.flagDown, fade: 0.3 }] : [])], faceOf(shot, "friend", "determined"), id === "s13" || id === "s14" ? -0.7 : 0);
       if (n >= 11 && n <= 14) inHand(flag, friend, "RightHand", V(0, -0.15, 0.1)); else flag.visible = false;

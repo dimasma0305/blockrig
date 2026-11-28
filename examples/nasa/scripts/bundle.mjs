@@ -14,7 +14,8 @@ const walk = (d) => (fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true 
 
 /** A hash of every file the bundle is built from (contents, so a touch without a change keeps the bundle). */
 export function bundleHash() {
-  const files = [...walk("src"), ...walk("../../src"), "package-lock.json", "package.json", "scripts/webpack.mjs", "remotion.config.ts"].filter((f) => fs.existsSync(f)).sort();
+  // assets/audio/timings.json is imported by src/story.ts, so it is part of the bundle: a re-voice must rebuild it
+  const files = [...walk("src"), ...walk("../../src"), "assets/audio/timings.json", "package-lock.json", "package.json", "scripts/webpack.mjs", "remotion.config.ts"].filter((f) => fs.existsSync(f)).sort();
   const h = crypto.createHash("sha1");
   for (const f of files) { h.update(f.replace(/\\/g, "/")); h.update(fs.readFileSync(f)); }
   return h.digest("hex").slice(0, 16);

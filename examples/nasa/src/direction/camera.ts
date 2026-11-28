@@ -6,7 +6,7 @@ import { V, move, orbit, type Cam, type Shot } from "../kit";
 import { easeInOut } from "blockrig/video";
 import type { Cast, Person } from "../cast/characters";
 import { LOCATIONS, type World } from "../world/World";
-import { meFor } from "./performance";
+import { meFor, legacy } from "./performance";
 
 const PI = Math.PI;
 const head = (q: Person) => q.rig.jointPosition("Neck", new THREE.Vector3()).add(V(0, 0.55 * q.rig.object.scale.y, 0));
@@ -29,15 +29,27 @@ const shaken = (c: Cam, s: number) => ({ ...c, shake: s });
 export function cameraFor(shot: Shot, p: number, local: number, cast: Cast, world: World): Cam {
   const cam = shotCamera(shot, p, local, cast, world);
   // closed rooms: keep the camera inside the walls (s62 looks in through the window from the yard)
-  if (shot.location === "room" && shot.id !== "s62") world.room.open.clampPoint(cam.pos, cam.pos);
+  if (shot.location === "room" && legacy(shot.id) !== "s62") world.room.open.clampPoint(cam.pos, cam.pos);
   if (shot.location === "nursery") world.nursery.box.clampPoint(cam.pos, cam.pos);
   return cam;
 }
 
 function shotCamera(shot: Shot, p: number, local: number, cast: Cast, world: World): Cam {
-  const { mom, dad, friend, tm1 } = cast, me = meFor(shot.id, cast), R = world.room, id = shot.id, e = easeInOut(p);
+  const { mom, dad, friend, tm1 } = cast, id = legacy(shot.id), me = meFor(id, cast), R = world.room, e = easeInOut(p);
+  const L = world.lap.position, lapCam = (d: number, dx = -0.6): Cam => ({ pos: L.clone().add(V(dx, 0.6, -d)), target: L.clone().add(V(0.3, -0.1, 0)), fov: 46, shake: 0 });
   const scr = R.screenAt.clone();
   switch (id) {
+    // ---- v3 new beats
+    case "s89": return lapCam(5.2 - 1.6 * e, -1.0); // the newspaper on my laptop, me frozen behind it
+    case "s90": return lapCam(3.2, -0.6);
+    case "s80": return { ...lapCam(6 - 2 * e, -1.8), target: L.clone().lerp(head(me), 0.35) };
+    case "s81": case "s83": return fromFloor(head(me), 0.3, 0.5, 36);
+    case "s82": return lapCam(3.4, 0.2);
+    case "s84": return { pos: V(1.0, 6.2, -10), target: head(me).lerp(head(mom), 0.55).add(V(0, -1.4, 0)), fov: 56, shake: 0 }; // Mom at the router, me at the desk
+    case "s85": return { pos: L.clone().add(V(-2.0, 1.6, -5.4)), target: L.clone().add(V(0.8, 0.5, 0)), fov: 50, shake: 0 }; // the cracked key on my laptop, Mom frozen with the router behind
+    case "s86": return lapCam(5 - 2 * e, -0.4);
+    case "s87": { const h = head(friend), sc = world.friendRoom.screen.position; return { pos: h.clone().add(V(-1.2, 1.0, 2.8)), target: sc.clone().lerp(h, 0.2), fov: 46, shake: 0 }; }
+    case "s88": { const h = head(friend), sc = world.friendRoom.screen.position; return { pos: h.clone().add(V(-3.2, 0.6, 5.6)), target: h.clone().lerp(sc, 0.4).add(V(0, -0.4, 0)), fov: 46, shake: 0 }; }
     // ---- the hook: the street where everyone hacks, crane down from above to street level
     case "s01": { const T = LOCATIONS.town; return move([V(T.x - 26, 30, T.z + 34), V(T.x - 4, -4, T.z + 8)], [V(T.x - 10, 5.5, T.z + 21), V(T.x - 1, 2.6, T.z - 8)], p, 58); } // aims at the crowd on the way down: faces clear of the captions
     // ---- frozen at the desk, from the screen side

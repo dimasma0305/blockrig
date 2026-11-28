@@ -7,8 +7,8 @@ specific to this video below.
 
 ## This video
 
-A kid raised as a hacker must hack NASA before ten or be deleted; Mom "invests" his $5,000 bug bounty, which turns out to be one tiny sunscreen for the next objective: hack the Sun before eleven. 70 shots, about 2:45, every line (narration and dialogue) in the one narrator voice; dialogue captions carry a speaker tag.
+A kid raised as a hacker must hack NASA before ten or the government removes him; nine years of real hacking tricks (Mitnick's phone con, aircrack-ng, Log4Shell, Heartbleed, Gary McKinnon's UFO hunt) fail, and Dad, eating a sandwich, asks "Did you try admin, admin?". It works; the next objective is the Sun. 37 shots, about 1:45; every dialogue speaker has their own voice, narration one voice.
 
-Places (`LOCATIONS` in src/world/World.ts): my room (Roblox Toolbox bedroom with a gaming desk; the window shows kids playing), the nursery (Roblox Toolbox bedroom), the preschool, the conference hall and the friend's room (Kenney). Unusual here: docs/story.md `say:` (pronunciation), `speaker:`, `title:` / `timer:` / `screen:` (on-screen text, src/world/boards.ts and src/direction/Layers2D.tsx), music theme `none` (silence), one hero rig scaled by age (performance.ts `ageScale`), story props in src/world/storyProps.ts.
+Places (`LOCATIONS` in src/world/World.ts): my room (Roblox Toolbox bedroom with a gaming desk; the window shows kids playing), the nursery (Roblox Toolbox bedroom), the preschool, the conference hall and the friend's room (Kenney). Unusual here: docs/story.md `say:` (pronunciation), `speaker:`, `title:` / `timer:` / `screen:` (on-screen text, src/world/boards.ts and src/direction/Layers2D.tsx), music theme `none` (silence), one hero rig scaled by age (performance.ts `ageScale`), shots mapped onto earlier staging by `legacy()` (new beats are s80-s90), story props in src/world/storyProps.ts.
 
 Read `docs/feedback.md` first.

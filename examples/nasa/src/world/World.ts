@@ -12,6 +12,7 @@ import type { RobloxCast } from "../cast/roblox";
 import { HOUSES } from "./assets";
 import { screen, banner, fanFlag, calendar, timerTag, poster, standee, nameTag } from "./boards";
 import * as P from "./storyProps";
+import { plate } from "../cast/characters";
 
 export const LOCATIONS = { room: new THREE.Vector3(0, 0, 0), nursery: new THREE.Vector3(600, 0, 0), preschool: new THREE.Vector3(1200, 0, 0), hall: new THREE.Vector3(1800, 0, 0), friend: new THREE.Vector3(2400, 0, 0), town: new THREE.Vector3(3000, 0, 0) };
 // Roblox rooms, in the map's own studs (read off map.json / MapLab): the floor centre, and the inner faces of the walls
@@ -81,7 +82,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     pkg: at(lib.model("cardboardBoxClosed", { height: 4.2 }), room.pkg.x, 0, room.pkg.z, 0.25),
     pkgOpen: at(lib.model("cardboardBoxOpen", { height: 4.2 }), room.pkg.x, 0, room.pkg.z, 0.25),
     pkgLabel: P.packageLabel(), ball: P.redBall(), juice: P.juiceBox(), yogurt: P.yogurt(), workbook: P.book("OSWE", "#6a4c93"),
-    juicePile: new THREE.Group(), suitcase: P.suitcase("#2f6fd6", true, ["CODEGATE", "SECCON"]), trophyBig: P.trophy(2.6), plushInCase: P.dragonPlush(0.5),
+    juicePile: new THREE.Group(), router: P.router(), plate: plate(), suitcase: P.suitcase("#2f6fd6", true, ["CODEGATE", "SECCON"]), trophyBig: P.trophy(2.6), plushInCase: P.dragonPlush(0.5),
     sunscreen: P.sunscreen(), receipt: P.sheet(1.1, 1.6), report: P.sheet(1.3, 1.7), sticky: P.stickyNote(), calendar: calendar(),
     books: [P.book("OSEP", "#1d3557", 1.4, 1.9), P.book("OSED", "#e63946", 1.4, 1.9)], phone: P.phone(), sandwich: P.sandwich(), cert: P.sheet(1.6, 1.1),
     plush: P.dragonPlush(0.42), fanFlag: fanFlag(0.9), milk: P.milkBottle(), badges: [P.badge("DEF CON CTF"), P.badge("SECCON", "#1d3557")], badgeWall: banner(["CTF BADGES"], 2.4, 1.4, "#14213d", "#fff", "#fca311"),
@@ -95,14 +96,14 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   props.calendar.position.copy(M(92.3, 8.3, 199.6)); props.calendar.rotation.y = -Math.PI / 2;
   props.badgeWall.position.copy(M(92.3, 8.6, 196.2)); props.badgeWall.rotation.y = -Math.PI / 2;
   props.books.forEach((b, i) => { b.position.copy(M(88.6, 4.3, 199.3 + i * 0.25)).add(V3(0, i * 0.26, 0)); b.rotation.y = 0.3; });
-  root.add(props.pkg, props.pkgOpen, props.ball, props.juice, props.yogurt, props.workbook, props.juicePile, props.suitcase, props.trophyBig, props.plushInCase, props.sunscreen, props.receipt, props.report, props.sticky, props.calendar, ...props.books, props.phone, props.sandwich, props.cert, props.plush, props.badgeWall, props.fanFlag, props.milk, ...props.badges);
+  root.add(props.router, props.plate, props.pkg, props.pkgOpen, props.ball, props.juice, props.yogurt, props.workbook, props.juicePile, props.suitcase, props.trophyBig, props.plushInCase, props.sunscreen, props.receipt, props.report, props.sticky, props.calendar, ...props.books, props.phone, props.sandwich, props.cert, props.plush, props.badgeWall, props.fanFlag, props.milk, ...props.badges);
   for (const b of props.badges) b.visible = false;
   // laptop stickers next to the screen: TCP1P and Burp Suite (plain text)
   [["TCP1P", "#0b2545", "#13c4a3"], ["Burp Suite", "#ff6633", "#ffffff"]].forEach(([t, bg, ac], i) => { const st = banner([t], 0.9, 0.42, bg, "#fff", ac); st.position.copy(M(90.45, 3.95, 194.6 + i * 2.7)); st.rotation.y = -Math.PI / 2; root.add(st); });
   const recTex = screen(1.1, 1.6); recTex.position.z = 0.03; recTex.set("RECEIPT"); props.receipt.add(recTex);
   const repTex = screen(1.3, 1.7); repTex.position.z = 0.03; repTex.set("PROGRESS REPORT"); props.report.add(repTex);
   const certTex = screen(1.6, 1.1); certTex.position.z = 0.03; certTex.set("OSCP: PASSED"); props.cert.add(certTex);
-  for (const k of ["ball", "juice", "yogurt", "workbook", "suitcase", "trophyBig", "plushInCase", "sunscreen", "receipt", "report", "phone", "sandwich", "cert", "plush", "pkgOpen", "fanFlag", "milk"] as const) (props as any)[k].visible = false;
+  for (const k of ["ball", "juice", "yogurt", "workbook", "suitcase", "trophyBig", "plushInCase", "sunscreen", "receipt", "report", "phone", "sandwich", "cert", "plush", "pkgOpen", "fanFlag", "milk", "router", "plate"] as const) (props as any)[k].visible = false;
   // the yard outside my window: lawn, a fence, trees and the houses across the way, where the kids play
   const yard = new THREE.Group(); root.add(yard);
   for (let i = 0; i < 6; i++) yard.add(at(lib.model("fence", { scale: 10 }), R.x - 14 + i * 4.8, 0, R.z - 36, 0));
@@ -174,7 +175,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   const kStand = standee(6.4); kStand.position.set(F.x - 3.2, 0, F.z - 7.6); kStand.rotation.y = 0.25; root.add(kStand);
   const fScreen = screen(2.6, 1.6); fScreen.position.set(F.x + 6, 4.15, F.z - 8.95); fScreen.set("KURENAIF"); root.add(fScreen);
   const fFlag = fanFlag(1.2); fFlag.position.set(F.x - 9, 0, F.z - 8.8); fFlag.scale.setScalar(1.4); root.add(fFlag);
-  const friendRoom = { spot: V3(F.x + 1.5, 0, F.z - 3) };
+  const friendRoom = { spot: V3(F.x + 1.5, 0, F.z - 3), desk: V3(F.x + 6, 0, F.z - 6.2), screen: fScreen };
   const fLight = new THREE.PointLight("#fff1dc", 22, 40, 1.3); fLight.position.set(F.x, 8.5, F.z); root.add(fLight);
 
   // ---------------------------------------------------------------- the town (the hook: a world where everyone is hacking)

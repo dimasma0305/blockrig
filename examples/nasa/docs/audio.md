@@ -39,20 +39,20 @@ The user found one voice for everyone hard to follow (2026-11-28): each dialogue
 - dad: am_michael 0.95
 - friend: am_puck 1.3
 - system: bf_emma 1.0
+- helpdesk: af_sarah 1.0
 
 ## Music
 
 - s01: suspense
-- s04: quirky-arp
-- s38: story
-- s47: suspense
-- s52: action
-- s54: none
-- s59: triumph
-- s61: quirky-arp
-- s68: none
+- s05: quirky-arp
+- s22: story
+- s27: action
+- s29: none
+- s32: triumph
+- s33: quirky-arp
+- s35: none
 
-`none` is silence (room tone): the music stops when Dad walks in with the sandwich (s54) and at the ending (s68).
+`none` is silence (room tone): the music stops when Dad walks in with his sandwich (s29) and at the ending (s35).
 
 A bouncy, awkward broken-chord loop at 94 bpm tuned to A = 451 Hz, over Db, Db6/Bbm, Bbm and an augmented A-Db-F
 twist (the user's notes on a song they like: its tempo, tuning and chords are free to use, its riff is not, so the
