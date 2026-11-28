@@ -1,14 +1,14 @@
 // Lighting presets built with drei: the image-based light (what reflects and fills the shade) is made of simple
 // glowing shapes, <Lightformer>s, rendered once into an environment map, instead of a fixed HDRI photo; plus
 // contact-hardening soft shadows (PCSS: sharp where a foot touches the ground, softer further away). A preset also
-// names the sun (a TIMES entry, src/kit/lighting.ts) so the key light, shadows and the fill agree.
+// names the sun (a TIMES entry, blockrig/video lighting) so the key light, shadows and the fill agree.
 //
 //   <LightRig preset="golden" />          inside the ThreeCanvas tree; key={preset} remounts it on a change
 //   LIGHT_PRESETS.golden.time             the TIMES entry its sun uses (pass it to createLighting().update)
 //
 // Frame-pure: the environment renders once when it mounts (frames={1}), and the PCSS noise depends only on the pixel.
 import { Environment, Lightformer, SoftShadows } from "@react-three/drei";
-import { LOOK } from "./lighting";
+import { LOOK } from "blockrig/video";
 
 type Former = { form?: "rect" | "circle" | "ring"; color: string; intensity: number; position: [number, number, number]; scale: [number, number]; rotation?: [number, number, number] };
 export type LightPreset = {

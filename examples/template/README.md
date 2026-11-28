@@ -36,7 +36,7 @@ golden hour, a lone rain cloud, and an expressive narrator with an emotion per l
 | Folder | What |
 |---|---|
 | `docs/` | source of truth: story, visuals (look bible, materials, weather), audio, feedback log, references |
-| `src/kit/` | reusable: timeline, captions, soundtrack, posing, camera recipes, weather, lighting, textures, structures, overlays, debug overlay |
+| `src/kit/` | reusable: captions, soundtrack, weather, textures, structures, overlays, post effects, debug overlay; plus BlockRig's `blockrig/video` (timeline, posing, camera recipes, lighting, Roblox maps, staging check, boards), re-exported from `src/kit/index.ts` |
 | `src/cast`, `src/world`, `src/direction` | this video's characters, places, acting and camera |
 | `src/debug/` | debug compositions |
 | `assets/` | Remotion public folder: generated audio, downloads (git-ignored), `manifest.json` |

@@ -3,7 +3,7 @@
 // `npm run studio` -> input props { "debug": true }, or `npx remotion render ... --props='{"debug":true}'`.
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { CAPTION_TOP } from "./Captions";
-import type { Timeline } from "./timeline";
+import type { Timeline } from "blockrig/video";
 
 const zone = (style: React.CSSProperties, label: string, colour: string) => (
   <div style={{ position: "absolute", border: `3px dashed ${colour}`, background: `${colour}22`, color: colour, font: "600 26px monospace", padding: 6, ...style }}>{label}</div>

@@ -2,7 +2,7 @@
 // lightning. Particles live in shaders (one draw call each) and follow the camera, so any frame renders the
 // same no matter the order. Pick a preset per shot in docs/story.md ("weather: storm") or pass numbers.
 import * as THREE from "three";
-import { rng } from "./rng";
+import { rng } from "blockrig/video";
 
 export type Weather = {
   rain: number;      // 0..1 drops

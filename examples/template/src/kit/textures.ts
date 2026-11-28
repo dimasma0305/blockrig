@@ -4,7 +4,7 @@
 // so `material("brick", { size: [w, h] })` repeats it correctly on a face of that size.
 // Swap any of them for a downloaded CC0 PBR set (see the materials skill) without changing the call sites.
 import * as THREE from "three";
-import { rng } from "./rng";
+import { rng } from "blockrig/video";
 
 type Ctx = CanvasRenderingContext2D;
 type Painter = (g: Ctx, n: number, r: () => number, o: TexOpts) => void;

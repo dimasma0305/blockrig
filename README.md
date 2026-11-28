@@ -4,17 +4,16 @@
 
 # BlockRig
 
-**Blocky R15 characters for three.js that wear real layered clothing and move like they do in-game.**
+**Make Roblox-style story videos fast, and make them good.**
 
-Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone weights, snap on hats and hair by attachment point, and play keyframe animations with priorities, weights, fades and Roblox-style easing. All in about 1,000 lines of dependency-free JavaScript.
+BlockRig is the engine behind narrated vertical Roblox-style shorts (YouTube Shorts, TikTok), made in code with three.js and Remotion. It gives you R6/R15 characters that wear real Roblox catalog items and play Roblox animations the way Roblox does. It also gives you the rest of a video: Roblox Toolbox maps, a staging check that catches cameras in walls and characters floating over beds, shots and captions timed to the voice, camera recipes, lighting looks and drawn screens. A video template ties it all together, from story to MP4.
 
 [![CI](https://github.com/dimasma0305/blockrig/actions/workflows/ci.yml/badge.svg)](https://github.com/dimasma0305/blockrig/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/blockrig?color=e3172f)](https://www.npmjs.com/package/blockrig)
-[![bundle](https://img.shields.io/bundlephobia/minzip/blockrig?label=min%2Bgzip)](https://bundlephobia.com/package/blockrig)
 [![three](https://img.shields.io/badge/three.js-r128%20%E2%86%92%20r184-black)](https://threejs.org)
 [![license](https://img.shields.io/badge/license-MIT-f4c430)](LICENSE)
 
-[**Live demo**](https://dimasma0305.github.io/blockrig/) · [Quick start](#quick-start) · [API](#api) · [How it works](#how-it-works) · [Testing](#testing)
+[**Live demo**](https://dimasma0305.github.io/blockrig/) · [Make a video](#make-a-video) · [Module map](#module-map) · [Examples](#made-with-blockrig) · [Characters](#characters) · [API](#api)
 
 </div>
 
@@ -25,21 +24,83 @@ Read Roblox-format `.mesh` and `.rbxm` files, skin a jacket with its *own* bone 
 | <img src="docs/wave.png" width="200" alt="wave clip"> | <img src="docs/run.png" width="200" alt="run clip"> | <img src="docs/card.png" width="200" alt="card throw clip"> | <img src="docs/victory.png" width="200" alt="victory jump clip"> |
 | `wave` | `run` | `card` | `victory` |
 
-## Made with BlockRig: story shorts
+## Make a video
+
+Every video starts as a copy of [`examples/template`](examples/template/README.md). The template holds the story documents, the scripts, an agent skill for each stage, and a small kit on top of BlockRig. A coding agent can run the whole pipeline: [`AGENTS.md`](examples/template/AGENTS.md) in the template is the source of truth for it.
+
+```sh
+cd examples/template
+npm run new -- ../my-video "My Video"     # 1. a new video from the template
+cd ../my-video && npm install
+```
+
+1. **Story.** Write `docs/story.md`: the hook in the first 2 seconds, the twist, and a shot list with one line per shot. Each shot can set its camera, `speaker:` for dialogue (caption tags and per-character voices), `note:` for an on-screen explainer, and a lighting preset. `docs/visuals.md` lists the cast and places; `docs/audio.md` the voices and music.
+2. **Voice.** `npm run voice` makes every line offline in plain Node (chatterbox-js, no Python), with one voice per character. Speech recognition checks each take, and the measured word timings set every shot's length and caption. `npm run check` confirms the voice says the right words at the right pace.
+3. **Assets.** `npm run assets` gets CC0 models, skies and textures. `npm run roblox` gets Roblox catalog items (hair, outfits, faces) and Toolbox maps through your signed-in browser. Real creator images go in `assets/brands/`. All of these stay out of git.
+4. **Stills.** `npm run stills` (or `npm run stills -- s01`) renders one frame per shot to `out/stills/` and a contact sheet, so you can review the look before a long render.
+5. **Collide.** `npm run collide` runs the Rapier staging check on the real frames. It finds cameras inside walls, faces hidden behind props, characters inside furniture, and characters floating, sunk or stiff on a soft bed.
+6. **Render.** `npm run render` renders `out/<slug>.mp4` (1080×1920, with the voice, music and captions). `npm run fast-gpu` (once, on laptops with two GPUs) makes renders about 4× faster.
+
+## Module map
+
+Two entry points, both ESM with TypeScript types, and `three` as the only peer dependency:
+
+| Import | What it's for |
+|---|---|
+| `blockrig` | **Characters**: R15/R6 rigs and bodies, Roblox `.mesh` / `.rbxm` / `.rbxmx` readers, layered clothing, accessories, welds and tools, faces (decals, FACS, drawn expressions), the Animator, IK. Follows Roblox's own mechanisms ([AGENTS.md](AGENTS.md)). |
+| `blockrig/video` | **The rest of the video**: everything a story short needs besides its characters, framework-free and frame-pure (a frame depends only on its time, so Remotion can render frames in any order and in parallel). |
+
+What's in `blockrig/video`:
+
+| Module | Exports | What it does |
+|---|---|---|
+| timeline | `createTimeline`, `speakersOf` | Shots, captions and music from the story and the measured voice. Shot lengths come from the voice; each caption pops in on its first spoken word and carries its shot's `speaker`. |
+| motion | `rng`, `easeInOut`, `easeOut`, `smooth`, `lerp`, `clamp01` | Seeded randomness and easing that look the same in every render tab. |
+| pose | `poseAt`, `groundRig`, `FEET`, `KNEEL`, `SEAT`, `ON_SEAT` | Frame-pure posing with the Animator (seek each track; Roblox priorities and blending), and feet or hips placed on a surface. |
+| camera | `pushIn`, `orbit`, `move`, `follow`, `lowAngle`, `topDown`, `applyCamera` | Camera recipes for shorts; shake is seeded by frame. |
+| lighting | `createLighting`, `TIMES`, `daylight`, `mixDaylight`, `LOOK`, `applyLook`, `avatarAmbient` | Sky dome, sun with soft shadows, fill and lightning; times of day (day, golden, dusk, night, storm) that blend across a shot. |
+| surfaces | `surfaceOf`, `restOn` | How far a body sinks into a bed, sofa, pillow, grass or floor, from the part's name or its Roblox `Material`. |
+| robloxMap | `buildRobloxMap`, `partGeometry`, `facePlane`, `materialLook` | Draws a Roblox map or model from its part list: Part shapes, wedges, mesh modifiers, MeshParts, Decals and Textures on `NormalId` faces, lights. Parts are merged per material. Also exports one solid collider box per visible part. |
+| collide | `createProbe`, `loadRapier` | The staging check: Rapier colliders for the world (rebuilt per shot from what's visible), then `check(camera, cast)` lists `camera-inside`, `hidden`, `inside`, `floating`, `sunk`, `stiff` and `overlap`. You install Rapier (`@dimforge/rapier3d-compat`) and pass it in. |
+| boards | `panel`, `text`, `pic`, `videoCard`, `browserWindow`, `banner`, `poster`, `standee` | Drawn screens, signs, posters and cardboard cut-outs. A panel redraws only when what it shows changes, and real images are cover-fitted (a grey box when one is missing). |
+| images | `loadImages`, `loadImage` | Loads named real images (avatars, thumbnails, logos) before the first frame; a missing file becomes `null`. |
+
+**What stays in each video** (the template's `src/kit`, `src/cast`, `src/world`, `src/direction`):
+
+- **Anything that needs React, Remotion, post-processing or drei**: `Captions` and `Soundtrack` components, overlays, `usePost` (N8AO ambient occlusion and bloom), `LightRig` presets, cascaded shadows, asset loading hooks.
+- **The template's own look, which each video changes**: code-built houses and streets, weather, procedural textures, fire, the Turf 2D layout plan, ground layers.
+- **The story itself**: cast, wardrobe, world, shot direction, story props and boards.
+
+When a fix in a video would help every video, move it into `blockrig/video` with a test. The rule is in [AGENTS.md](AGENTS.md#the-video-toolkit-blockrigvideo).
+
+```js
+import { createTimeline, poseAt, groundRig, FEET, pushIn, applyCamera, buildRobloxMap, createProbe, loadRapier } from "blockrig/video";
+
+const T = createTimeline(story, timings);                   // story.json + the voice's timings.json
+const { shot, local, p } = T.shotAt(frame / T.FPS);
+
+const map = buildRobloxMap(mapJson, { meshes, images });     // a Toolbox map, drawn the Roblox way
+scene.add(map.group);
+const bed = map.find(/bed/i);                                // stage characters on what the map holds
+
+poseAt(rig, [{ clip: clips.idle }, { clip: clips.wave, at: 0.4, fade: 0.2 }], local);
+groundRig(rig, 0, FEET);
+applyCamera(camera, pushIn(heroHead, dir, 9, 4, p), frame);
+
+const R = await loadRapier(() => import("@dimforge/rapier3d-compat"));
+const probe = createProbe(R, world.root);                    // once per shot
+console.log(probe.check(camera, [{ name: "me", rig }]));     // [] when the staging is clean
+```
+
+## Made with BlockRig
 
 <table><tr>
 <td width="300"><a href="docs/ctf.mp4"><img src="docs/ctf-preview.gif" width="300" alt="Everybody Plays CTF: in a neon city where everyone hacks, the last-ranked player finds the flag in the page source"></a></td>
 <td>
 
-**"Everybody Plays CTF"**: a narrated short set in a world where everyone, from the baker to the schoolkids, plays capture-the-flag hacking contests. Every character is dressed in code:
+**"Everybody Plays CTF"** ([`examples/ctf`](examples/ctf/README.md)): a narrated short set in a world where everyone, from the baker to the schoolkids, plays capture-the-flag hacking contests. It shows **characters dressed entirely in code**: drawn Shirt/Pants templates, layered hair, headphones and visors on Roblox attachments, laptops welded to their hands, and IK hands on a keyboard. They play in a rainy neon city with custom shaders (a lightning storm, a hex force-field dome, holograms, glyph rain).
 
-- drawn Shirt/Pants templates;
-- layered hair, headphones and visors on Roblox attachments;
-- laptops welded to their hands, and IK hands on a keyboard.
-
-They play in a rainy neon city with custom shaders: dressed towers, a lightning storm, a hex force-field dome, holograms, glyph rain, beams and particles. The expressive narrator runs offline in plain Node (Chatterbox ONNX + Kokoro + Whisper, no Python).
-
-▶ [**Watch it with sound**](docs/ctf.mp4) · [How it's made](examples/ctf/README.md)
+▶ [**Watch it with sound**](docs/ctf.mp4)
 
 </td>
 </tr>
@@ -47,45 +108,35 @@ They play in a rainy neon city with custom shaders: dressed towers, a lightning 
 <td width="300"><a href="docs/sawit.mp4"><img src="docs/sawit-preview.gif" width="300" alt="The Sawit Spirit: forests burn and turn into oil palm overnight, and a kid finds out the kind King is behind it"></a></td>
 <td>
 
-**"The Sawit Spirit"**: a 2-minute story in a kingdom where every forest left unplanted burns at night and is sawit (oil palm) by morning. A kid catches the "spirit" (three men with torches), follows them into the palace, and the whole town sees the proof of what the King did.
+**"The Sawit Spirit"** ([`examples/sawit`](examples/sawit/README.md)): a 2-minute story in a kingdom where every forest left unplanted burns at night and is sawit (oil palm) by morning. It shows **real Roblox catalog items and Toolbox maps**: a peci and KORPRI batik on the King, a beard on Grandpa, torches held the Roblox way. The village and palace are Roblox maps; fire, smoke and water are frame-pure shaders; and every shot has a lighting preset.
 
-- Characters wear real Roblox catalog items: a peci and KORPRI batik on the King, a beard on Grandpa, hoods and torches on the guards.
-- The village, the palace and the houses are Roblox Toolbox maps, with forests and sawit fields made from Kenney models.
-- Fire, smoke and water are frame-pure shaders.
+▶ [**Watch it with sound**](docs/sawit.mp4)
 
-Making it fixed several things in the library so every video gets them: beards drawn at their real size, face shells that never let the head show through, torches held upright the Roblox way, and elbows and knees that bend like Roblox's R15 block rig.
+</td>
+</tr>
+<tr>
+<td width="300"></td>
+<td>
 
-▶ [**Watch it with sound**](docs/sawit.mp4) · [How it's made](examples/sawit/README.md)
+**"Hack NASA Before Ten"** ([`examples/nasa`](examples/nasa/README.md)): a 2:32 short with 70 shots. A kid raised as a hacker from the crib has until ten to hack NASA. It shows **dialogue and on-screen detail**: per-character voices and speaker tags on captions, explainer notes for the jargon, and Roblox Toolbox bedrooms staged with the collision check. Drawn screens, boards, posters and a cardboard standee use the creators' real images (kept out of git), and a countdown floats above the hero's head.
 
 </td>
 </tr></table>
 
-### Make your own: the video template
-
-[`examples/template`](examples/template/README.md) is a self-contained starting point for viral Roblox-style story
-shorts. `npm run new -- ../my-video "Title"` copies it. It contains:
-
-- **`docs/`, the source of truth:** the story and shot list, a look bible (cast, places, materials, weather), the audio plan, and a feedback log.
-- **A kit:**
-  - captions and voice timing;
-  - textured houses, rooms and streets built in code;
-  - weather (rain, storm, lightning, snow, fog) and times of day;
-  - camera recipes and debug compositions.
-- **Scripts:**
-  - offline expressive voices, with every take checked by speech recognition;
-  - CC0 and local-only Roblox asset fetchers;
-  - stills, render and preview.
-- **Agent skills,** one per stage.
+[**`examples/template`**](examples/template/README.md) is where every new video starts (see [Make a video](#make-a-video)). It uses `blockrig/video` directly. The three videos above were made before the toolkit moved into the library, so they keep their own copies of the kit in `src/kit`. They work as they are, and can switch to `blockrig/video` the way the template did.
 
 ## Scope
 
-BlockRig is a **character** library: rigs, bodies, heads, clothing, accessories, faces and animation for Roblox-style characters. It doesn't build worlds (Parts, Terrain, materials, Lighting, Sky) or handle physics, controllers or cameras. Put your character in any three.js scene you like. See [AGENTS.md](AGENTS.md#scope-characters-only).
+BlockRig covers what a Roblox-style story video needs that plain three.js and Remotion don't give you: **characters** that match Roblox (`blockrig`), and **Roblox maps, staging, timing, cameras, light and drawn text** for the video (`blockrig/video`). It doesn't do physics simulation, character controllers, networking or game logic. React components, post-processing and asset fetching stay in the video project, so the library runs anywhere three.js runs. See [AGENTS.md](AGENTS.md#scope).
 
-## Why
+## Characters
+
+The characters are the hard part of a Roblox look, and the part BlockRig started with.
 
 The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, no weights. Layered clothing like jackets and coats *does* ship with skin weights for all 15 R15 bones, but only inside the binary `.mesh` file, which no JavaScript library could read. BlockRig reads those weights and binds the garment to a three.js `SkinnedMesh`, so sleeves bend at the elbow and coat tails follow the legs, the way they do in-game.
 
-## Features
+### Features
+
 
 - 🙂 **Dynamic heads**: Roblox FACS heads posed by the 50 `FaceControls`, with corrective poses, mood animations and face keys in imported clips.
 - 👕 **Roblox avatars**: `BodyColors`, classic **Shirt / Pants / T-shirt** templates composited the Roblox way, and **body packages** whose joints are built from their rig attachments (`BuildRigFromAttachments`), with accessories on body attachments too.
@@ -99,10 +150,10 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` and `CurveAnimation` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **151 tests**, including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
-- 🪶 No runtime dependencies: `three` is the only peer dependency. ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
+- 🧪 **166 tests** (characters and the video toolkit), including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🪶 No runtime dependencies: `three` is the only peer dependency (Rapier is yours to install only for the staging check). ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
-## Quick start
+## Characters: quick start
 
 ```bash
 npm install blockrig three
@@ -470,6 +521,10 @@ anim.play(salute, { fade: 0.15 });
 
 Full typings are in [`src/index.d.ts`](src/index.d.ts).
 
+### `blockrig/video`
+
+The modules and their exports are listed in the [module map](#module-map); every export has JSDoc in [`src/video/`](src/video) and full typings in [`src/video/index.d.ts`](src/video/index.d.ts). Two rules hold for all of it: a frame depends only on its time (no state carried between frames), and the video brings its own React, Remotion, post-processing and Rapier.
+
 ## How it works
 
 ```mermaid
@@ -490,13 +545,13 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 85 unit + regression tests (node:test, no browser needed)
+npm test             # 166 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
 npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html, faces.html, clothing.html and ik.html)
 ```
 
-- **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every expression (valid parameters, the right shapes for open mouths, `x` and `><` eyes), face blending, blinking, look/talk, face markers and decals, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion.
+- **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every expression (valid parameters, the right shapes for open mouths, `x` and `><` eyes), face blending, blinking, look/talk, face markers and decals, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion. The video toolkit is tested too: voice-timed shots and captions, frame-pure posing and camera shake, Roblox part shapes and `NormalId` faces, map merging and colliders, the staging check against real Rapier colliders, and boards on a mock canvas.
 - **Regression tests** pin the writer's output byte-for-byte (SHA-256), the parse of a committed fixture file, the joint positions plus skinned coat vertices of every bundled clip at four points in time, the joint layout of every body shape, a scaled body, R6 and an R6-retargeted clip, and the exact drawing commands for every expression.
 - **CI** runs everything on Node 20, 22 and 24 against three.js r128 and r184, builds the UMD bundle, smoke-tests it in a VM and checks the package contents. Pushing a `v*` tag publishes to npm with provenance and creates a GitHub release. `main` deploys the demo to GitHub Pages.
 
@@ -506,7 +561,7 @@ BlockRig follows Roblox's own mechanisms wherever they exist: Motor6D joints, at
 
 ## Assets and trademarks
 
-BlockRig contains **no Roblox assets**. Every screenshot and test uses a coat generated by `makeCoat()`, a face drawn on a canvas and original animations. If you load files downloaded from Roblox, make sure you have the right to use them: catalog items belong to their creators, and Roblox's Terms of Use apply. The `.mesh` reader follows the community-documented format ([spec](https://devforum.roblox.com/t/roblox-mesh-format/326114)) and the `.rbxm` reader follows [Rojo's binary format docs](https://dom.rojo.space/binary.html).
+BlockRig contains **no Roblox assets**. Every screenshot and test uses a coat generated by `makeCoat()`, a face drawn on a canvas and original animations. If you load files downloaded from Roblox, make sure you have the right to use them: catalog items belong to their creators, and Roblox's Terms of Use apply. Real creator images a video shows (avatars, thumbnails, logos) are the creators' own: keep them in the video's git-ignored `assets/brands/` and use them only where you have the right to. The `.mesh` reader follows the community-documented format ([spec](https://devforum.roblox.com/t/roblox-mesh-format/326114)) and the `.rbxm` reader follows [Rojo's binary format docs](https://dom.rojo.space/binary.html).
 
 *Roblox is a trademark of Roblox Corporation. This project is not affiliated with, endorsed by or sponsored by Roblox Corporation.*
 

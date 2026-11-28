@@ -6,10 +6,10 @@
 import * as THREE from "three";
 import { createLighting, createWeather, applyFog, rng, LOOK, type AssetLibrary, type Weather, type Daylight } from "../kit";
 import { HOUSES } from "./assets";
-import { buildRobloxMap } from "../kit/robloxMap";
+import { buildRobloxMap } from "blockrig/video";
 import { createCascades, type Cascades } from "../kit/cascades";
 import { Plan, rect, circle } from "../kit/plan";
-import { restOn } from "../kit/surfaces";
+import { restOn } from "blockrig/video";
 import type { RobloxCast } from "../cast/roblox";
 
 // With the Roblox items (the default once downloaded): a free Toolbox room replaces the Kenney bedroom. Numbers are in the map's own studs (read

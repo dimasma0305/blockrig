@@ -1,7 +1,7 @@
 // What every character does in every shot: where they stand, which clips play, their face. Pure function of
 // (shot, local time): call it every frame. Unused characters are hidden. Follow docs/story.md "action" notes.
 import * as THREE from "three";
-import { poseAt, groundRig, FEET, ON_SEAT, type Layer } from "../kit/pose";
+import { poseAt, groundRig, FEET, ON_SEAT, type Layer } from "blockrig/video";
 import { facsExpression } from "blockrig";
 import type { Shot } from "../kit";
 import * as C from "../cast/clips";

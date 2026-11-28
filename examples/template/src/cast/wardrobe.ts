@@ -1,7 +1,7 @@
 // Original clothing, drawn in code on Roblox's classic 585x559 Shirt/Pants template (BlockRig composites them
 // onto the body like Roblox does). Every face gets light-to-dark shading and a fabric grain so nothing reads flat.
 import { TEMPLATE, TEMPLATE_SIZE } from "blockrig";
-import { rng } from "../kit/rng";
+import { rng } from "blockrig/video";
 
 type Rect = [number, number, number, number];
 type Faces = Record<"U" | "D" | "F" | "B" | "L" | "R", Rect>;

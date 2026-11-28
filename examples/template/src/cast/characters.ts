@@ -4,8 +4,8 @@ import * as THREE from "three";
 import { createRig, createFace } from "blockrig";
 import { hoodie, tee, jeans, shorts } from "./wardrobe";
 import { hair, baseballCap, glasses, outlined, AT, type HairStyle } from "./props";
-import { rng } from "../kit/rng";
-import { avatarAmbient } from "../kit/lighting";
+import { rng } from "blockrig/video";
+import { avatarAmbient } from "blockrig/video";
 import type { RobloxCast, RobloxHead, RobloxHair } from "./roblox";
 
 export type Person = { rig: any; face: any; name: string; dynamic?: boolean; faceSets?: Record<string, THREE.Object3D[]> };

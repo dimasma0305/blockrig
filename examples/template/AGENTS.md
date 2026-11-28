@@ -12,7 +12,7 @@ new ones) point here from their own short AGENTS.md, so improve them here and ev
 |---|---|---|
 | `docs/` | **Source of truth.** `story.md` (shots), `visuals.md` (look bible), `audio.md` (voice, music), `feedback.md` (what the user asked for), `references.md` | you, first, for any change |
 | `src/generated/story.json` | compiled from docs by `npm run docs` | never by hand |
-| `src/kit/` | generic building blocks: timeline, captions, soundtrack, posing, camera recipes, weather, lighting, textures, structures, Roblox map renderer, 2D layout plan (Turf), collision probe (Rapier), surface softness, overlays, debug overlay | improve when a fix helps every video |
+| `src/kit/` | generic building blocks. Shared and tested in BlockRig (`blockrig/video`, re-exported by `src/kit/index.ts`): timeline and captions, posing, camera recipes, lighting, surface softness, Roblox map renderer, collision probe (Rapier), boards, images. Local: captions and soundtrack components, overlays, post effects, light rig, cascaded shadows, weather, textures, structures, fire, 2D layout plan (Turf), ground layers, debug overlay | improve when a fix helps every video; shared parts are fixed in BlockRig (`src/video/`, with a test) |
 | `src/cast/` | characters, wardrobe (Shirt/Pants drawn in code), hair and props, pose clips | per video |
 | `src/world/` | locations, their props, and how weather and daylight apply | per video |
 | `src/direction/` | `performance.ts` (who does what per shot), `camera.ts` (one recipe per shot) | per video |

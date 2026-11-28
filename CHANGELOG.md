@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
+
+BlockRig's purpose is now making Roblox-style story videos fast and good: the characters plus the rest of the video.
+
+- **`blockrig/video`**: a new entry point (`src/video/`, typed in `src/video/index.d.ts`) with the shared parts of every story short, moved out of the video template and tested: `createTimeline` / `speakersOf` (voice-timed shots and captions, speaker tags), `rng` and easing, `poseAt` / `groundRig` (frame-pure posing), camera recipes and `applyCamera`, `createLighting` / `TIMES` / `mixDaylight` / `avatarAmbient` / `applyLook`, `surfaceOf` / `restOn`, `buildRobloxMap` (Roblox parts, wedges, mesh modifiers, MeshParts, NormalId decals, lights, solid colliders), `createProbe` / `loadRapier` (the Rapier staging check), boards (`panel`, `text`, `pic`, `videoCard`, `browserWindow`, `banner`, `poster`, `standee`) and `loadImages`. Framework-free: the video passes in Rapier, canvases and images.
+- Fixes made on the way: the staging check skips things whose parent is hidden and scales map colliders with their group, and the probe has `free()` so it can be rebuilt per shot. Roblox maps merge their parts without `three/examples`, so they also work on three r128.
+- `examples/template` imports these from `blockrig/video`; its `src/kit` keeps only what needs React, Remotion or post-processing, and its own look. `examples/ctf`, `examples/sawit` and `examples/nasa` keep their own kit copies.
+- README, AGENTS.md and package.json describe the new purpose; `package.json` `exports` has `./video` and per-entry `types`.
+
+Also in this release, for the characters:
 
 - **Head shape matches Roblox's classic head**: the top and bottom edges are rounded with a 0.29-stud radius (`HEAD_CORNER`), measured from catalog face accessories built as shells around that head. With the old, tighter rounding the head poked through those shells near the edges and showed as a two-tone "mask". `headGeometry(height, radius, corner)`.
 - Meshes with non-finite vertices load safely: the triangles using them are dropped (one old v3 hair carried a NaN vertex).

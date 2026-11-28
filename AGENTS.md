@@ -1,28 +1,39 @@
 # AGENTS.md: how to work on BlockRig
 
-BlockRig reproduces how **Roblox** builds, dresses and animates characters, in three.js. The rule for every change is:
+BlockRig exists to make **Roblox-style story videos** (narrated vertical shorts) **fast to make and good to watch**. It has two parts:
+
+- **`blockrig`, the characters.** R15/R6 rigs that build, dress, pose, animate and express a character the way **Roblox** does.
+- **`blockrig/video`, the rest of the video** (`src/video/`). Roblox maps, the staging check, voice-timed shots and captions, frame-pure posing, camera recipes, lighting looks and drawn boards: the parts every video needs, tested once here instead of copied into each video.
+
+Videos are made from `examples/template` (its own `AGENTS.md` and `.agents/skills` run the pipeline: story → voice → assets → stills → collide → render).
+
+The rule for every change that touches something Roblox has is:
 
 > **Do it the way Roblox does it.** Find the Roblox mechanism first (engine class, property, formula, file format) and implement *that*, with Roblox's names, units, axes and defaults. Only invent something when Roblox has no equivalent. Then make it opt-in and label it as a BlockRig extra.
 
-A change that "looks right" but works differently from Roblox is a bug, even if it renders fine.
+A change that "looks right" but works differently from Roblox is a bug, even if it renders fine. That covers maps too: `Part.Shape`, `WedgePart`, `NormalId` faces, `Material` enum values and `MeshPart.Size` follow Roblox.
 
-## Scope: characters only
-
-BlockRig is a **character** library. Everything in it serves building, dressing, posing, animating and expressing a Roblox-style character. The world around the character is the app's job, built with plain three.js.
+## Scope
 
 **In scope**
-- Rigs and bodies: R15 and R6, body shapes and scaling, body-part meshes, Roblox head shapes.
-- Clothing and accessories: layered clothing, hair, hats and face accessories, attachment welds.
-- Animation: KeyframeSequence import, the Animator (easing, priorities, weights, fades, markers), retargeting.
-- Faces: face Decals, Dynamic Heads (FACS) when added, and the procedural expressions extra.
-- The file formats those need: `.mesh`, `.rbxm` / `.rbxmx`, reading only the instances that belong to a character or an accessory.
+- Characters: R15 and R6 rigs and bodies, body shapes and scaling, body-part meshes, Roblox head shapes; layered clothing, hair, hats, face accessories, attachment welds, held tools; KeyframeSequence / CurveAnimation import, the Animator, retargeting, IK; face Decals, Dynamic Heads (FACS) and the procedural expressions extra; the `.mesh`, `.rbxm` and `.rbxmx` formats those need.
+- Video (`blockrig/video`): drawing Roblox maps and models from their part list, collider export and the Rapier staging check, surface softness for staging, the story timeline and captions (with speaker tags), frame-pure posing, camera recipes, times of day and the lighting look, drawn screens / boards / posters / standees, real-image loading.
 
 **Out of scope (don't add these to the library)**
-- Environments: Parts and maps, Terrain, materials, `Lighting`, `Sky`, `Atmosphere`, water, place (`.rbxl`) loading.
-- Physics, collisions, Humanoid movement and controllers, cameras, networking, game logic, UI.
-- Props that aren't worn or held by a character. A held tool or weapon attached to a hand is in scope; a tree is not.
+- Physics simulation, Humanoid movement and controllers, networking, game logic, UI frameworks.
+- Anything that needs React, Remotion, drei, postprocessing or another heavy runtime: components, hooks, render scripts and post effects stay in the video project (`examples/template/src/kit`).
+- Story-specific things: a video's cast, wardrobe, world, shot direction, props and the content of its boards.
+- Asset downloading and any Roblox or creator asset itself (see Assets).
 
-Examples, demos and tests may build a simple scene around a character, but those helpers stay in `examples/`. If a request is about the world rather than the character, say that it's out of scope for BlockRig and suggest doing it in the app or a separate package.
+If a request is for something out of scope, say so and suggest doing it in the video project (the template's kit) instead.
+
+## The video toolkit (`blockrig/video`)
+
+- **Framework-free.** `three` is the only import. Heavy or optional dependencies are passed in by the caller (Rapier: `createProbe(R, root)`, `loadRapier(() => import("@dimforge/rapier3d-compat"))`; canvases: `setCanvasFactory`; images: `loadImages(files, resolve)`).
+- **Frame-pure.** A frame depends only on its time: no state carried between frames, randomness seeded (`rng`), caches keyed by what they show (`panel.set(key, p)`). Remotion renders frames out of order in parallel tabs.
+- **Works on every supported three.js** (r128 → r184): no `three/examples` imports (they aren't loadable in Node on old releases), and tests that compare colours avoid colour-management round trips.
+- **Promote, don't copy.** When a fix in a video helps every video, move it here with a test, export it from `src/video/index.js`, type it in `src/video/index.d.ts`, and switch `examples/template` to import it. Older example videos keep their local `src/kit` copies until someone migrates them on purpose; never edit a video that's mid-render.
+- Write each module as plain ESM JavaScript with JSDoc, like the rest of `src/`.
 
 ## Before you change anything
 
@@ -65,6 +76,9 @@ Keep this table current. **Parity** means it behaves like Roblox. **Approximatio
 | Crossfading face images | `set(name, { fade })` | **Extra** (opt-in) |
 | R15 ⇄ R6 clip retargeting | `toR6` / `toR15` | **Extra**: Roblox plays nothing across rig types |
 | Procedural coat `makeCoat()`, outline shader | | **Extra** (test fixture / style) |
+| `BasePart` (`Part.Shape` Ball / Block / Cylinder along X, `WedgePart`, `CornerWedgePart`, `Size`, `CFrame`, `Color`, `Transparency`), `SpecialMesh` / `BlockMesh` / `CylinderMesh` modifiers, `MeshPart` fitted to `Size`, `Decal` / `Texture` on `NormalId` faces, `PointLight` / `SpotLight` | `buildRobloxMap()` (`blockrig/video`) | Approximation (note 12) |
+| `Material` enum (Plastic, Wood, Concrete, Grass, Glass, Neon, ...) | `materialLook()`: roughness, metalness, neon, glass, an optional PBR set | Approximation (note 12) |
+| Story video helpers: timeline, staging check, surfaces, cameras, lighting looks, boards | `blockrig/video` | **Extra** |
 
 ### Known differences (fix these toward parity when you touch them)
 
@@ -79,6 +93,7 @@ Keep this table current. **Parity** means it behaves like Roblox. **Approximatio
 9. **Dynamic heads.** BlockRig poses a FACS head by moving each vertex by its skinned bones' summed offsets (all control columns times their values, correctives as the product of their controls), which equals skinning when the face bones only translate, as on the official heads checked (*Woman Face*, *Man Face*: 59 `trans_only_joint`s). The rx/ry/rz matrices are parsed but not applied; heads whose FACS rotates bones need real skinning about each bone's pivot. Controls clamp to 0..1. Download dynamic heads with the `Roblox-AssetFormat: avatar_meshpart_head` header to get the MeshPart (with FACS) rather than the static SpecialMesh fallback.
 10. **CurveAnimation.** Checked against Roblox Studio 0.748: a CurveAnimation built in Studio (test/fixtures/studio-curves.lua) and saved to file decodes key for key (values then times at 2400 ticks/s; Float keys `u8 mode, u8 tangent mode, f32 value, f32 left, f32 right`; Rotation keys `u8 12+mode, f32 quaternion xyzw, f32 left, f32 right`; markers as NUL-terminated strings; unset tangents are stored already derived), and BlockRig's evaluation matches Studio's `GetValueAtTime` / `GetRotationAtTime` to within 1e-6 and 0.0003° (`test/fixtures/studio-curves.json`). Cubic rotation segments were checked with zero tangents only. In Luau, `EulerRotationCurve.X` and `Vector3Curve.X` are methods, so reach the child curves with `FindFirstChild`. The official animations tried so far (emotes, the 2024 Bold pack, dynamic-head moods) download as KeyframeSequences.
 11. **IKControl.** Roblox's IK solver isn't published. BlockRig uses cyclic coordinate descent in world space for Position (12 iterations), a swing about the root-to-effector line for Pole, a direct orientation for Rotation, and a turn shared evenly along the chain for LookAt. `SmoothTime`, `Offset` rotation, and joint constraints (Hinge/BallSocket limits on the chain) are not applied, so chains can bend past natural limits; use a pole to keep elbows and knees the right way.
+12. **Roblox maps.** `buildRobloxMap` draws what the part list carries. Unions (`UnionOperation`) have no geometry in the file and are drawn (and collide) as their bounding box, which can swallow furniture inside them; skip those with `skip`. Materials get Roblox-like roughness and metalness and an optional CC0 surface tinted by the part colour, not Roblox's own textures. Lights are capped to the brightest few (`maxLights`), and their brightness is scaled to look right in three.js rather than converted by a known formula.
 
 ## Conventions (all Roblox's)
 
@@ -89,12 +104,13 @@ Keep this table current. **Parity** means it behaves like Roblox. **Approximatio
 
 ## Assets
 
-- **Never commit Roblox assets** to this repo or the npm package. That covers catalog meshes, textures, face decals, animations, and Roblox's own body parts. Tests and screenshots use generated content (`makeCoat`, `writeMesh`, procedural faces).
+- **Never commit Roblox assets** to this repo or the npm package. That covers catalog meshes, textures, face decals, animations, Roblox's own body parts, and Toolbox maps. Real creator images used in a video (avatars, thumbnails, logos in `assets/brands`) are git-ignored the same way. Tests and screenshots use generated content (`makeCoat`, `writeMesh`, procedural faces).
 - APIs take assets from the caller (`parseMesh(bytes)`, `createFace({ images })`). Documentation may explain how to fetch assets for personal use, with a note about Roblox's Terms of Use and creators' rights.
 
 ## Tests and releases
 
-- `npm test` must pass on Node 20/22/24 × three r128/r184 (CI does this).
+- `npm test` must pass on Node 20/22/24 × three r128/r184 (CI does this). The video tests need `@dimforge/rapier3d-compat` (a dev dependency).
+- After changing `src/video/`, also run `npx tsc --noEmit` and `npm run stills -- s01` in `examples/template`.
 - Behaviour changes need a unit test. Intentional output changes need `npm run test:update`, and the snapshot diff has to be reviewed in the PR.
 - Re-render README images with `npm run screenshots` when visuals change.
 - Bump the version in `package.json` and `src/index.js`, add a `CHANGELOG.md` entry, then tag `vX.Y.Z` to publish (see `.github/workflows/release.yml`).

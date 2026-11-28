@@ -20,4 +20,4 @@ export { curveAnimationToClip, decodeFloatCurve, decodeRotationCurve, decodeMark
 export { parseFacs, facsWeights, facsBoneOffsets, FACS_CODES, FACE_CONTROLS, FACS_EXPRESSIONS, facsExpression } from "./facs.js";
 export { keyframeSequenceToClip, POSE_EASING_STYLE, POSE_EASING_DIRECTION, ANIMATION_PRIORITY, R6_C0_ROTATIONS } from "./keyframes.js";
 export { lz4Block } from "./binary.js";
-export const VERSION = "0.2.0";
+export const VERSION = "0.3.0";

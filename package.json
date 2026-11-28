@@ -1,12 +1,19 @@
 {
   "name": "blockrig",
-  "version": "0.2.0",
-  "description": "R15 block-character rig for three.js: reads Roblox-format .mesh (v2–v7) and .rbxm files, skins layered clothing with its own bone weights, attaches accessories by attachment point, and plays keyframe animations with Roblox-style easing, priorities and fades, with R6/R15 body types and live facial expressions.",
+  "version": "0.3.0",
+  "description": "Make Roblox-style story videos fast and good in three.js: R15/R6 characters that wear real Roblox clothing and play Roblox animations, plus blockrig/video for Roblox maps, a staging check, voice-timed shots and captions, camera recipes, lighting looks and drawn screens.",
   "type": "module",
   "main": "./src/index.js",
   "module": "./src/index.js",
   "exports": {
-    ".": "./src/index.js",
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./video": {
+      "types": "./src/video/index.d.ts",
+      "default": "./src/video/index.js"
+    },
     "./umd": "./dist/blockrig.umd.js",
     "./package.json": "./package.json"
   },
@@ -31,19 +38,24 @@
     "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
+    "roblox",
+    "roblox-video",
+    "shorts",
+    "story",
+    "remotion",
     "three",
-    "facial-expressions",
-    "r6",
     "threejs",
     "r15",
+    "r6",
     "rig",
-    "skinning",
     "animation",
     "layered-clothing",
-    "mesh",
+    "roblox-map",
     "rbxm",
+    "mesh",
     "blocky",
-    "character"
+    "character",
+    "facial-expressions"
   ],
   "author": "dimasma0305",
   "license": "MIT",
@@ -62,6 +74,7 @@
     "three": ">=0.128.0"
   },
   "devDependencies": {
+    "@dimforge/rapier3d-compat": "^0.21.0",
     "esbuild": "0.27.0",
     "playwright-core": "1.63.0",
     "three": "0.184.0"

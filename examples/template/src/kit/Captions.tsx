@@ -2,7 +2,7 @@
 // highlighted word, popping in on the caption's first word.
 import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Montserrat";
-import type { Caption } from "./timeline";
+import type { Caption } from "blockrig/video";
 
 const { fontFamily } = loadFont("normal", { weights: ["800"], subsets: ["latin"] });
 

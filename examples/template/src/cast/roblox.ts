@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { continueRender, delayRender, staticFile, cancelRender } from "remotion";
 import * as THREE from "three";
 import { parseMesh, parseRbxm, keyframeSequenceToClip } from "blockrig";
-import type { MapData } from "../kit/robloxMap";
+import type { MapData } from "blockrig/video";
 
 export type RobloxHead = { mesh: any; map: THREE.Texture | null; size: number[]; attachments: Record<string, number[]>; mood: any | null };
 export type RobloxHair = { mesh: any; map: THREE.Texture | null; attachment: { name: string; cframe: any }; plate?: string | null; scale?: number[]; offset?: number[] };
