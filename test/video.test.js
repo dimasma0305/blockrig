@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { createRig, clips } from "../src/index.js";
+import { createRig, clips, cframeToMatrix } from "../src/index.js";
 import {
   rng, easeInOut, smooth, createTimeline, speakersOf, V, pushIn, orbit, applyCamera, poseAt, groundRig, FEET, ON_SEAT,
   surfaceOf, restOn, daylight, mixDaylight, TIMES, createLighting, avatarAmbient, buildRobloxMap, partGeometry, facePlane, materialLook,
@@ -231,4 +231,106 @@ test("video: loadImages loads by name and leaves failures out as null", async ()
   class FakeImage { set src(v) { this.width = 1; queueMicrotask(() => (v.includes("bad") ? this.onerror() : this.onload())); } }
   const imgs = await loadImages({ a: "a.jpg", b: "bad.jpg" }, (f) => "brands/" + f, { Image: FakeImage });
   assert.ok(imgs.a instanceof FakeImage); assert.equal(imgs.b, null);
+});
+
+// ---- fixes from the videos' feedback logs
+import { Plan, rect, circle, inside, intersects, layer, groundConflicts, lightsByLocation, compileStory, swallowingUnions } from "../src/video/index.js";
+
+test("video: the layout plan keeps things off roads, out of each other, and lists forced overlaps", () => {
+  assert.ok(intersects(rect(0, 0, 2, 2), rect(1.5, 0, 2, 2))); assert.ok(!intersects(rect(0, 0, 2, 2), rect(3, 0, 2, 2)));
+  assert.ok(intersects(rect(0, 0, 2, 2), rect(2, 0, 2, 2)), "touching counts"); assert.ok(intersects(rect(0, 0, 10, 10), rect(0, 0, 1, 1)), "one inside the other");
+  assert.ok(intersects(rect(0, 0, 4, 1, Math.PI / 4), circle(1, 1, 0.3)) === inside(rect(0, 0, 4, 1, Math.PI / 4), 1, 1));
+  const plan = new Plan(), r = rng(3);
+  plan.zone("road", rect(0, 0, 10, 200));
+  const lot = plan.area("lot", rect(30, 0, 30, 30));
+  assert.equal(plan.place("house", rect(10, 0, 12, 8)), false, "a house on the road is refused");
+  assert.equal(plan.place("house", rect(30, 0, 10, 8)), true);
+  const trees = plan.scatter(lot, { count: 5, radius: 1.5, gap: 4, rng: r, name: "tree" });
+  for (const [x, z] of trees) { assert.ok(inside(lot, x, z)); assert.ok(!intersects(circle(x, z, 1.5), rect(30, 0, 10, 8)), "no tree in the house"); }
+  assert.deepEqual(plan.along([-20, -5], [20, -5], 5).filter(([x]) => Math.abs(x) < 5.5), [], "no fence posts across the road");
+  plan.place("shed", rect(0, 20, 4, 4), { force: true });
+  assert.deepEqual(plan.conflicts(), ["shed overlaps road"]);
+});
+
+test("video: ground layers don't flicker (own height step and polygon offset; same-layer overlaps are listed)", () => {
+  const plane = () => new THREE.Mesh(new THREE.PlaneGeometry(10, 10).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial());
+  const root = new THREE.Group(), grass = layer(plane(), 0), road = layer(plane(), 2);
+  root.add(grass, road);
+  assert.equal(road.position.y, 0.08); assert.equal(road.material.polygonOffsetFactor, -2);
+  assert.deepEqual(groundConflicts(root), []);
+  const puddle = layer(plane(), 2); puddle.position.x = 5; root.add(puddle);
+  assert.equal(groundConflicts(root).length, 1);
+});
+
+test("video: lamps are on only at the location the camera is in (render speed)", () => {
+  const root = new THREE.Group(), a = new THREE.PointLight(), b = new THREE.SpotLight(), sun = new THREE.DirectionalLight();
+  a.position.set(5, 8, 0); b.position.set(598, 8, 3); root.add(a, b, sun);
+  const L = lightsByLocation(root, { room: V(0, 0, 0), school: V(600, 0, 0) });
+  L.show("school"); assert.equal(a.visible, false); assert.equal(b.visible, true); assert.equal(sun.visible, true, "the sun is shared");
+  L.show("nowhere"); assert.equal(a.visible, true);
+});
+
+test("video: story docs compile, and broken shots are caught before any voice or render time", () => {
+  const md = `---\ntitle: T\nslug: t\nfps: 30\nsize: 1080x1920\n---\n### s01 · street\n> In this town, it rains.\n- captions: In this *town* | it rains\n- camera: crane\n- action: walk\n- emotion: flat\n### s02 · room\n> Hi mom!\n- captions: Hi mom and dad\n- say: Hai mama papa\n- faces: me=giddy\n- light: disco\n### s03 · room\n- camera: hold\n`;
+  const audio = "## Voice\n- engine: chatterbox-js\n- gap: 0.45\n## Voices\n- mom: af_heart 1.1\n## Music\n- s01: goofy-piano\n- s03: none\n- s09: casio\n";
+  const { story, errors, warnings } = compileStory(md, audio, { themes: ["goofy-piano"] });
+  assert.equal(story.fps, 30); assert.equal(story.voice.gapSeconds, 0.45); assert.deepEqual(story.voice.chatterbox.voices.mom, { voice: "af_heart", pitch: 1.1 });
+  assert.deepEqual(story.shots[0].captions[0], { text: "In this town", highlight: "town" });
+  const has = (re) => assert.ok(errors.some((e) => re.test(e)), `expected ${re}: ${errors.join(" | ")}`);
+  has(/s02: captions .* do not cover/); has(/s02: "say" has 3 words, the line 2/); has(/s02: face "giddy"/); has(/s02: light "disco"/);
+  has(/s03: a silent shot needs/); has(/no shot "s09"/);
+  assert.ok(!errors.some((e) => /theme "none"/.test(e)), "none is silence");
+  assert.ok(!errors.some((e) => /^s01/.test(e)));
+  assert.ok(warnings.some((w) => /s02: no emotion .* panic/.test(w)));
+});
+
+test("video: a Roblox desk-top union drawn as a box over a chair is left out (and reported); walls and dormers stay", () => {
+  const turn = [0.643, 0, -0.766, 0, 1, 0, 0.766, 0, 0.643]; // the nasa desk is turned 50 degrees
+  const chair = [part({ name: "Body", model: "GamingChair", size: [3.3, 3.4, 3], cframe: { rot: I3, pos: [-4, 3.1, 0] } }), part({ name: "Chair", model: "GamingChair", size: [3.1, 4.3, 3.8], cframe: { rot: I3, pos: [-4.5, 5.3, 0] } })];
+  const desk = part({ cls: "UnionOperation", union: 7, name: "Union", model: "Desk", size: [13.2, 0.2, 12.2], cframe: { rot: turn, pos: [0, 4.2, 0] } });
+  const lamp = part({ name: "Lamp", model: "Lamp", size: [1, 2, 1], cframe: { rot: I3, pos: [2, 5.3, 0] } }); // standing ON the desk: fine
+  const dormer = part({ cls: "UnionOperation", union: 8, name: "Union", model: "Roof Window", size: [8, 4, 4], cframe: { rot: I3, pos: [30, 20, 0] } });
+  const win = [part({ name: "Frame", model: "Window", size: [3, 3, 0.5], cframe: { rot: I3, pos: [30, 20, 0] } }), part({ name: "Sill", model: "Window", size: [3, 0.5, 0.6], cframe: { rot: I3, pos: [30, 18.5, 0] } })];
+  const data = { parts: [...chair, desk, lamp, dormer, ...win], lights: [] };
+  assert.deepEqual(swallowingUnions(data.parts), [desk]);
+  assert.deepEqual(swallowingUnions([...chair.slice(0, 1), desk, lamp]), [], "one part poking through is not furniture");
+  const map = buildRobloxMap(data, { meshes: {}, images: {} }, { warn: false });
+  assert.equal(map.dropped.length, 1); assert.equal(map.dropped[0].part, desk);
+  assert.ok(!map.colliders.some((c) => c.name === "Desk/Union"));
+  const top = map.dropped[0].standIn; assert.ok(top, "trimmed to a stand-in");
+  assert.ok(map.colliders.some((c) => c.name === "Desk/Union (trimmed)"));
+  assert.ok(top.size[0] * top.size[2] > 0.3 * 13.2 * 12.2, "a big part of the top is kept");
+  // no corner of the kept top lies inside a chair part's footprint
+  const g = partGeometry(top).applyMatrix4(cframeToMatrix(top.cframe, new THREE.Matrix4())), pos = g.attributes.position;
+  for (const p of chair) {
+    const b = new THREE.Box3().setFromCenterAndSize(V(...p.cframe.pos), V(...p.size));
+    for (let i = 0; i < pos.count; i++) assert.ok(!(pos.getX(i) > b.min.x + 0.01 && pos.getX(i) < b.max.x - 0.01 && pos.getZ(i) > b.min.z + 0.01 && pos.getZ(i) < b.max.z - 0.01), "the kept top clears the chair");
+  }
+  assert.equal(buildRobloxMap(data, { meshes: {}, images: {} }, { unions: "skip", warn: false }).dropped[0].standIn, null);
+  assert.ok(map.colliders.some((c) => c.name === "Roof Window/Union"), "the dormer roof stays");
+  assert.equal(buildRobloxMap(data, { meshes: {}, images: {} }, { unions: "box" }).dropped.length, 0);
+});
+
+test("video: a seated character isn't 'inside' its own chair, and captions over a watched face are caught", async () => {
+  const R = await loadRapier(() => import("@dimforge/rapier3d-compat"));
+  const data = { parts: [
+    part({ name: "Floor", size: [40, 1, 40], cframe: { rot: I3, pos: [0, -0.5, 0] } }),
+    part({ name: "Seat", model: "GamingChair", size: [2.4, 0.5, 2.4], cframe: { rot: I3, pos: [0, 1.75, 0] } }),
+    part({ name: "Back", model: "GamingChair", size: [2.4, 4, 0.6], cframe: { rot: I3, pos: [0, 4, 0] } }),
+  ], lights: [] };
+  const root = new THREE.Group(); root.add(buildRobloxMap(data, { meshes: {}, images: {} }).group);
+  const rig = createRig(); rig.object.position.set(0, 0, 0); groundRig(rig, 2, ON_SEAT);
+  const standing = createRig(); standing.object.position.set(0, 0, 0); groundRig(standing, 0, FEET); // standing on the floor through the chair: wrong
+  new THREE.Group().add(rig.object, standing.object); // placed in the scene (unplaced characters are skipped)
+  const probe = createProbe(R, root);
+  const cam = new THREE.PerspectiveCamera(50, 9 / 16, 0.3, 2000); cam.position.set(0, 4, 12); cam.lookAt(0, 3, 0);
+  const seated = probe.check(cam, [{ name: "me", rig }]);
+  assert.ok(!seated.some((i) => i.kind === "inside"), JSON.stringify(seated));
+  assert.ok(probe.check(cam, [{ name: "ghost", rig: standing }]).some((i) => i.kind === "inside" && i.what.startsWith("GamingChair")), "standing in the chair still counts");
+  // aim so the face sits low in the frame, in the caption band
+  cam.lookAt(0, 6.5, 0);
+  const caps = probe.check(cam, [{ name: "me", rig }], { captions: [0.6, 0.8] });
+  assert.ok(caps.some((i) => i.kind === "caption-over-face"), JSON.stringify(caps));
+  assert.ok(!probe.check(cam, [{ name: "me", rig }]).some((i) => i.kind === "caption-over-face"), "only when captions are given");
+  probe.free();
 });

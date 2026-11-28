@@ -7,6 +7,9 @@
 //                   below (surfaceOf: a bed or sofa gives ~0.3 studs, a floor nothing)
 //   stiff           a character rests exactly on top of something soft (a bed should give a little)
 //   overlap         two characters stand inside each other
+//   caption-over-face  a watched face sits behind the captions (pass `{ captions: [top, bottom] }`, frame fractions)
+// A seated character is never "inside" the seat it sits in: parts of the model under its hips are ignored for that
+// (nasa: the gaming chair's one-box-per-part colliders swallowed the hero and every chair shot failed).
 // Run it inside the real render (same scene, poses, cameras), so it checks exactly what the video shows. Rebuild the
 // probe for every shot from what is visible then (props that move or show only in some shots would otherwise leave
 // ghost colliders), and `free()` the old one.
@@ -33,6 +36,8 @@ function label(o) {
   return o?.name || "?";
 }
 const solidMaterial = (m) => m && !m.isShaderMaterial && !m.isPointsMaterial && (m.opacity ?? 1) >= 0.5 && m.visible !== false;
+/** The model a collider belongs to: "GamingChair/Pillow" -> "GamingChair" (map parts are named model/part). */
+const modelOf = (name) => (name.includes("/") ? name.slice(0, name.indexOf("/")) : name);
 const shown = (o) => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return true; };
 
 /** Colliders for everything visible under `root`, and `check(camera, people)` for one frame. */
@@ -63,7 +68,12 @@ export function createProbe(R, root) {
   visit(root);
   world.step(); // builds the query structures
 
-  const solidAt = (at) => { let hit = null; world.intersectionsWithPoint({ x: at.x, y: at.y, z: at.z }, (c) => { hit = names.get(c.handle) ?? "?"; return false; }); return hit; };
+  // the first solid thing at a point (skipping colliders of the model `except`), or null
+  const solidAt = (at, except = null) => {
+    let hit = null;
+    world.intersectionsWithPoint({ x: at.x, y: at.y, z: at.z }, (c) => { const n = names.get(c.handle) ?? "?"; if (except && modelOf(n) === except) return true; hit = n; return false; });
+    return hit;
+  };
   const ray = (from, dir, max) => {
     const h = world.castRay(new R.Ray({ x: from.x, y: from.y, z: from.z }, { x: dir.x, y: dir.y, z: dir.z }), max, true);
     return h ? { toi: h.timeOfImpact ?? h.toi, name: names.get(h.collider.handle) ?? "?", material: materials.get(h.collider.handle) } : null;
@@ -75,7 +85,7 @@ export function createProbe(R, root) {
     /** Is a point inside something solid? The collider's name, or null. */
     solidAt,
     /** Everything wrong in this frame. `people` are the characters placed in the scene (hidden ones are skipped). */
-    check(camera, people) {
+    check(camera, people, o = {}) {
       camera.updateMatrixWorld(true);
       const out = [], cam = camera.getWorldPosition(new THREE.Vector3());
       const inCam = solidAt(cam); if (inCam) out.push({ kind: "camera-inside", who: "camera", what: inCam });
@@ -92,17 +102,26 @@ export function createProbe(R, root) {
           const d = head.clone().sub(cam), dist = d.length(), h = ray(cam, d.normalize(), dist - 0.9);
           if (h) out.push({ kind: "hidden", who: c.name, what: h.name, amount: +(dist - h.toi).toFixed(1) });
         }
-        // inside: probe points up the torso (solid colliders; trimesh walls are caught where they cross the spine)
-        const neck = c.rig.jointPosition("Neck"), mid = hip.clone().lerp(neck, 0.5);
-        const inside = solidAt(mid) ?? solidAt(neck.clone().lerp(mid, 0.3));
-        if (inside) out.push({ kind: "inside", who: c.name, what: inside });
+        if (watched && o.captions) {
+          const f = (1 - ndc.y) / 2; // 0 = top of the frame
+          if (f >= o.captions[0] && f <= o.captions[1]) out.push({ kind: "caption-over-face", who: c.name, what: "captions", amount: +f.toFixed(2) });
+        }
         // ground: what is under the hips, compared with where the character's feet were put (groundRig records the
         // contact: feet on the ground, or hips on a seat; otherwise the rig's root)
         const ct = c.rig.object.userData.contact;
         const feet = ct?.ground ?? c.rig.object.position.y, from = new THREE.Vector3(ct?.x ?? hip.x, feet + 1.2, ct?.z ?? hip.z);
+        const under = solidAt(from) ? null : ray(from, new THREE.Vector3(0, -1, 0), 12);
+        // inside: probe points up the torso (solid colliders; trimesh walls are caught where they cross the spine);
+        // a seated character's own seat (the model under its hips) doesn't count
+        let seat = null;
+        if (ct?.seated) { const s = ray(new THREE.Vector3(ct.x, ct.ground + 0.3, ct.z), new THREE.Vector3(0, -1, 0), 1.5); seat = s ? modelOf(s.name) : null; }
+        const solidHere = (at) => solidAt(at, seat);
+        const neck = c.rig.jointPosition("Neck"), mid = hip.clone().lerp(neck, 0.5);
+        const inside = solidHere(mid) ?? solidHere(neck.clone().lerp(mid, 0.3));
+        if (inside) out.push({ kind: "inside", who: c.name, what: inside });
         if (!solidAt(from)) {
           // a soft surface (bed, sofa, pillow) should take the body in by about its `sink`; a hard one not at all
-          const g = ray(from, new THREE.Vector3(0, -1, 0), 12), ground = g ? from.y - g.toi : -Infinity, gap = feet - ground;
+          const g = under, ground = g ? from.y - g.toi : -Infinity, gap = feet - ground;
           const sink = g ? surfaceOf(g.name, g.material).sink : 0;
           if (!g) out.push({ kind: "floating", who: c.name, what: "nothing below", amount: 12 });
           else if (gap > 0.45) out.push({ kind: "floating", who: c.name, what: g.name, amount: +gap.toFixed(2) });

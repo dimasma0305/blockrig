@@ -43,12 +43,13 @@ cd ../my-video && npm install
 
 ## Module map
 
-Two entry points, both ESM with TypeScript types, and `three` as the only peer dependency:
+Three entry points, all ESM with TypeScript types, and `three` as the only peer dependency:
 
 | Import | What it's for |
 |---|---|
 | `blockrig` | **Characters**: R15/R6 rigs and bodies, Roblox `.mesh` / `.rbxm` / `.rbxmx` readers, layered clothing, accessories, welds and tools, faces (decals, FACS, drawn expressions), the Animator, IK. Follows Roblox's own mechanisms ([AGENTS.md](AGENTS.md)). |
 | `blockrig/video` | **The rest of the video**: everything a story short needs besides its characters, framework-free and frame-pure (a frame depends only on its time, so Remotion can render frames in any order and in parallel). |
+| `blockrig/voice` | **The narration**: what each line is voiced as, whether a take is good, where the pauses go, and whether the whole thing is paced right. Pure JavaScript with no dependencies; the video runs the speech models (Chatterbox, Kokoro, Whisper) and ffmpeg. |
 
 What's in `blockrig/video`:
 
@@ -60,15 +61,29 @@ What's in `blockrig/video`:
 | camera | `pushIn`, `orbit`, `move`, `follow`, `lowAngle`, `topDown`, `applyCamera` | Camera recipes for shorts; shake is seeded by frame. |
 | lighting | `createLighting`, `TIMES`, `daylight`, `mixDaylight`, `LOOK`, `applyLook`, `avatarAmbient` | Sky dome, sun with soft shadows, fill and lightning; times of day (day, golden, dusk, night, storm) that blend across a shot. |
 | surfaces | `surfaceOf`, `restOn` | How far a body sinks into a bed, sofa, pillow, grass or floor, from the part's name or its Roblox `Material`. |
-| robloxMap | `buildRobloxMap`, `partGeometry`, `facePlane`, `materialLook` | Draws a Roblox map or model from its part list: Part shapes, wedges, mesh modifiers, MeshParts, Decals and Textures on `NormalId` faces, lights. Parts are merged per material. Also exports one solid collider box per visible part. |
-| collide | `createProbe`, `loadRapier` | The staging check: Rapier colliders for the world (rebuilt per shot from what's visible), then `check(camera, cast)` lists `camera-inside`, `hidden`, `inside`, `floating`, `sunk`, `stiff` and `overlap`. You install Rapier (`@dimforge/rapier3d-compat`) and pass it in. |
+| robloxMap | `buildRobloxMap`, `partGeometry`, `facePlane`, `materialLook`, `swallowingUnions`, `trimUnion` | Draws a Roblox map or model from its part list: Part shapes, wedges, mesh modifiers, MeshParts, Decals and Textures on `NormalId` faces, lights. Parts are merged per material. Also exports one solid collider box per visible part. Desk and table tops that are unions (drawn as one box) are trimmed so they don't cover the chair standing in them. |
+| collide | `createProbe`, `loadRapier` | The staging check: Rapier colliders for the world (rebuilt per shot from what's visible), then `check(camera, cast, { captions })` lists `camera-inside`, `hidden`, `inside`, `floating`, `sunk`, `stiff`, `overlap` and `caption-over-face`. A seated character never counts as inside its own chair. You install Rapier (`@dimforge/rapier3d-compat`) and pass it in. |
 | boards | `panel`, `text`, `pic`, `videoCard`, `browserWindow`, `banner`, `poster`, `standee` | Drawn screens, signs, posters and cardboard cut-outs. A panel redraws only when what it shows changes, and real images are cover-fitted (a grey box when one is missing). |
 | images | `loadImages`, `loadImage` | Loads named real images (avatars, thumbnails, logos) before the first frame; a missing file becomes `null`. |
+| plan | `Plan`, `rect`, `circle`, `polygon`, `inside`, `intersects` | The 2D layout of a place before it becomes 3D: keep-out zones (roads, paths, the stage), lots, footprints that may not overlap, `scatter` and `along` for trees, fences and lamps, and `conflicts()`. |
+| ground | `layer`, `groundConflicts`, `checkGround` | Flat ground surfaces on their own layer (height step plus polygon offset), so grass, roads and puddles never flicker. |
+| lights | `lightsByLocation` | Each place's lamps are on only while the camera is there: every light costs every pixel, so this keeps renders fast. |
+| story | `compileStory`, `parseStory`, `parseAudio`, `checkStory` | `docs/story.md` and `docs/audio.md` compiled into the story object. Broken shots are caught before any voice or render time: captions that don't cover the line, `say:` that changes the word count, silent shots without a length, and unknown faces, weather, times, emotions, lighting presets or music. |
+
+What's in `blockrig/voice`:
+
+| Module | Exports | What it does |
+|---|---|---|
+| text | `spellNumbers`, `normalizeWords`, `matchScore` | Did the take say the line? Letter-level matching, with numbers spelled the way they're spoken ("$5,000" = "five thousand dollars") and homophones counted as right. |
+| takes | `EMOTIONS`, `moodOf`, `emotionSettings`, `voiceOf`, `judgeTake`, `maxTakeSeconds`, `alignWords`, `estimateWords` | One narrator for every mood (emotion is performance strength, tempo within 5% and loudness, never pitch). Dialogue lines use their speaker's own voice. Takes are judged words first, then pitch, then length (runaway takes are capped). Caption word times come from speech recognition only when they make sense. |
+| audio | `medianPitch`, `speechBounds`, `trimToSpeech`, `addPauses`, `pauseAfter`, `encodeWav` | YIN pitch, clips trimmed to their speech, and real silence at commas (0.22 s) and stops (0.4 s), cut only into silence so a word is never split. |
+| checks | `pace`, `pitchReport`, `wordTimeProblems`, `musicSections` | Pace over the spoken shots (~160 wpm; over 190 is rushed), each voice against its own median pitch, caption times, and music sections (`none` is silence). |
 
 **What stays in each video** (the template's `src/kit`, `src/cast`, `src/world`, `src/direction`):
 
 - **Anything that needs React, Remotion, post-processing or drei**: `Captions` and `Soundtrack` components, overlays, `usePost` (N8AO ambient occlusion and bloom), `LightRig` presets, cascaded shadows, asset loading hooks.
-- **The template's own look, which each video changes**: code-built houses and streets, weather, procedural textures, fire, the Turf 2D layout plan, ground layers.
+- **The template's own look, which each video changes**: code-built houses and streets, weather, procedural textures, fire.
+- **Running the models**: the voice scripts call Chatterbox, Kokoro, Whisper and ffmpeg, and the music generator writes its own themes.
 - **The story itself**: cast, wardrobe, world, shot direction, story props and boards.
 
 When a fix in a video would help every video, move it into `blockrig/video` with a test. The rule is in [AGENTS.md](AGENTS.md#the-video-toolkit-blockrigvideo).
@@ -91,6 +106,36 @@ const R = await loadRapier(() => import("@dimforge/rapier3d-compat"));
 const probe = createProbe(R, world.root);                    // once per shot
 console.log(probe.check(camera, [{ name: "me", rig }]));     // [] when the staging is clean
 ```
+
+## Problems found while making videos, fixed in the library
+
+Every problem the videos' feedback logs (`examples/*/docs/feedback.md`) recorded is fixed once, in the library, with a test that keeps it fixed:
+
+| Problem (from a video) | Fix | Where |
+|---|---|---|
+| "The speech is too fast" (305 wpm); long gaps between lines | Pace measured over the spoken shots against ~160 wpm; clips trimmed to their speech | `pace`, `trimToSpeech` (voice) |
+| "Why does he say *rank last* so happily?" | An emotion per line; a line ending in "!" panics | `moodOf`, `EMOTIONS` (voice) |
+| The narrator sounded like a different person from line to line; "sad sounds like another voice" | One voice sample for every mood (no pitch shifting); every take's pitch kept near its voice's median (high-energy lines may go 35% up, drifting down stays at 20%) | `judgeTake`, `pitchLimit`, `pitchReport` (voice) |
+| The pitch tracker read every voice ~7% low (found while moving it) | YIN walks to the bottom of the dip | `medianPitch` (voice) |
+| Takes that said the line right were thrown out ("$5,000", "11", "an"/"and") | Numbers spelled out, homophones merged, letter-level match | `matchScore`, `spellNumbers` (voice) |
+| "Commas must be heard"; a glitch at pauses split "Sawit" in two | Real silence at commas and stops, only ever cut into silence, with fades | `addPauses` (voice) |
+| A take that loses the text and babbles | Takes capped at ~2.5 words/s × 1.8 | `maxTakeSeconds`, `judgeTake` (voice) |
+| Captions jumping on short clips (nonsense word times) | Speech-recognition times used only when they fit inside the clip and move forward | `alignWords` (voice) |
+| "Hard to understand: same voice for everyone" | Dialogue lines use their speaker's own voice; captions carry speaker tags | `voiceOf` (voice), `speakersOf`, caption `speaker` (video) |
+| "The music stops here" | Music theme `none` is silence | `musicSections` (voice), `checkStory` (video) |
+| Captions that don't match the line; `say:` pronunciations that shift captions; silent shots without a length | Checked when the docs compile, before any voice or render | `compileStory`, `checkStory` (video) |
+| Town layout with trees in driveways and fences across paths | 2D plan with keep-out zones and footprints that may not overlap | `Plan` (video) |
+| Flickering ground where surfaces overlap | Each ground surface on its own layer, overlaps listed | `layer`, `groundConflicts` (video) |
+| Cameras in walls, hidden faces, characters inside props, floating, sunk or stiff on a bed | The staging check on the real frames | `createProbe`, `surfaceOf`, `restOn` (video) |
+| Ghost colliders from props that move or only show in some shots | Hidden objects aren't solid; the probe is rebuilt per shot and freed | `createProbe` (video) |
+| The hero sitting in the gaming chair was flagged "inside" it | A seated character's own seat doesn't count | `createProbe`, `groundRig` (video) |
+| An L-shaped desk top (a Roblox union) drawn as one box covered the chair | Desk and table top unions over furniture are trimmed to the part that clears it | `buildRobloxMap`, `trimUnion` (video) |
+| Captions or tags covering faces | `caption-over-face` in the staging check | `createProbe` (video) |
+| Slow renders with five places' lamps on at once | Each place's lamps on only while the camera is there | `lightsByLocation` (video) |
+| Frames that differ between render tabs | Seeded randomness, frame-pure posing and boards | `rng`, `poseAt`, `panel` (video) |
+| Body parts poking through clothes; beards at the wrong size; the head showing through face accessories; torches held backwards; gaps at elbows and knees | Character fixes | `blockrig` (see the [CHANGELOG](CHANGELOG.md)) |
+
+Some fixes are still in each video because they need a renderer or a model: post-effect black frames (`usePost` sanitises NaN before bloom), the look (ACES, low sun, little fill), Roblox face skin colours, and roads turned to run along the street.
 
 ## Made with BlockRig
 
@@ -127,7 +172,7 @@ console.log(probe.check(camera, [{ name: "me", rig }]));     // [] when the stag
 
 ## Scope
 
-BlockRig covers what a Roblox-style story video needs that plain three.js and Remotion don't give you: **characters** that match Roblox (`blockrig`), and **Roblox maps, staging, timing, cameras, light and drawn text** for the video (`blockrig/video`). It doesn't do physics simulation, character controllers, networking or game logic. React components, post-processing and asset fetching stay in the video project, so the library runs anywhere three.js runs. See [AGENTS.md](AGENTS.md#scope).
+BlockRig covers what a Roblox-style story video needs that plain three.js and Remotion don't give you: **characters** that match Roblox (`blockrig`), **Roblox maps, staging, layout, timing, cameras, light and drawn text** for the video (`blockrig/video`), and the **decisions behind the narration** (`blockrig/voice`). It doesn't do physics simulation, character controllers, networking or game logic. React components, post-processing and asset fetching stay in the video project, so the library runs anywhere three.js runs. See [AGENTS.md](AGENTS.md#scope).
 
 ## Characters
 
@@ -150,7 +195,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` and `CurveAnimation` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **166 tests** (characters and the video toolkit), including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **182 tests** (characters, the video toolkit and the voice), including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency (Rapier is yours to install only for the staging check). ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Characters: quick start
@@ -545,13 +590,13 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 166 unit + regression tests (node:test, no browser needed)
+npm test             # 182 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
 npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html, faces.html, clothing.html and ik.html)
 ```
 
-- **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every expression (valid parameters, the right shapes for open mouths, `x` and `><` eyes), face blending, blinking, look/talk, face markers and decals, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion. The video toolkit is tested too: voice-timed shots and captions, frame-pure posing and camera shake, Roblox part shapes and `NormalId` faces, map merging and colliders, the staging check against real Rapier colliders, and boards on a mock canvas.
+- **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every expression (valid parameters, the right shapes for open mouths, `x` and `><` eyes), face blending, blinking, look/talk, face markers and decals, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion. The video toolkit is tested too: voice-timed shots and captions, frame-pure posing and camera shake, Roblox part shapes and `NormalId` faces, map merging and colliders, the staging check against real Rapier colliders, boards on a mock canvas, the layout plan, ground layers, story checks, Roblox union trimming, and every narration fix (number matching, pitch, pauses, pace, take judging).
 - **Regression tests** pin the writer's output byte-for-byte (SHA-256), the parse of a committed fixture file, the joint positions plus skinned coat vertices of every bundled clip at four points in time, the joint layout of every body shape, a scaled body, R6 and an R6-retargeted clip, and the exact drawing commands for every expression.
 - **CI** runs everything on Node 20, 22 and 24 against three.js r128 and r184, builds the UMD bundle, smoke-tests it in a VM and checks the package contents. Pushing a `v*` tag publishes to npm with provenance and creates a GitHub release. `main` deploys the demo to GitHub Pages.
 

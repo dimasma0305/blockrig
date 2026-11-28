@@ -3,7 +3,8 @@
 BlockRig exists to make **Roblox-style story videos** (narrated vertical shorts) **fast to make and good to watch**. It has two parts:
 
 - **`blockrig`, the characters.** R15/R6 rigs that build, dress, pose, animate and express a character the way **Roblox** does.
-- **`blockrig/video`, the rest of the video** (`src/video/`). Roblox maps, the staging check, voice-timed shots and captions, frame-pure posing, camera recipes, lighting looks and drawn boards: the parts every video needs, tested once here instead of copied into each video.
+- **`blockrig/video`, the rest of the video** (`src/video/`). Roblox maps, the staging check, the layout plan, ground layers, story-doc checks, voice-timed shots and captions, frame-pure posing, camera recipes, lighting looks and drawn boards: the parts every video needs, tested once here instead of copied into each video.
+- **`blockrig/voice`, the narration decisions** (`src/voice/`). Number-aware take matching, moods, per-speaker voices, take judging, pitch, pauses at punctuation, trimming, pace and music sections. The speech models stay in the video's scripts.
 
 Videos are made from `examples/template` (its own `AGENTS.md` and `.agents/skills` run the pipeline: story → voice → assets → stills → collide → render).
 
@@ -17,7 +18,8 @@ A change that "looks right" but works differently from Roblox is a bug, even if 
 
 **In scope**
 - Characters: R15 and R6 rigs and bodies, body shapes and scaling, body-part meshes, Roblox head shapes; layered clothing, hair, hats, face accessories, attachment welds, held tools; KeyframeSequence / CurveAnimation import, the Animator, retargeting, IK; face Decals, Dynamic Heads (FACS) and the procedural expressions extra; the `.mesh`, `.rbxm` and `.rbxmx` formats those need.
-- Video (`blockrig/video`): drawing Roblox maps and models from their part list, collider export and the Rapier staging check, surface softness for staging, the story timeline and captions (with speaker tags), frame-pure posing, camera recipes, times of day and the lighting look, drawn screens / boards / posters / standees, real-image loading.
+- Video (`blockrig/video`): drawing Roblox maps and models from their part list, collider export and the Rapier staging check, surface softness for staging, the 2D layout plan, ground layers, lamps per location, story docs and their checks, the story timeline and captions (with speaker tags), frame-pure posing, camera recipes, times of day and the lighting look, drawn screens / boards / posters / standees, real-image loading.
+- Voice (`blockrig/voice`): the decisions around speech models, not the models: what a line is voiced as, take judging, pitch, pauses, trimming, word times, pace, music sections.
 
 **Out of scope (don't add these to the library)**
 - Physics simulation, Humanoid movement and controllers, networking, game logic, UI frameworks.
@@ -29,11 +31,15 @@ If a request is for something out of scope, say so and suggest doing it in the v
 
 ## The video toolkit (`blockrig/video`)
 
-- **Framework-free.** `three` is the only import. Heavy or optional dependencies are passed in by the caller (Rapier: `createProbe(R, root)`, `loadRapier(() => import("@dimforge/rapier3d-compat"))`; canvases: `setCanvasFactory`; images: `loadImages(files, resolve)`).
+- **Framework-free.** `three` is the only import (`blockrig/voice` imports nothing). Heavy or optional dependencies are passed in by the caller (Rapier: `createProbe(R, root)`, `loadRapier(() => import("@dimforge/rapier3d-compat"))`; canvases: `setCanvasFactory`; images: `loadImages(files, resolve)`).
 - **Frame-pure.** A frame depends only on its time: no state carried between frames, randomness seeded (`rng`), caches keyed by what they show (`panel.set(key, p)`). Remotion renders frames out of order in parallel tabs.
 - **Works on every supported three.js** (r128 → r184): no `three/examples` imports (they aren't loadable in Node on old releases), and tests that compare colours avoid colour-management round trips.
 - **Promote, don't copy.** When a fix in a video helps every video, move it here with a test, export it from `src/video/index.js`, type it in `src/video/index.d.ts`, and switch `examples/template` to import it. Older example videos keep their local `src/kit` copies until someone migrates them on purpose; never edit a video that's mid-render.
 - Write each module as plain ESM JavaScript with JSDoc, like the rest of `src/`.
+
+## Fix problems in the library
+
+When a video turns up a problem (the user's feedback, `npm run check`, `npm run collide`, a still that looks wrong), and the fix would help any other video, fix it here, not only in that video: find or add the function in `src/`, `src/video/` or `src/voice/`, write a test that fails without the fix (name the video's symptom in the test title), switch `examples/template` to it, and add a row to the README's "Problems found while making videos" table. Only fixes that need a renderer, React, Remotion or a speech model stay in the video (say so in that table's last paragraph).
 
 ## Before you change anything
 
@@ -93,7 +99,7 @@ Keep this table current. **Parity** means it behaves like Roblox. **Approximatio
 9. **Dynamic heads.** BlockRig poses a FACS head by moving each vertex by its skinned bones' summed offsets (all control columns times their values, correctives as the product of their controls), which equals skinning when the face bones only translate, as on the official heads checked (*Woman Face*, *Man Face*: 59 `trans_only_joint`s). The rx/ry/rz matrices are parsed but not applied; heads whose FACS rotates bones need real skinning about each bone's pivot. Controls clamp to 0..1. Download dynamic heads with the `Roblox-AssetFormat: avatar_meshpart_head` header to get the MeshPart (with FACS) rather than the static SpecialMesh fallback.
 10. **CurveAnimation.** Checked against Roblox Studio 0.748: a CurveAnimation built in Studio (test/fixtures/studio-curves.lua) and saved to file decodes key for key (values then times at 2400 ticks/s; Float keys `u8 mode, u8 tangent mode, f32 value, f32 left, f32 right`; Rotation keys `u8 12+mode, f32 quaternion xyzw, f32 left, f32 right`; markers as NUL-terminated strings; unset tangents are stored already derived), and BlockRig's evaluation matches Studio's `GetValueAtTime` / `GetRotationAtTime` to within 1e-6 and 0.0003° (`test/fixtures/studio-curves.json`). Cubic rotation segments were checked with zero tangents only. In Luau, `EulerRotationCurve.X` and `Vector3Curve.X` are methods, so reach the child curves with `FindFirstChild`. The official animations tried so far (emotes, the 2024 Bold pack, dynamic-head moods) download as KeyframeSequences.
 11. **IKControl.** Roblox's IK solver isn't published. BlockRig uses cyclic coordinate descent in world space for Position (12 iterations), a swing about the root-to-effector line for Pole, a direct orientation for Rotation, and a turn shared evenly along the chain for LookAt. `SmoothTime`, `Offset` rotation, and joint constraints (Hinge/BallSocket limits on the chain) are not applied, so chains can bend past natural limits; use a pole to keep elbows and knees the right way.
-12. **Roblox maps.** `buildRobloxMap` draws what the part list carries. Unions (`UnionOperation`) have no geometry in the file and are drawn (and collide) as their bounding box, which can swallow furniture inside them; skip those with `skip`. Materials get Roblox-like roughness and metalness and an optional CC0 surface tinted by the part colour, not Roblox's own textures. Lights are capped to the brightest few (`maxLights`), and their brightness is scaled to look right in three.js rather than converted by a known formula.
+12. **Roblox maps.** `buildRobloxMap` draws what the part list carries. Unions (`UnionOperation`) have no geometry in the file and are drawn (and collide) as their bounding box. A flat union that furniture pokes up through (a desk or table top) is trimmed to the largest rectangle clear of it (`unions: "trim"`); other unions (walls, roofs, dormers) stay boxes, and `skip` leaves out any part by hand. Materials get Roblox-like roughness and metalness and an optional CC0 surface tinted by the part colour, not Roblox's own textures. Lights are capped to the brightest few (`maxLights`), and their brightness is scaled to look right in three.js rather than converted by a known formula.
 
 ## Conventions (all Roblox's)
 

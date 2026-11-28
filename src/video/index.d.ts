@@ -95,11 +95,19 @@ export type MapAssets = {
   /** a PBR set by name ("planks", "concrete", "grass", "asphalt"): its normal, roughness and colour maps are used */
   pbr?: (name: string) => THREE.MeshStandardMaterial;
 };
-export type MapOpts = { maxLights?: number; lightScale?: number; shadows?: boolean; skip?: (p: MapPart) => boolean };
+export type MapOpts = {
+  maxLights?: number; lightScale?: number; shadows?: boolean; skip?: (p: MapPart) => boolean;
+  /** desk / table top unions drawn as one box over furniture: "trim" (default) to the part that clears it, "skip", or "box" (keep) */
+  unions?: "trim" | "skip" | "box";
+  /** false: don't console.warn about dropped unions */
+  warn?: boolean;
+};
 export type MapCollider = { size: number[]; matrix: THREE.Matrix4; name: string; material?: number };
 export type MaterialLook = { set?: string; tile?: number; rough: number; metal?: number; neon?: boolean; glass?: boolean };
 export interface RobloxMap {
   group: THREE.Group; box: THREE.Box3; colliders: MapCollider[];
+  /** unions left out because their box swallowed another model's furniture */
+  dropped: { part: MapPart; box: THREE.Box3; standIn: MapPart | null }[];
   find(re: RegExp): THREE.Box3;
   names(): [string, number][];
 }
@@ -107,15 +115,18 @@ export function buildRobloxMap(data: MapData, assets: MapAssets, o?: MapOpts): R
 export function partGeometry(p: MapPart): THREE.BufferGeometry;
 export function facePlane(size: number[], face: number): { g: THREE.PlaneGeometry; dims: [number, number] };
 export function materialLook(material: number): MaterialLook;
+export function swallowingUnions(parts: MapPart[]): MapPart[];
+export function trimUnion(u: MapPart, parts: MapPart[]): MapPart | null;
 
 // ---- staging check
-export type Issue = { kind: "camera-inside" | "hidden" | "inside" | "floating" | "sunk" | "stiff" | "overlap"; who: string; what: string; amount?: number };
+export type Issue = { kind: "camera-inside" | "hidden" | "inside" | "floating" | "sunk" | "stiff" | "overlap" | "caption-over-face"; who: string; what: string; amount?: number };
 export type Probed = { name: string; rig: { object: THREE.Object3D; jointPosition(n: string, t?: THREE.Vector3): THREE.Vector3 } };
 export interface Probe {
   free(): void;
   colliders: number;
-  solidAt(at: THREE.Vector3): string | null;
-  check(camera: THREE.PerspectiveCamera, people: Probed[]): Issue[];
+  solidAt(at: THREE.Vector3, exceptModel?: string | null): string | null;
+  /** `captions`: the caption band as fractions of the frame height from the top, e.g. [0.62, 0.78] */
+  check(camera: THREE.PerspectiveCamera, people: Probed[], o?: { captions?: [number, number] }): Issue[];
 }
 /** `R`: the `@dimforge/rapier3d-compat` namespace, initialised. */
 export function createProbe(R: any, root: THREE.Object3D): Probe;
@@ -142,3 +153,41 @@ export function standee(art: CanvasImageSource & { width: number; height: number
 // ---- images
 export function loadImage(src: string, o?: { Image?: any }): Promise<HTMLImageElement | null>;
 export function loadImages<K extends string>(files: Record<K, string>, resolve?: (file: string) => string, o?: { Image?: any }): Promise<Record<K, HTMLImageElement | null>>;
+
+// ---- layout plan
+export type Shape = { type: "polygon"; points: [number, number][] };
+export type PlanItem = { name: string; kind: "zone" | "area" | "footprint"; shape: Shape; color?: string; except?: string[] };
+export function polygon(pts: [number, number][]): Shape;
+export function rect(cx: number, cz: number, w: number, d: number, angle?: number): Shape;
+export function circle(cx: number, cz: number, r: number, n?: number): Shape;
+export function points(s: Shape): [number, number][];
+export function inside(s: Shape, x: number, z: number): boolean;
+export function intersects(a: Shape, b: Shape): boolean;
+export class Plan {
+  items: PlanItem[];
+  zone(name: string, shape: Shape, color?: string): Shape;
+  area(name: string, shape: Shape, color?: string): Shape;
+  free(shape: Shape, except?: string[]): boolean;
+  place(name: string, shape: Shape, o?: { force?: boolean; except?: string[]; color?: string }): boolean;
+  scatter(area: Shape, o: { count: number; radius: number; gap?: number; rng: () => number; tries?: number; name?: string }): [number, number][];
+  along(a: [number, number], b: [number, number], step: number, radius?: number): [number, number][];
+  conflicts(): string[];
+}
+
+// ---- ground layers
+export const LAYER_STEP: number;
+export function layer<T extends THREE.Mesh>(mesh: T, n: number, base?: number): T;
+export function groundConflicts(root: THREE.Object3D): string[];
+export function checkGround(root: THREE.Object3D): void;
+
+// ---- lights per location
+export function lightsByLocation(root: THREE.Object3D, locations: Record<string, { x: number; z: number }>): { lamps: { light: THREE.Light; at: string }[]; show(location: string): void };
+
+// ---- story documents
+export const WEATHER_NAMES: string[];
+export const LIGHT_PRESET_NAMES: string[];
+export type StoryCheckOpts = { expressions?: string[]; weather?: string[]; times?: string[]; emotions?: string[]; lights?: string[]; themes?: string[] };
+export function parseStory(md: string): { front: Record<string, string>; shots: (StoryShot & Record<string, any>)[]; errors: string[] };
+export function parseAudio(md: string): { voice: StoryFile["voice"] & Record<string, any>; music: { theme: string; fromShot: string }[] };
+export function checkStory(story: { shots: (StoryShot & Record<string, any>)[]; music?: { theme: string; fromShot: string }[] }, o?: StoryCheckOpts): { errors: string[]; warnings: string[]; words: number };
+export function compileStory(storyMd: string, audioMd?: string, o?: StoryCheckOpts): { story: StoryFile; errors: string[]; warnings: string[]; words: number };

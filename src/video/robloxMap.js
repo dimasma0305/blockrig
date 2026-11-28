@@ -11,7 +11,10 @@
 //   map.group.userData.colliders  // one solid box per visible part, for createProbe (the staging check)
 //
 // Unions (CSG, `UnionOperation`) carry no geometry in the file and are drawn as their bounding box: fine for walls
-// and trims, wrong for arches and hollow shapes. Pass `skip` to leave out the ones that swallow furniture.
+// and trims, wrong for L-shaped desks, arches and hollow shapes. A desk or table top union that furniture pokes up
+// through (nasa: an L-shaped desk top drawn as one box covered the gaming chair and trapped the hero in its collider)
+// is trimmed by default to the largest rectangle of its top that clears the furniture (listed in `map.dropped`);
+// `unions: "skip"` leaves such unions out, `unions: "box"` keeps every union as its box.
 // Docs: https://create.roblox.com/docs/reference/engine/classes/BasePart , .../enums/NormalId , .../enums/Material
 import * as THREE from "three";
 import { cframeToMatrix } from "../cframe.js";
@@ -151,8 +154,61 @@ const toLinear = (c) => new THREE.Color().setRGB(c[0], c[1], c[2], THREE.SRGBCol
  *   parsed `.mesh` files and loaded images by asset id; `pbr(set)` gives normal / roughness / colour maps for a look's set
  * @param {{ maxLights?: number, lightScale?: number, shadows?: boolean, skip?: (part: object) => boolean }} [o]
  */
+const isUnion = (p) => p.cls === "UnionOperation" || p.union != null;
+const partBox = (p) => new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(), new THREE.Vector3(...p.size)).applyMatrix4(cframeToMatrix(p.cframe, new THREE.Matrix4()));
+// a desk / table top union (flat slab) and, in its own frame, the footprint of each other model passing up through it
+function piercings(u, solid) {
+  const [sx, sy, sz] = u.size, r = u.cframe.rot;
+  if (!(sy <= 0.6 && sy < Math.min(sx, sz) && Math.max(sx, sz) <= 16 && Math.abs(r[4]) > 0.99)) return null; // a flat slab
+  const inv = cframeToMatrix(u.cframe, new THREE.Matrix4()).invert(), local = new THREE.Vector3(), corner = new THREE.Vector3();
+  const top = u.cframe.pos[1] + sy / 2, model = u.model ?? null, by = new Map();
+  for (const { p, box, c } of solid) {
+    const m = p.model ?? null; if (m === model) continue;
+    local.copy(c).applyMatrix4(inv);
+    if (!(Math.abs(local.x) < sx / 2 && Math.abs(local.z) < sz / 2 && box.min.y < top && box.max.y > top + 0.2)) continue;
+    let f = by.get(m); if (!f) by.set(m, (f = { n: 0, x0: Infinity, x1: -Infinity, z0: Infinity, z1: -Infinity }));
+    f.n++;
+    for (const cx of [box.min.x, box.max.x]) for (const cz of [box.min.z, box.max.z]) { corner.set(cx, top, cz).applyMatrix4(inv); f.x0 = Math.min(f.x0, corner.x); f.x1 = Math.max(f.x1, corner.x); f.z0 = Math.min(f.z0, corner.z); f.z1 = Math.max(f.z1, corner.z); }
+  }
+  return [...by.values()].filter((f) => f.n >= 2);
+}
+const solidParts = (parts) => parts.filter((p) => !isUnion(p) && p.transparency < 0.98 && Math.min(...p.size) >= 0.4).map((p) => { const box = partBox(p); return { p, box, c: box.getCenter(new THREE.Vector3()) }; });
+
+/**
+ * Unions that swallow furniture: a desk or table top that is a union (a flat slab at most 0.6 studs thick and 16
+ * studs across) with two or more solid parts of one other model passing up through it inside its footprint. Drawn
+ * as one box, an L-shaped desk top covers the chair standing in its corner (nasa). Walls, roofs and dormers (unions
+ * with windows set in them) are never matched. Returns those union parts.
+ */
+export function swallowingUnions(parts) {
+  const solid = solidParts(parts);
+  return parts.filter((u) => isUnion(u) && piercings(u, solid)?.length);
+}
+
+/**
+ * The stand-in for a swallowing slab: the largest rectangle of its top that clears the furniture passing through it
+ * (one arm of an L-shaped desk), as a plain part in the same frame; null when nothing useful (under 1 stud) is left.
+ */
+export function trimUnion(u, parts) {
+  const fs = piercings(u, solidParts(parts)); if (!fs?.length) return null;
+  const [sx, sy, sz] = u.size, gap = 0.1;
+  const x0 = Math.min(...fs.map((f) => f.x0)) - gap, x1 = Math.max(...fs.map((f) => f.x1)) + gap, z0 = Math.min(...fs.map((f) => f.z0)) - gap, z1 = Math.max(...fs.map((f) => f.z1)) + gap;
+  const cands = [[-sx / 2, Math.max(-sx / 2, x0), -sz / 2, sz / 2], [Math.min(sx / 2, x1), sx / 2, -sz / 2, sz / 2], [-sx / 2, sx / 2, -sz / 2, Math.max(-sz / 2, z0)], [-sx / 2, sx / 2, Math.min(sz / 2, z1), sz / 2]];
+  const [a, b, c, d] = cands.sort((p, q) => (q[1] - q[0]) * (q[3] - q[2]) - (p[1] - p[0]) * (p[3] - p[2]))[0];
+  if (b - a < 1 || d - c < 1) return null;
+  const r = u.cframe.rot, lx = (a + b) / 2, lz = (c + d) / 2;
+  const pos = [u.cframe.pos[0] + r[0] * lx + r[2] * lz, u.cframe.pos[1] + r[3] * lx + r[5] * lz, u.cframe.pos[2] + r[6] * lx + r[8] * lz];
+  const { union, ...rest } = u;
+  return { ...rest, cls: "Part", shape: 1, name: `${u.name ?? "Union"} (trimmed)`, size: [b - a, sy, d - c], cframe: { rot: r, pos } };
+}
+
 export function buildRobloxMap(data, assets, o = {}) {
   const group = new THREE.Group(); group.name = "roblox-map";
+  // desk and table tops drawn as one box over the furniture standing in them: trimmed to the part that clears it
+  // ("trim", the default), left out ("skip"), or kept as boxes ("box")
+  const mode = o.unions ?? "trim", dropped = mode === "box" ? [] : swallowingUnions(data.parts), drop = new Set(dropped);
+  const standIns = dropped.map((u) => (mode === "trim" ? trimUnion(u, data.parts) : null));
+  if (dropped.length && o.warn !== false) console.warn(`roblox map: ${mode === "trim" ? "trimmed" : "left out"} ${dropped.length} union(s) drawn as boxes over furniture: ${dropped.map((p) => `${p.model ?? "?"}/${p.name ?? "Union"}`).join(", ")}`);
   const shadows = o.shadows ?? true, boxes = [], colliders = [];
   const buckets = new Map(), texCache = new Map();
   const texture = (id, mesh) => {
@@ -163,7 +219,7 @@ export function buildRobloxMap(data, assets, o = {}) {
   };
   const add = (key, g, lk, opacity) => { let b = buckets.get(key); if (!b) buckets.set(key, (b = { geoms: [], look: lk, opacity })); b.geoms.push(g); };
 
-  for (const p of data.parts) {
+  for (const p of [...data.parts.filter((q) => !drop.has(q)), ...standIns.filter(Boolean)]) {
     if (o.skip?.(p)) continue;
     const lk = materialLook(p.material), matrix = cframeToMatrix(p.cframe, new THREE.Matrix4());
     const opacity = lk.glass ? Math.min(1 - p.transparency, 0.45) : 1 - p.transparency;
@@ -250,6 +306,8 @@ export function buildRobloxMap(data, assets, o = {}) {
   group.userData.box = all; group.userData.colliders = colliders;
   return {
     group, box: all, colliders,
+    /** Unions left out because their box swallowed furniture (draw a stand-in where it matters): `{ part, box }`. */
+    dropped: dropped.map((part, i) => ({ part, box: partBox(part), standIn: standIns[i] })),
     /** Box around every part whose name or model name matches. */
     find(re) { const out = new THREE.Box3(); for (const b of boxes) if (re.test(b.part.name ?? "") || re.test(b.part.model ?? "")) out.union(b.box); return out; },
     /** Model (or part) names with their part counts, most parts first. */

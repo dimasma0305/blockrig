@@ -34,7 +34,7 @@ const v = new THREE.Vector3();
 /**
  * Drop or raise the whole rig so its lowest contact sits on y = ground. `contacts` are joint names with the distance
  * from the joint down to the surface (a foot joint is 0.3 studs above the sole). Records where the character rests
- * in `rig.object.userData.contact`, which the staging check (createProbe) reads.
+ * in `rig.object.userData.contact` (`seated` when the hips rest on something), which the staging check reads.
  */
 export function groundRig(rig, ground, contacts) {
   rig.object.updateMatrixWorld(true);
@@ -44,7 +44,7 @@ export function groundRig(rig, ground, contacts) {
   rig.object.position.y += ground - lowest;
   rig.object.updateMatrixWorld(true);
   let cx = 0, cz = 0; for (const [j] of contacts) { rig.jointPosition(j, v); cx += v.x / contacts.length; cz += v.z / contacts.length; }
-  rig.object.userData.contact = { ground, x: cx, z: cz };
+  rig.object.userData.contact = { ground, x: cx, z: cz, seated: contacts.some(([j]) => j === "LowerTorso") };
 }
 export const FEET = [["LeftFoot", 0.3], ["RightFoot", 0.3]];
 export const KNEEL = [["LeftFoot", 0.3], ["RightFoot", 0.3], ["RightLowerLeg", 0.5], ["LeftLowerLeg", 0.5]];

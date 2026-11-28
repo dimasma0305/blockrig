@@ -8,7 +8,7 @@ import { createLighting, createWeather, applyFog, rng, LOOK, type AssetLibrary, 
 import { HOUSES } from "./assets";
 import { buildRobloxMap } from "blockrig/video";
 import { createCascades, type Cascades } from "../kit/cascades";
-import { Plan, rect, circle } from "../kit/plan";
+import { Plan, rect, circle } from "blockrig/video";
 import { restOn } from "blockrig/video";
 import type { RobloxCast } from "../cast/roblox";
 
@@ -56,7 +56,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   }
   const far = strip(lib, "grass", 1200, 1200, 10, 0.05); far.position.y -= 0.01; root.add(far);
 
-  // ---- the 2D plan first (src/kit/plan.ts, Turf): keep-out zones, then footprints, then what fills the gaps.
+  // ---- the 2D plan first (blockrig/video Plan): keep-out zones, then footprints, then what fills the gaps.
   // Nothing may overlap the road, the sidewalks, a path or the "stage" where the hero acts and the cameras look;
   // houses, fences, trees, planters and cars are placed only where they fit. PlanLab draws it from above.
   const plan = new Plan(), perSide = 6, spacing = length / perSide, setback = sidewalkHalf + 16, depth = 70;

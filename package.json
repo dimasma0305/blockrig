@@ -1,7 +1,7 @@
 {
   "name": "blockrig",
   "version": "0.3.0",
-  "description": "Make Roblox-style story videos fast and good in three.js: R15/R6 characters that wear real Roblox clothing and play Roblox animations, plus blockrig/video for Roblox maps, a staging check, voice-timed shots and captions, camera recipes, lighting looks and drawn screens.",
+  "description": "Make Roblox-style story videos fast and good in three.js: R15/R6 characters that wear real Roblox clothing and play Roblox animations, blockrig/video for Roblox maps, a staging check, layout plans, voice-timed shots and captions, cameras, lighting and drawn screens, and blockrig/voice for narration takes, pauses, pitch and pace.",
   "type": "module",
   "main": "./src/index.js",
   "module": "./src/index.js",
@@ -13,6 +13,10 @@
     "./video": {
       "types": "./src/video/index.d.ts",
       "default": "./src/video/index.js"
+    },
+    "./voice": {
+      "types": "./src/voice/index.d.ts",
+      "default": "./src/voice/index.js"
     },
     "./umd": "./dist/blockrig.umd.js",
     "./package.json": "./package.json"
@@ -41,6 +45,8 @@
     "roblox",
     "roblox-video",
     "shorts",
+    "narration",
+    "tts",
     "story",
     "remotion",
     "three",

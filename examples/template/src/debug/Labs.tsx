@@ -18,7 +18,7 @@ import { act, place } from "../direction/performance";
 import { useRobloxCast, type RobloxCast } from "../cast/roblox";
 import { useAssetLibrary, type AssetLibrary } from "../kit/assets";
 import { buildRobloxMap } from "blockrig/video";
-import { points as planPoints } from "../kit/plan";
+import { points as planPoints } from "blockrig/video";
 import { buildWorld } from "../world/World";
 import { ASSETS } from "../world/assets";
 
@@ -165,7 +165,7 @@ export const MapLab: React.FC<{ roblox?: boolean }> = () => {
 };
 
 // ---------------------------------------------------------------- PlanLab
-// The town's 2D plan (src/kit/plan.ts) over the real 3D street, from above: grey road and sidewalks, yellow stage,
+// The town's 2D plan (blockrig/video Plan) over the real 3D street, from above: grey road and sidewalks, yellow stage,
 // beige paths, blue houses, purple Roblox lots, green trees, brown fences, orange cars. Overlaps print as errors.
 function PlanScene({ lib, rb }: { lib: AssetLibrary; rb: RobloxCast | null }) {
   const frame = useCurrentFrame(), { camera, gl, scene } = useThree() as any;
