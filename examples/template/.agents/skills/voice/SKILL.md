@@ -97,6 +97,11 @@ gaps), cut at the quietest point between the words, and re-times the words for c
 "+N pause". Write the pause you want into the line: "In this town, it rains..." gets its breath; "In this town it
 rains" does not. Tune both in docs/audio.md (`commaPause`, `stopPause`).
 
+A pause is only ever cut into real silence (quieter than 3% of the line's peak), with 6 ms fades either side; where
+the words run together, no pause is added. Cutting at "the quietest point" regardless once split a word in two
+("Sawit" after "hills.": Whisper's word edges were a tenth of a second off), an audible glitch the user heard. If a
+line needs the beat anyway, re-voice it (another take) rather than forcing a cut.
+
 ## Music
 
 Every theme is synthesised in code (scripts/music.mjs), original and free to commit and post. **Default:

@@ -12,6 +12,7 @@ import { Plan, rect } from "../kit/plan";
 import type { RobloxCast } from "../cast/roblox";
 import { FOREST_TREES } from "./assets";
 import { fire, smokeColumn, type Fire } from "./fire";
+import { createCascades, type Cascades } from "../kit/cascades";
 import { kingdomMap, ledger, portrait, crownLogo, sign } from "./boards";
 import { createRig } from "blockrig";
 
@@ -197,8 +198,10 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   const lantern = lib.model("lantern", { height: 1.6 }); at(lantern, stumpPos.clone().add(V3(1.8, 0, 0.6))); root.add(lantern);
   const lanternLight = new THREE.PointLight("#ffc06b", 0, 26, 1.6); lanternLight.position.copy(stumpPos).add(V3(1.8, 1.4, 0.6)); root.add(lanternLight);
   // fires along the edge (s15 the first tree, s28 the whole edge)
-  addFire("firstTree", firstTree.position.clone().add(V3(0, 0, 0)), { width: 5, height: 16, seed: 21 });
-  for (let i = 0; i < 7; i++) addFire("edge", FOR.clone().add(V3(9 + (i % 2) * 5, 0, -42 + i * 13)), { width: 7, height: 18 + (i % 3) * 4, seed: 30 + i, light: i % 2 ? 0 : 40 });
+  addFire("firstTree", firstTree.position.clone().add(V3(0, 0, 0)), { width: 5, height: 16, seed: 21, shadows: 512, shadowRange: 60, lightHeight: 4 });
+  // the burning edge: seven fires, but only the two facing the bucket line give light, low and strong, and both throw
+  // shadows (a light without a shadow map shines through people and erased their shadows)
+  for (let i = 0; i < 7; i++) addFire("edge", FOR.clone().add(V3(9 + (i % 2) * 5, 0, -42 + i * 13)), { width: 7, height: 18 + (i % 3) * 4, seed: 30 + i, light: i === 2 || i === 4 ? 70 : 0, shadows: i === 2 || i === 4 ? 1024 : 0, shadowRange: 80, lightHeight: 4 });
   const edgeSmoke = smokeColumn({ width: 30, height: 90, seed: 41 }); edgeSmoke.position.copy(FOR).add(V3(14, 8, 0)); root.add(edgeSmoke); smokes.push({ s: edgeSmoke, key: "edgeSmoke" });
 
   // the victim forest (s03 burning, s04 sawit by morning)
@@ -272,13 +275,14 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   // wall torches: small fires (they light the room)
   const roomFires: Fire[] = [];
   for (const [x, z, ry] of [[-RW / 2 + 0.8, -6, Math.PI / 2], [RW / 2 - 0.8, 8, -Math.PI / 2], [-12, -RD / 2 + 0.8, 0], [12, -RD / 2 + 0.8, 0]]) {
-    const f = fire({ width: 0.8, height: 1.8, seed: 90 + roomFires.length, smoke: false, light: 18 }); f.position.copy(ROOM).add(V3(x, 11, z)); root.add(f); roomFires.push(f); fires.push({ f, key: "room" });
+    const f = fire({ width: 0.8, height: 1.8, seed: 90 + roomFires.length, smoke: false, light: 18, shadows: roomFires.length >= 2 ? 512 : 0, shadowRange: 50 }); // the two on the back wall throw shadows f.position.copy(ROOM).add(V3(x, 11, z)); root.add(f); roomFires.push(f); fires.push({ f, key: "room" });
     const holder = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.35, 1.2, 8), new THREE.MeshStandardMaterial({ color: "#3a3a3a", metalness: 0.6 })); holder.position.copy(f.position).add(V3(0, -0.6, 0)); root.add(holder);
   }
 
   // ================================================================ sky, sun, weather
   const clouds = Array.from({ length: 14 }, () => { const c = lib.model("cloud", { scale: 10 + r() * 12, shadows: false }); c.userData.home = V3((r() - 0.5) * 500, 90 + r() * 50, (r() - 0.5) * 500); c.userData.noCollide = true; root.add(c); return c; });
   const birds = Array.from({ length: 6 }, (_, i) => { const b = lib.model("bird", { width: 2.6, shadows: false }); b.userData.phase = i * 1.3; b.userData.noCollide = true; root.add(b); return b; });
+  let cascades: Cascades | null = null;
   const lighting = createLighting({ shadowSize: 60, sky: false }); root.add(lighting.root); lighting.root.userData.noCollide = true;
   const weather = createWeather(); root.add(weather.root); weather.root.userData.noCollide = true;
   const pmrem = new THREE.PMREMGenerator(gl), envs: Record<string, THREE.Texture> = {};
@@ -303,8 +307,10 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
       const { flash } = weather.update(w, o.time, o.local, o.camera);
       const skyName = overcast > 0.45 ? "storm" : skyFor(o.daylight), night = o.daylight.stars > 0.6;
       scene.background = inside ? new THREE.Color("#0d0a08") : lib.sky(skyName); if (!o.ownLight) scene.environment = env(skyName); // ownLight: a LightRig preset lights this shot
-      scene.backgroundIntensity = (night ? 0.28 : 1) + flash * 2.5; scene.environmentIntensity = inside ? 0.12 : night ? 0.3 : 1;
+      scene.backgroundIntensity = (night ? 0.28 : 1) + flash * 2.5; scene.environmentIntensity = LOOK.env * (inside ? 0.12 : night ? 0.3 : 1);
       lighting.update({ time: o.daylight, overcast, flash, focus: inside ? focus : (o.camera as THREE.PerspectiveCamera).position.clone().setY(0) });
+      // sun shadows to the horizon: cascaded shadow maps (kit/cascades.ts) instead of one 120-stud box
+      cascades ??= createCascades(scene, o.camera as THREE.PerspectiveCamera, { maxFar: 700 }); cascades.update(lighting.sun);
       gl.toneMappingExposure = LOOK.exposure * o.daylight.exposure * (inside ? 1.1 : night ? 0.95 : 1);
       applyFog(scene, w, new THREE.Color(o.daylight.horizon).lerp(new THREE.Color("#7d8796"), overcast), inside ? 0.0005 : 0.0011);
       for (const { f, key } of fires) f.update(o.time, o.camera, key === "room" ? (inside ? 1 : 0) : o.fire[key] ?? 0);

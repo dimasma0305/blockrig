@@ -25,6 +25,14 @@ render and after AO; buffers are sized from the video, not the canvas (it can be
 full render, scan it for black frames (render skill) before sending it.
 The sun's shadows are soft PCF (`shadow.radius`), 4096 px, fitted around the camera's focus.
 
+## Fire and torch shadows
+
+A fire that lights people must make them throw shadows away from it, or the scene looks fake (the user noticed).
+Point lights cast shadows by rendering the scene six times, so give a shadow only to the fires that matter in a
+shot, with a small map and a short range: `fire({ ..., shadows: 512, shadowRange: 60 })` for a bonfire or a burning
+tree, `shadows: 256, shadowRange: 35` for a torch in a hand (src/kit/fire.ts; also smokeColumn and spray for water). Keep flame meshes from
+casting shadows themselves.
+
 ## In the kit
 
 | Effect | Where |

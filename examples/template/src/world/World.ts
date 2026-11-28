@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { createLighting, createWeather, applyFog, rng, LOOK, type AssetLibrary, type Weather, type Daylight } from "../kit";
 import { HOUSES } from "./assets";
 import { buildRobloxMap } from "../kit/robloxMap";
+import { createCascades, type Cascades } from "../kit/cascades";
 import { Plan, rect, circle } from "../kit/plan";
 import { restOn } from "../kit/surfaces";
 import type { RobloxCast } from "../cast/roblox";
@@ -166,6 +167,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   }
 
   // ---------------------------------------------------------------- sky, sun, weather
+  let cascades: Cascades | null = null;
   const lighting = createLighting({ shadowSize: 45, sky: false }); root.add(lighting.root); lighting.root.userData.noCollide = true;
   const weather = createWeather(); root.add(weather.root); weather.root.userData.noCollide = true;
   const cloudRain = createWeather({ area: 3.2, top: 8, drops: 500, splashes: 120, flakes: 1 }); root.add(cloudRain.root); cloudRain.root.userData.noCollide = true;
@@ -185,8 +187,10 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
       const { flash } = weather.update(w, o.time, o.local, o.camera);
       const skyName = overcast > 0.45 ? "storm" : skyFor(o.daylight);
       scene.background = lib.sky(skyName); if (!o.ownLight) scene.environment = env(skyName); // ownLight: a LightRig preset lights this shot (kit/lightRig.tsx)
-      scene.backgroundIntensity = (skyName === "storm" ? 0.55 : 1) * (1 + flash * 2.5); scene.environmentIntensity = (skyName === "storm" ? 0.6 : 1) * (inside ? 0.6 : 1);
+      scene.backgroundIntensity = (skyName === "storm" ? 0.55 : 1) * (1 + flash * 2.5); scene.environmentIntensity = LOOK.env * ((skyName === "storm" ? 0.6 : 1) * (inside ? 0.6 : 1));
       lighting.update({ time: o.daylight, overcast, flash, focus: inside ? focus : (o.camera as THREE.PerspectiveCamera).position.clone().setY(0) });
+      // sun shadows to the horizon: cascaded shadow maps (kit/cascades.ts) instead of one box around the camera
+      cascades ??= createCascades(scene, o.camera as THREE.PerspectiveCamera, { maxFar: 700 }); cascades.update(lighting.sun);
       gl.toneMappingExposure = LOOK.exposure * o.daylight.exposure * (inside ? 1.05 : 1);
       applyFog(scene, w, new THREE.Color(o.daylight.horizon).lerp(new THREE.Color("#7d8796"), overcast), inside ? 0.001 : 0.0009); // clear days stay crisp to the horizon (reference); weather adds its own haze
       for (const g of wet) { g.mat.roughness = g.rough + (0.12 - g.rough) * w.wet; g.mat.envMapIntensity = 1 + 1.5 * w.wet; }

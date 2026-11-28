@@ -98,6 +98,26 @@ of hand-tuned offsets:
 `ROBLOX=0` for the all-original cut) draws every zone and footprint over the real street from above. Adding a location:
 give it its own plan and a stage for each of its shots.
 
+## Real-world light balance (LOOK in src/kit/lighting.ts)
+
+Shadows only read like the real world when the sun is several times brighter than the light that fills the shade.
+In three.js that fill (the environment map, the hemisphere light, the characters' self-light) is not blocked by
+objects, so it lights shadows nearly as much as open ground and they look shallow and washed out (the user's
+words). `LOOK` keeps it low for every scene: `env: 0.3` (scene.environmentIntensity), `fill: 0.3` (hemisphere),
+`avatar: 0.05` (characters' self-light), `sun: 1.6`. Shaded sides of faces and bodies go clearly darker and cast
+shadows show solidly on the ground. Lights that should throw shadows at night (fires, torches) need their own:
+the vfx skill.
+
+## Sun shadows to the horizon (src/kit/cascades.ts, three's CSM)
+
+One shadow map covers one box around the camera; everything outside it has no shadow, and wide shots look flat
+(the user: "so many objects don't have correct shadows"). The world uses cascaded shadow maps: three cascades,
+sharp up close and coarser far away, following the camera to 700 studs. They replace the sun's own shadow and patch
+every lit material as it appears (`createCascades` in buildWorld's update). Every shadow-worthy thing must still
+`castShadow` (downloaded models, Roblox maps, instanced trees and characters do) and the ground `receiveShadow`.
+Cost: the shadow pass runs once per cascade; with fire shadows a night shot can take twice as long (40 -> 79 s per
+180 frames). Checking: wide shots in stills should show a shadow under every tree, house and person.
+
 ## Lighting presets (src/kit/lightRig.tsx, drei)
 
 By default the sky photo (HDRI) lights each scene. For a shot that needs a mood, name a preset in docs/story.md

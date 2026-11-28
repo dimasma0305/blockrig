@@ -91,17 +91,24 @@ function breathe(x, sr, words) {
     if (i + 1 >= words.length) return;
     const need = /(\.\.\.|…|[.!?])["')]*$/.test(w.word) ? STOP_P : /[,;:—-]["')]*$/.test(w.word) ? COMMA : 0;
     if (!need) return;
-    const a = Math.max(0, Math.round((w.end - 0.1) * sr)), b = Math.min(x.length, Math.round((words[i + 1].start + 0.1) * sr));
+    // Whisper's word edges can be off by a tenth of a second: search a little wider, and only ever cut into real
+    // silence. If there is none (the words run together), add no pause: a cut inside a word is an audible glitch
+    // (one split "Sawit" in two after "hills.").
+    const a = Math.max(0, Math.round((w.end - 0.15) * sr)), b = Math.min(x.length, Math.round((words[i + 1].start + 0.25) * sr));
     let best = Infinity, at = Math.round(((w.end + words[i + 1].start) / 2) * sr);
     for (let s = a; s < Math.max(a + 1, b - hop); s += hop) { const e = rms(s); if (e < best) { best = e; at = s + (hop >> 1); } }
+    if (best >= quiet) return;
     let l = at, r = at; while (l - hop > 0 && rms(l - hop) < quiet) l -= hop; while (r + hop < x.length && rms(r) < quiet) r += hop;
     const have = (r - l) / sr; if (have < need) cuts.push({ at, add: need - have });
   });
   if (!cuts.length) return { x, words, n: 0 };
   const total = cuts.reduce((t, c) => t + Math.round(c.add * sr), 0), y = new Float32Array(x.length + total);
   let src = 0, dst = 0;
-  for (const c of cuts) { y.set(x.subarray(src, c.at), dst); dst += c.at - src; dst += Math.round(c.add * sr); src = c.at; }
-  y.set(x.subarray(src), dst);
+  // 6 ms fades either side of every insert, so even a cut in near-silence can't click
+  const fade = Math.round(0.006 * sr), xf = Float32Array.from(x);
+  for (const c of cuts) for (let k = 0; k < fade; k++) { const g = k / fade; if (c.at - 1 - k >= 0) xf[c.at - 1 - k] *= g; if (c.at + k < xf.length) xf[c.at + k] *= g; }
+  for (const c of cuts) { y.set(xf.subarray(src, c.at), dst); dst += c.at - src; dst += Math.round(c.add * sr); src = c.at; }
+  y.set(xf.subarray(src), dst);
   const shift = (t) => t + cuts.filter((c) => c.at / sr <= t).reduce((s, c) => s + c.add, 0);
   return { x: y, words: words.map((w) => ({ ...w, start: +shift(w.start).toFixed(3), end: +shift(w.end).toFixed(3) })), n: cuts.length };
 }

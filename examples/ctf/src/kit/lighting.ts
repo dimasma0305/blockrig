@@ -6,7 +6,11 @@ export type Daylight = { top: string; horizon: string; ground: string; sun: stri
 // The look (from the user's reference shorts): a strong warm afternoon sun low enough for long crisp shadows, a deep
 // blue sky, little flat fill so shadows keep their depth, and ACES Filmic for saturated, contrasty colour (AgX
 // looked washed out next to them). Every composition calls applyLook(gl).
-export const LOOK = { toneMapping: THREE.ACESFilmicToneMapping, exposure: 0.9, shadowMap: THREE.PCFShadowMap };
+// Real-world light balance: the sun is several times brighter than the sky light that fills the shade, so shadows
+// read dark and blue-ish, not washed out. In three.js the fill (environment map, hemisphere light, characters' own
+// glow) is NOT blocked by objects, so it lights shadows almost as much as open ground: keep it low. `env` scales
+// scene.environmentIntensity, `fill` the hemisphere light, `avatar` the characters' self-light (avatarAmbient).
+export const LOOK = { toneMapping: THREE.ACESFilmicToneMapping, exposure: 0.9, shadowMap: THREE.PCFShadowMap, env: 0.3, fill: 0.3, avatar: 0.05, sun: 1.6 };
 export function applyLook(gl: THREE.WebGLRenderer) {
   gl.toneMapping = LOOK.toneMapping; gl.toneMappingExposure = LOOK.exposure; gl.shadowMap.type = LOOK.shadowMap;
   const w = globalThis as any; // once per tab: which GPU renders (headless Chrome can fall back to the slow integrated one: npm run fast-gpu)
@@ -15,7 +19,7 @@ export function applyLook(gl: THREE.WebGLRenderer) {
 }
 /** Roblox lights avatars with strong ambient light, so faces and clothes stay readable in shade (reference shorts):
  *  a little of each material's own colour and texture as self-light. Call it on every character once it is dressed. */
-export function avatarAmbient(obj: THREE.Object3D, amount = 0.3) {
+export function avatarAmbient(obj: THREE.Object3D, amount = LOOK.avatar) {
   const done = new Set<THREE.Material>();
   obj.traverse((o: any) => {
     if (!o.isMesh) return;
@@ -76,8 +80,8 @@ export function createLighting({ shadowSize = 40, shadowMap = 4096, sky: showSky
       uniforms.uTop.value.set(time.top); uniforms.uHorizon.value.set(time.horizon); uniforms.uGround.value.set(time.ground); uniforms.uSun.value.set(time.sun);
       uniforms.uSunDir.value.set(...time.sunDir).normalize(); uniforms.uStars.value = time.stars; uniforms.uFlash.value = f * 0.9; uniforms.uOvercast.value = overcast;
       sky.position.copy(focus);
-      hemi.color.set(time.top).lerp(new THREE.Color("#ffffff"), 0.5); hemi.groundColor.set(time.ground); hemi.intensity = time.fill * (1 + 0.3 * overcast);
-      sun.color.set(time.sun); sun.intensity = time.sunIntensity * (1 - 0.65 * overcast);
+      hemi.color.set(time.top).lerp(new THREE.Color("#ffffff"), 0.5); hemi.groundColor.set(time.ground); hemi.intensity = time.fill * LOOK.fill * (1 + 0.3 * overcast);
+      sun.color.set(time.sun); sun.intensity = time.sunIntensity * LOOK.sun * (1 - 0.65 * overcast);
       sun.position.copy(focus).addScaledVector(uniforms.uSunDir.value, 120); sun.target.position.copy(focus); sun.target.updateMatrixWorld();
       flash.intensity = f * 7;
     },

@@ -121,7 +121,8 @@ export function buildCast(rb: RobloxCast | null, lib: AssetLibrary): Cast {
   for (const [i, g] of guards.entries()) {
     // held the Roblox way: Humanoid:EquipTool's grip (the torch is modelled +Y up), with the toolHold pose (performance.ts)
     const t = torchStick(); g.rig.equipTool(t, { grip: TORCH_GRIP }); t.visible = false; g.props.torch = t;
-    const f = fire({ width: 0.7, height: 1.6, seed: 300 + i, smoke: false, light: 14 }); f.position.y = 2.0; t.add(f); g.flame = f;
+    // torchlight: the guards and the trees around them throw shadows
+    const f = fire({ width: 0.7, height: 1.6, seed: 300 + i, smoke: false, light: 14, shadows: 256, shadowRange: 35 }); f.position.y = 2.0; t.add(f); g.flame = f;
   }
   weld(grandpa, "lantern", lib.model("lantern", { height: 1.6 }), { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, -1.6, 0] });
   for (const k of [hero, ...kids]) { weld(k, "bucket", bucket(), { rot: [1, 0, 0, 0, 1, 0, 0, 0, 1], pos: [0, -0.7, -0.3] }); k.water = spray(500 + k.name.length * 7); k.water.visible = false; }

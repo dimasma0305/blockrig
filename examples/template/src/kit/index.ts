@@ -18,3 +18,4 @@ export * from "./plan";
 export * from "./surfaces";
 export * from "./ground";
 export * from "./post";
+export * from "./fire";

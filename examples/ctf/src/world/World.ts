@@ -5,7 +5,7 @@ import { towerMaterial, domeMaterial, hologramMaterial, glyphAtlas, glyphRainMat
 import { STREET, LANES, BAKERY, SCHOOL, HERO_STREET, PX, VAULT, TERMINAL, BARRIER_Z } from "./layout";
 import { Plan, rect, circle } from "../kit/plan";
 import { rng } from "../kit/rng";
-import { wires, createWeather, type Weather, type AssetLibrary } from "../kit";
+import { wires, createWeather, LOOK, type Weather, type AssetLibrary } from "../kit";
 import { SHOPS, SKYSCRAPERS } from "./assets";
 
 export type WorldState = {
@@ -40,7 +40,7 @@ export function buildWorld(renderer: THREE.WebGLRenderer, scene: THREE.Scene, li
   // neon environment for reflections (wet road, glossy jackets): a little scene of glowing panels
   const envScene = new THREE.Scene(), pm = new THREE.PMREMGenerator(renderer);
   for (const [c, x, z] of [["#19e3c4", -6, 0], ["#ff2e88", 6, 0], ["#ffb35c", 0, -6], ["#3a4cff", 0, 6]] as const) { const p = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), neon(c)); p.position.set(x, 1, z); p.lookAt(0, 0, 0); envScene.add(p); }
-  scene.environment = pm.fromScene(envScene, 0.04).texture; scene.environmentIntensity = 0.7;
+  scene.environment = pm.fromScene(envScene, 0.04).texture; scene.environmentIntensity = LOOK.env * (0.7);
 
   // ---- ground: wet asphalt everywhere, road markings and pavements on the street ----
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), std("#0a0c16", { roughness: 0.22, metalness: 0.55 }));

@@ -8,6 +8,7 @@
 //
 // Frame-pure: the environment renders once when it mounts (frames={1}), and the PCSS noise depends only on the pixel.
 import { Environment, Lightformer, SoftShadows } from "@react-three/drei";
+import { LOOK } from "./lighting";
 
 type Former = { form?: "rect" | "circle" | "ring"; color: string; intensity: number; position: [number, number, number]; scale: [number, number]; rotation?: [number, number, number] };
 export type LightPreset = {
@@ -84,7 +85,7 @@ export function LightRig({ preset, softShadows = true }: { preset: string; softS
   return (
     <>
       {softShadows && <SoftShadows size={p.shadows.size} samples={p.shadows.samples} focus={p.shadows.focus} />}
-      <Environment frames={1} resolution={256} background={false} environmentIntensity={p.envIntensity}>
+      <Environment frames={1} resolution={256} background={false} environmentIntensity={p.envIntensity * LOOK.env}>
         <color attach="background" args={[p.base]} />
         {p.formers.map((f, i) => <Lightformer key={i} form={f.form ?? "rect"} color={f.color} intensity={f.intensity} position={f.position} scale={f.scale as any} {...(f.rotation ? { rotation: f.rotation } : {})} />)} {/* no rotation: it faces the centre */}
       </Environment>

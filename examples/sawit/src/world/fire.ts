@@ -61,7 +61,11 @@ function riser(count: number, o: { radius: number; height: number; speed: number
 export type Fire = THREE.Group & { update(t: number, camera: THREE.Camera, power: number): void };
 
 /** A fire `width` studs across and `height` tall: flame planes, a glow, embers, smoke and a flickering light. */
-export function fire(o: { width: number; height: number; seed: number; smoke?: boolean; light?: number }): Fire {
+/** `lightHeight`: where its light sits (default 60% of the flames; a big fire's light belongs low, near the base,
+ *  or people get short stubby shadows instead of long ones). `shadows`: the fire's light casts shadows (people and trees throw them away from the fire), at that shadow-map
+ *  size (512 for fires, 256 for hand torches). A point light's shadow renders the scene 6 times, so only the fires
+ *  that matter in a shot get one; its range is kept short (`shadowRange` studs). */
+export function fire(o: { width: number; height: number; seed: number; smoke?: boolean; light?: number; shadows?: number; shadowRange?: number; lightHeight?: number }): Fire {
   const g = new THREE.Group() as Fire, r = rng(o.seed); g.userData.noCollide = true;
   const flames: { mesh: THREE.Mesh; mat: THREE.ShaderMaterial; base: number }[] = [];
   const n = Math.max(2, Math.round(o.width / 1.6));
@@ -77,7 +81,11 @@ export function fire(o: { width: number; height: number; seed: number; smoke?: b
   g.add(embers.pts);
   const smoke = o.smoke === false ? null : riser(Math.round(14 + o.width * 2), { radius: o.width * 0.45, height: o.height * 5, speed: 2.2, size: o.height * 1.6, colour: "#2b2622", additive: false, opacity: 0.55, seed: o.seed + 2, drift: 3 });
   if (smoke) { smoke.pts.position.y = o.height * 0.6; g.add(smoke.pts); }
-  const light = new THREE.PointLight("#ff7a1e", (o.light ?? 30) * 4, o.height * 8 + o.width * 3, 1); light.position.y = o.height * 0.6; g.add(light);
+  const light = new THREE.PointLight("#ff7a1e", (o.light ?? 30) * 4, o.height * 8 + o.width * 3, 1); light.position.y = o.lightHeight ?? o.height * 0.6; g.add(light); // low (about head height) = long shadows away from the fire, as in life
+  if (o.shadows) {
+    light.castShadow = true; light.shadow.mapSize.set(o.shadows, o.shadows); light.shadow.bias = -0.002; light.shadow.normalBias = 0.05; light.shadow.radius = 3;
+    light.shadow.camera.near = 0.5; light.shadow.camera.far = o.shadowRange ?? Math.min(80, o.height * 4 + 20);
+  }
   const tmp = new THREE.Vector3();
   g.update = (t, camera, power) => {
     g.visible = power > 0.01;
