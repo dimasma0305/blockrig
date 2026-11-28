@@ -25,7 +25,7 @@ A change that "looks right" but works differently from Roblox is a bug, even if 
 - Physics simulation, Humanoid movement and controllers, networking, game logic, UI frameworks.
 - Anything that needs React, Remotion, drei, postprocessing or another heavy runtime: components, hooks, render scripts and post effects stay in the video project (`examples/template/src/kit`).
 - Story-specific things: a video's cast, wardrobe, world, shot direction, props and the content of its boards.
-- Asset downloading and any Roblox or creator asset itself (see Assets).
+- Any Roblox or creator asset itself (see Assets). Downloading is limited to `blockrig/pack/cache`: public bundle details, and files from links the user's own signed-in browser provides. Never read cookies or sign in for the user.
 
 If a request is for something out of scope, say so and suggest doing it in the video project (the template's kit) instead.
 
@@ -110,7 +110,7 @@ Keep this table current. **Parity** means it behaves like Roblox. **Approximatio
 
 ## Assets
 
-- **Never commit Roblox assets** to this repo or the npm package. That covers catalog meshes, textures, face decals, animations, Roblox's own body parts, and Toolbox maps. Real creator images used in a video (avatars, thumbnails, logos in `assets/brands`) are git-ignored the same way. Tests and screenshots use generated content (`makeCoat`, `writeMesh`, procedural faces).
+- **Never commit Roblox assets** to this repo or the npm package (the pack cache lives in the user's home folder, and a video's copies under its git-ignored `assets/roblox/`). That covers catalog meshes, textures, face decals, animations, Roblox's own body parts, and Toolbox maps. Real creator images used in a video (avatars, thumbnails, logos in `assets/brands`) are git-ignored the same way. Tests and screenshots use generated content (`makeCoat`, `writeMesh`, procedural faces).
 - APIs take assets from the caller (`parseMesh(bytes)`, `createFace({ images })`). Documentation may explain how to fetch assets for personal use, with a note about Roblox's Terms of Use and creators' rights.
 
 ## Tests and releases

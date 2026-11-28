@@ -274,5 +274,8 @@
       "kind": "hair",
       "about": "Braided Ponytail (Brown) (DIDIgamedev)"
     }
+  },
+  "packs": {
+    "rthro": "bundle:356"
   }
 }

@@ -3,7 +3,8 @@
 // to zoom, and edit the props on the right; rendered (npm run stills -- --comp Sandbox 0 120 240), the camera turns
 // slowly around the character, so frames show every side.
 //
-// Props: who (hero, sister, neighbour0..3), clip (a name from src/cast/clips.ts, or "all" to cycle them), face (an
+// Props: who (hero, sister, neighbour0..3), clip (a name from src/cast/clips.ts, "all" to cycle them, or a pack's slot
+// as "<pack>:<slot>", e.g. "rthro:run" after npm run pack -- bundle:356 rthro), face (an
 // expression, or "cycle"), time (day, golden, dusk, night), post (effects on/off), ao, bloom.
 import { useEffect, useMemo, useRef } from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, getRemotionEnvironment } from "remotion";
@@ -19,6 +20,7 @@ import { buildCast, HAIR } from "../cast/characters";
 import { ALL } from "../cast/clips";
 import { act, place } from "../direction/performance";
 import { useRobloxCast, type RobloxCast } from "../cast/roblox";
+import { usePacks, type Packs } from "../cast/packs";
 
 export type SandboxProps = { who: string; clip: string; face: string; hair: string; spin: number; time: string; light: string; soft: boolean; post: boolean; ao: number; bloom: number; roblox: boolean };
 export const SANDBOX_DEFAULTS: SandboxProps = { who: "hero", clip: "all", face: "cycle", hair: "own", spin: 0.5, time: "day", light: "golden", soft: true, post: true, ao: POST_DEFAULTS.ao, bloom: POST_DEFAULTS.bloom, roblox: true };
@@ -26,7 +28,7 @@ const FACES = ["neutral", "happy", "laugh", "smug", "determined", "angry", "furi
 const ALL_HAIR = [...HAIR.boy, ...HAIR.girl];
 export const CLIP_SECONDS = 2.5;
 
-function Stage({ lib, rb, p }: { lib: AssetLibrary; rb: RobloxCast | null; p: SandboxProps }) {
+function Stage({ lib, rb, packs, p }: { lib: AssetLibrary; rb: RobloxCast | null; packs: Packs; p: SandboxProps }) {
   const frame = useCurrentFrame(), { fps } = useVideoConfig(), t = frame / fps;
   const { gl, scene, camera } = useThree() as any;
   const studio = getRemotionEnvironment().isStudio;
@@ -60,7 +62,9 @@ function Stage({ lib, rb, p }: { lib: AssetLibrary; rb: RobloxCast | null; p: Sa
   if (hs) { for (const o of hs.own) o.visible = !hs.pool[hairKey]; for (const [k, o] of Object.entries(hs.pool)) o.visible = k === hairKey; }
   const names = Object.keys(ALL), ci = p.clip === "all" ? Math.floor(t / CLIP_SECONDS) % names.length : Math.max(0, names.indexOf(p.clip));
   const face = p.face === "cycle" ? FACES[Math.floor(t / 1.2) % FACES.length] : p.face;
-  place(who, 0, 0, 0); act(who, [{ clip: (ALL as any)[names[ci]] }], p.clip === "all" ? t % CLIP_SECONDS : t, face);
+  // "<pack>:<slot>": the heaviest clip of that slot in a Roblox pack (src/cast/packs.ts)
+  const [packName, slot] = p.clip.split(":"), packClip = slot ? packs[packName]?.clip(slot) : null;
+  place(who, 0, 0, 0); act(who, [{ clip: packClip ?? (ALL as any)[names[ci]] }], p.clip === "all" ? t % CLIP_SECONDS : t, face);
   // light: "hdri" = the sky photo lights the scene (as before); a preset = drei Lightformers + PCSS soft shadows (kit/lightRig.tsx)
   const preset = LIGHT_PRESETS[p.light], day = TIMES[preset ? preset.time : p.time] ?? TIMES.day;
   built.lighting.update({ time: day, focus: new THREE.Vector3() });
@@ -89,18 +93,18 @@ function Stage({ lib, rb, p }: { lib: AssetLibrary; rb: RobloxCast | null; p: Sa
 export const Sandbox: React.FC<Partial<SandboxProps>> = (props) => {
   const p = { ...SANDBOX_DEFAULTS, ...props };
   const { width, height } = useVideoConfig();
-  const lib = useAssetLibrary(ASSETS), rb = useRobloxCast(!!p.roblox);
+  const lib = useAssetLibrary(ASSETS), rb = useRobloxCast(!!p.roblox), packs = usePacks();
   const frame = useCurrentFrame(), { fps } = useVideoConfig(), names = Object.keys(ALL);
   const label: React.CSSProperties = { position: "absolute", left: 50, color: "#fff", font: "800 40px sans-serif", WebkitTextStroke: "7px #000", paintOrder: "stroke fill" };
   const ci = p.clip === "all" ? Math.floor(frame / fps / CLIP_SECONDS) % names.length : Math.max(0, names.indexOf(p.clip));
   const face = p.face === "cycle" ? FACES[Math.floor(frame / fps / 1.2) % FACES.length] : p.face;
   return (
     <AbsoluteFill style={{ background: "#87a9d6" }}>
-      {lib && rb !== undefined && <ThreeCanvas width={width} height={height} shadows dpr={1}
+      {lib && rb !== undefined && packs && <ThreeCanvas width={width} height={height} shadows dpr={1}
         gl={{ antialias: !p.post, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }} camera={{ fov: 45, position: [4, 4, -11] }}>
-        <Stage lib={lib} rb={rb} p={p} />
+        <Stage lib={lib} rb={rb} packs={packs} p={p} />
       </ThreeCanvas>}
-      <div style={{ ...label, top: 120 }}>{p.who} · {names[ci]} · {face}{p.hair !== "own" ? ` · ${p.hair === "cycle" ? ALL_HAIR[Math.floor(frame / fps / 2) % ALL_HAIR.length] : p.hair}` : ""}</div>
+      <div style={{ ...label, top: 120 }}>{p.who} · {p.clip.includes(":") ? p.clip : names[ci]} · {face}{p.hair !== "own" ? ` · ${p.hair === "cycle" ? ALL_HAIR[Math.floor(frame / fps / 2) % ALL_HAIR.length] : p.hair}` : ""}</div>
       <div style={{ ...label, top: 175, fontSize: 28, WebkitTextStroke: "5px #000" }}>{LIGHT_PRESETS[p.light] ? `light: ${p.light}` : `${p.time} (sky light)`} · effects {p.post ? `on (AO ${p.ao}, bloom ${p.bloom})` : "off"}</div>
     </AbsoluteFill>
   );

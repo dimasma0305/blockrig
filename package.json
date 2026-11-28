@@ -18,6 +18,14 @@
       "types": "./src/voice/index.d.ts",
       "default": "./src/voice/index.js"
     },
+    "./pack": {
+      "types": "./src/pack/index.d.ts",
+      "default": "./src/pack/index.js"
+    },
+    "./pack/cache": {
+      "types": "./src/pack/cache.d.ts",
+      "default": "./src/pack/cache.js"
+    },
     "./umd": "./dist/blockrig.umd.js",
     "./package.json": "./package.json"
   },
@@ -44,6 +52,7 @@
   "keywords": [
     "roblox",
     "roblox-video",
+    "roblox-bundle",
     "shorts",
     "narration",
     "tts",

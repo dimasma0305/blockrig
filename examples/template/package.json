@@ -15,6 +15,7 @@
     "voice": "node scripts/docs.mjs && node scripts/voice.mjs",
     "assets": "node scripts/fetch-assets.mjs",
     "roblox": "node scripts/fetch-roblox.mjs",
+    "pack": "node scripts/pack.mjs",
     "studio": "node scripts/docs.mjs && remotion studio",
     "stills": "node scripts/docs.mjs && node scripts/stills.mjs",
     "check": "node scripts/docs.mjs && node scripts/check.mjs && tsc --noEmit",

@@ -36,19 +36,20 @@ cd ../my-video && npm install
 
 1. **Story.** Write `docs/story.md`: the hook in the first 2 seconds, the twist, and a shot list with one line per shot. Each shot can set its camera, `speaker:` for dialogue (caption tags and per-character voices), `note:` for an on-screen explainer, and a lighting preset. `docs/visuals.md` lists the cast and places; `docs/audio.md` the voices and music.
 2. **Voice.** `npm run voice` makes every line offline in plain Node (chatterbox-js, no Python), with one voice per character. Speech recognition checks each take, and the measured word timings set every shot's length and caption. `npm run check` confirms the voice says the right words at the right pace.
-3. **Assets.** `npm run assets` gets CC0 models, skies and textures. `npm run roblox` gets Roblox catalog items (hair, outfits, faces) and Toolbox maps through your signed-in browser. Real creator images go in `assets/brands/`. All of these stay out of git.
+3. **Assets.** `npm run assets` gets CC0 models, skies and textures. `npm run roblox` gets Roblox catalog items (hair, outfits, faces) and Toolbox maps through your signed-in browser. `npm run pack -- bundle:356 rthro` gets a whole Roblox pack by its id (see [Roblox packs](#roblox-packs-by-id)). Real creator images go in `assets/brands/`. All of these stay out of git.
 4. **Stills.** `npm run stills` (or `npm run stills -- s01`) renders one frame per shot to `out/stills/` and a contact sheet, so you can review the look before a long render.
 5. **Collide.** `npm run collide` runs the Rapier staging check on the real frames. It finds cameras inside walls, faces hidden behind props, characters inside furniture, and characters floating, sunk or stiff on a soft bed.
 6. **Render.** `npm run render` renders `out/<slug>.mp4` (1080×1920, with the voice, music and captions). `npm run fast-gpu` (once, on laptops with two GPUs) makes renders about 4× faster.
 
 ## Module map
 
-Three entry points, all ESM with TypeScript types, and `three` as the only peer dependency:
+Four entry points, all ESM with TypeScript types, and `three` as the only peer dependency:
 
 | Import | What it's for |
 |---|---|
 | `blockrig` | **Characters**: R15/R6 rigs and bodies, Roblox `.mesh` / `.rbxm` / `.rbxmx` readers, layered clothing, accessories, welds and tools, faces (decals, FACS, drawn expressions), the Animator, IK. Follows Roblox's own mechanisms ([AGENTS.md](AGENTS.md)). |
 | `blockrig/video` | **The rest of the video**: everything a story short needs besides its characters, framework-free and frame-pure (a frame depends only on its time, so Remotion can render frames in any order and in parallel). |
+| `blockrig/pack` | **Whole Roblox packs by id**: a bundle (body package, dynamic head, animation pack, outfit) or a single asset (accessory, shirt, emote, Toolbox model), referenced as `bundle:356` or `asset:376548738`, downloaded once into a cache every video shares, and turned into rig parts, accessories, clothing, clips by slot, or a map. `blockrig/pack/cache` is the disk cache (Node). |
 | `blockrig/voice` | **The narration**: what each line is voiced as, whether a take is good, where the pauses go, and whether the whole thing is paced right. Pure JavaScript with no dependencies; the video runs the speech models (Chatterbox, Kokoro, Whisper) and ffmpeg. |
 
 What's in `blockrig/video`:
@@ -106,6 +107,41 @@ const R = await loadRapier(() => import("@dimforge/rapier3d-compat"));
 const probe = createProbe(R, world.root);                    // once per shot
 console.log(probe.check(camera, [{ name: "me", rig }]));     // [] when the staging is clean
 ```
+
+## Roblox packs by id
+
+Use a whole Roblox pack, not item by item: reference it by its Roblox id, download it once, and every video on the machine reuses it.
+
+```sh
+npm run pack -- bundle:356 rthro      # the Rthro Animation Package, named "rthro" in assets/manifest.json "packs"
+npm run pack -- bundle:949 boy        # a dynamic head with its mood and brows
+npm run pack -- asset:376548738 hair  # a single catalog item or Toolbox model
+npm run pack                          # every pack in the manifest
+```
+
+- **Bundle details** come from Roblox's public catalog.
+- **The files** need your Roblox sign-in. When some are missing, the script writes a small browser script (`assets/roblox/pack-links.js`). Run it in the browser pane on https://assetdelivery.roblox.com while signed in, save what it returns, then run `npm run pack -- links <file>` and `npm run pack` again. Each round reveals the next layer: the bundle names its items, the items name their meshes, textures and keyframe sequences. It usually takes two or three rounds.
+- **The cache:** files are stored once in `~/.cache/blockrig/roblox` (or `BLOCKRIG_CACHE`) by asset id, and copied into the video's git-ignored `assets/roblox/packs/`. Version 7 (Draco) meshes are stored as version 4, so the video needs no decoder.
+
+In the video:
+
+```ts
+import { rigFromPack } from "blockrig/pack";
+const packs = usePacks();                                   // src/cast/packs.ts: loads before the first frame
+const rig = rigFromPack(packs.boy, { outline: 0.035 });     // body parts, head, accessories (layered ones fitted), clothing
+poseAt(rig, [{ clip: packs.rthro.clip("run") }], t);        // the heaviest clip of a slot: idle, walk, run, jump, fall, climb, swim, mood, emote...
+```
+
+A pack's items are sorted by their Roblox `AssetType`:
+- **Body parts:** `describeBodyParts`.
+- **Heads:** dynamic heads are fetched as MeshParts, with FaceControls.
+- **Faces.**
+- **Classic clothing.**
+- **Accessories:** rigid ones on their attachment; layered ones fitted through their WrapLayer cages.
+- **Animations:** animation packs keep Roblox's own slot names and weights.
+- **Models:** drawn as maps (`describeMap`, then `buildRobloxMap`).
+
+The Sandbox debug composition plays a pack's clip with `clip: "rthro:run"`. Checked on the real Rthro Animation Package: all 10 clips load and play. Roblox items belong to Roblox and their creators: they stay out of git.
 
 ## Problems found while making videos, fixed in the library
 
