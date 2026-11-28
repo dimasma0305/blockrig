@@ -38,3 +38,16 @@ ground and a hazy horizon. Outdoor close-ups: low and level; wides: high only wh
 
 `npm run stills -- s03 s05` for changed shots, `DEBUG=1` to see the caption band and app zones, and the `Shot`
 composition in Studio to scrub one shot with notes.
+
+## Inside a Roblox room (learned on the nasa video)
+
+A Toolbox bedroom is full of furniture: an `on(person)` camera placed by the person's facing ended up inside a
+chair back, behind the desk, or looking at a pile of props on the desk corner in half the shots. What worked:
+- Measure the room first: list map.json parts by model with their boxes, and take a top view of the real scene
+  (nasa's `cam` input prop: `PROPS='{"cam":{"pos":[x,y,z],"target":[x,y,z],"fov":110}}' npm run stills -- s01`, camera below the ceiling).
+- Mark the open floor as a Box3 and clamp every camera in the room to it; shoot dialogue from that side.
+- Stage actors in that open floor too, and let them "cheat out" (turn ~75% toward the camera side, as on a stage),
+  or every line is the back of a head.
+- Leave out map parts that stand between those cameras and the hero (`buildRobloxMap(..., { skip })`), and check
+  that your own props (a pile of juice boxes!) don't sit on that line.
+- Check a full contact sheet after each pass: the fixes interact.

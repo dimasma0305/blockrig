@@ -36,8 +36,11 @@ if (pitches.length > 2) {
   for (const [id, p] of pitches) { const d = p / median - 1, limit = d > 0 && LOUD.has(emo[id]) ? 0.35 : 0.2; if (Math.abs(d) > limit) problems.push(`${id}: voice pitch ${p.toFixed(0)} Hz is ${(d * 100).toFixed(0)}% off the narrator's ${median.toFixed(0)} Hz (sounds like another voice)`); else if (Math.abs(d) > 0.12) notes.push(`${id}: voice pitch ${(d * 100).toFixed(0)}% off the median`); }
 }
 if (!timings.placeholder && timings.total) {
-  const wpm = (60 * words) / timings.total;
-  notes.push(`pace: ${words} words in ${timings.total.toFixed(1)} s = ${wpm.toFixed(0)} wpm overall (target ~160)`);
+  // silent beats (shots with no line, held for their "min") are deliberate: pace is measured over the spoken shots
+  const gap = story.voice?.gapSeconds ?? 0.12, silent = story.shots.filter((s) => !s.narration).reduce((t, s) => t + Math.max(s.minSeconds ?? 0, 0.5), 0);
+  const wpm = (60 * words) / Math.max(1, timings.total - silent);
+  if (silent) notes.push(`silent beats: ${silent.toFixed(1)} s (not counted in the pace)`);
+  notes.push(`pace: ${words} words in ${(timings.total - silent).toFixed(1)} s of spoken shots = ${wpm.toFixed(0)} wpm overall (target ~160)`);
   if (wpm > 190) problems.push(`pace ${wpm.toFixed(0)} wpm is rushed: lower "tempo" or raise "gap" in docs/audio.md`);
   if (wpm < 130) problems.push(`pace ${wpm.toFixed(0)} wpm drags: raise "tempo" or shorten "gap"/"min" holds`);
 }

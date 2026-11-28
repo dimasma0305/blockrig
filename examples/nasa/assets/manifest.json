@@ -1,0 +1,328 @@
+{
+  "$about": "Assets this video uses (assets skill). `npm run assets` downloads them into git-ignored folders and writes assets/credits.json. Roblox catalog items and Toolbox maps: used freely in videos (Roblox allows it), files never committed (npm run roblox fetches them).",
+  "kenney": {
+    "city-kit-suburban": {},
+    "city-kit-roads": {},
+    "car-kit": {},
+    "furniture-kit": {},
+    "nature-kit": {}
+  },
+  "github": {
+    "kenney-platformer": {
+      "base": "https://raw.githubusercontent.com/KenneyNL/Starter-Kit-3D-Platformer/main/models/",
+      "files": [
+        "cloud.glb",
+        "Textures/colormap.png"
+      ],
+      "licence": "CC0 1.0",
+      "author": "Kenney (kenney.nl)",
+      "page": "https://github.com/KenneyNL/Starter-Kit-3D-Platformer"
+    }
+  },
+  "hdri": {
+    "day": {
+      "id": "kloofendal_48d_partly_cloudy_puresky",
+      "res": "2k"
+    },
+    "golden": {
+      "id": "qwantani_dusk_2_puresky",
+      "res": "2k"
+    },
+    "storm": {
+      "id": "overcast_soil_puresky",
+      "res": "2k"
+    },
+    "night": {
+      "id": "rogland_clear_night",
+      "res": "2k"
+    }
+  },
+  "textures": {
+    "asphalt": {
+      "id": "asphalt_02",
+      "res": "1k"
+    },
+    "planks": {
+      "id": "brown_planks_04",
+      "res": "1k"
+    },
+    "fabric": {
+      "id": "denim_fabric",
+      "res": "1k"
+    },
+    "concrete": {
+      "id": "brushed_concrete",
+      "res": "1k"
+    }
+  },
+  "ambientcg": {
+    "grass": {
+      "id": "Grass004",
+      "res": "1K-JPG"
+    }
+  },
+  "polypizza": {
+    "shiba": {
+      "id": "y4wdQpg767"
+    },
+    "bird": {
+      "id": "8Ph79kHbt9s"
+    }
+  },
+  "roblox": {
+    "$about": "Free Roblox catalog items (official, or community UGC at price 0) and Toolbox maps: used in posted videos (Roblox allows it); the files are git-ignored, never committed. npm run roblox (see the assets skill). Pick by quality: the most-favourited items (SortType=1), premium UGC included (assetdelivery serves them).",
+    "boyHead": {
+      "bundle": 949,
+      "kind": "head"
+    },
+    "girlHead": {
+      "bundle": 948,
+      "kind": "head"
+    },
+    "heroHair": {
+      "assetId": 101109395111164,
+      "kind": "hair"
+    },
+    "heroShirt": {
+      "assetId": 398633584,
+      "kind": "shirt",
+      "about": "Denim Jacket with White Hoodie"
+    },
+    "heroPants": {
+      "assetId": 398633812,
+      "kind": "pants",
+      "about": "Black Jeans with White Shoes"
+    },
+    "sisterHair": {
+      "assetId": 89707605927173,
+      "kind": "hair"
+    },
+    "sisterShirt": {
+      "assetId": 6876555875,
+      "kind": "shirt",
+      "about": "y2k aesthetic girl vintage trendy soft gray cute (uaeu)"
+    },
+    "sisterPants": {
+      "assetId": 5197702014,
+      "kind": "pants",
+      "about": "Cute ripped Jeans Y2k aesthetic vintage girl (uaeu)"
+    },
+    "n0Hair": {
+      "assetId": 6823338112,
+      "kind": "hair",
+      "about": "Messy Boy Hair in Black (Rush_X)"
+    },
+    "n0Shirt": {
+      "assetId": 7919545692,
+      "kind": "shirt",
+      "about": "Emo y2k black shirt aesthetic boy (reysia)"
+    },
+    "n0Pants": {
+      "assetId": 382537569,
+      "kind": "pants"
+    },
+    "n1Hair": {
+      "assetId": 7284206648,
+      "kind": "hair",
+      "about": "Aesthetic Split Bangs Hair in Blonde (Lukacors)"
+    },
+    "n1Shirt": {
+      "assetId": 5042211670,
+      "kind": "shirt",
+      "about": "purple cool crop-top (retrogirlz)"
+    },
+    "n1Pants": {
+      "assetId": 1160488459,
+      "kind": "pants",
+      "about": "Pink! Trendy Girls Cute Casual Outfit (Boho Clothing)"
+    },
+    "n2Hair": {
+      "assetId": 5644883846,
+      "kind": "hair",
+      "about": "Cool Boy Hair (genkroco)"
+    },
+    "n2Shirt": {
+      "assetId": 144076436,
+      "kind": "shirt",
+      "about": "Grey Striped Shirt with Denim Jacket"
+    },
+    "n2Pants": {
+      "assetId": 398635338,
+      "kind": "pants"
+    },
+    "n3Hair": {
+      "assetId": 6501746646,
+      "kind": "hair",
+      "about": "Popular Girl Blonde & Brown Hair (bunnexh)"
+    },
+    "n3Shirt": {
+      "assetId": 6170187890,
+      "kind": "shirt",
+      "about": "y2k vamp girl vintage aesthetic (uaeu)"
+    },
+    "n3Pants": {
+      "assetId": 5246950670,
+      "kind": "pants",
+      "about": "skirt + converse boots y2k (h34rtSICK)"
+    },
+    "faceAnime": {
+      "assetId": 131886627952212,
+      "kind": "face"
+    },
+    "faceFang": {
+      "assetId": 106459314796536,
+      "kind": "face"
+    },
+    "faceRanker": {
+      "assetId": 114738498874820,
+      "kind": "face"
+    },
+    "facePotato": {
+      "assetId": 71083397812129,
+      "kind": "face"
+    },
+    "faceCrying": {
+      "assetId": 140335885709847,
+      "kind": "face"
+    },
+    "faceSparkle": {
+      "assetId": 117530109834139,
+      "kind": "face"
+    },
+    "faceSmile": {
+      "assetId": 73803306079949,
+      "kind": "face"
+    },
+    "faceSharpEyes": {
+      "assetId": 87283810049324,
+      "kind": "face"
+    },
+    "faceAngerVein": {
+      "assetId": 96729799003786,
+      "kind": "face"
+    },
+    "faceChibi": {
+      "assetId": 96980015396127,
+      "kind": "face"
+    },
+    "faceHearts": {
+      "assetId": 100152234940998,
+      "kind": "face"
+    },
+    "mapHouseA": {
+      "assetId": 317197851,
+      "kind": "map",
+      "about": "Suburban House (Toolbox, free)"
+    },
+    "mapBedroomA": {
+      "assetId": 9659331819,
+      "kind": "map",
+      "about": "Random Bedroom (Toolbox, free)"
+    },
+    "mapBedroomB": {
+      "assetId": 17681009469,
+      "kind": "map",
+      "about": "Modern Bedroom (Toolbox, free)"
+    },
+    "faceLaugh": {
+      "assetId": 12064732367,
+      "kind": "face",
+      "about": "Blushing Big Smile Face (3D) (Headpets)"
+    },
+    "faceDizzy": {
+      "assetId": 10924889010,
+      "kind": "face",
+      "about": "Epic Dizzy Face (3D) (Headpets)"
+    },
+    "faceSleepy": {
+      "assetId": 11720215989,
+      "kind": "face",
+      "about": "Cute Sleepy Face (Blizzei)"
+    },
+    "faceBlush": {
+      "assetId": 10716153814,
+      "kind": "face",
+      "about": "Blush Sticker Filter (Blizzei): layered on for embarrassed"
+    },
+    "h4Hair": {
+      "assetId": 5891039736,
+      "kind": "hair",
+      "about": "Black Anime Hair (PolarCub)"
+    },
+    "h5Hair": {
+      "assetId": 323476364,
+      "kind": "hair",
+      "about": "Brown Scene Hair (Roblox)"
+    },
+    "h6Hair": {
+      "assetId": 10323360626,
+      "kind": "hair",
+      "about": "Black Fluffy Middle Swept Hair (Rush_X)"
+    },
+    "h7Hair": {
+      "assetId": 4875445470,
+      "kind": "hair",
+      "about": "Black Short Parted Hair (Homemade_Meal)"
+    },
+    "g5Hair": {
+      "assetId": 15227777707,
+      "kind": "hair",
+      "about": "Straight Hair with Headphones (Black) (DIDIgamedev)"
+    },
+    "g6Hair": {
+      "assetId": 13251161977,
+      "kind": "hair",
+      "about": "Braided Ponytail (Brown) (DIDIgamedev)"
+    },
+    "momShirt": {
+      "assetId": 398634295,
+      "kind": "shirt",
+      "about": "Pastel Starburst Top with Gray Jacket (Roblox)"
+    },
+    "momPants": {
+      "assetId": 398634487,
+      "kind": "pants",
+      "about": "Beautiful You Jeans (Roblox)"
+    },
+    "dadShirt": {
+      "assetId": 398635081,
+      "kind": "shirt",
+      "about": "Blue Plaid Shirt (Roblox)"
+    },
+    "dadPants": {
+      "assetId": 144076760,
+      "kind": "pants",
+      "about": "Dark Green Jeans (Roblox)"
+    },
+    "dadHair": {
+      "assetId": 376548738,
+      "kind": "hair",
+      "about": "Brown Charmer Hair (Roblox)"
+    },
+    "babyShirt": {
+      "assetId": 382537702,
+      "kind": "shirt",
+      "about": "Teal Shirt (Roblox)"
+    },
+    "headset": {
+      "assetId": 4649457617,
+      "kind": "hair",
+      "about": "White Gaming Headset (maplestick)"
+    },
+    "babyPants": {
+      "assetId": 382537950,
+      "kind": "pants",
+      "about": "Jean Shorts with White Shoes (Roblox)"
+    },
+    "kidShirt": {
+      "assetId": 382538059,
+      "kind": "shirt",
+      "about": "Green Jersey (Roblox)"
+    },
+    "kidShirt2": {
+      "assetId": 382537085,
+      "kind": "shirt",
+      "about": "I <3 Pizza Shirt (Roblox)"
+    }
+  }
+}

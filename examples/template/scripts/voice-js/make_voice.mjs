@@ -60,7 +60,11 @@ function pitch(x) {
   out.sort((a, b) => a - b); return out.length ? out[out.length >> 1] : 0;
 }
 const NUM = { 0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 10: "ten", knew: "new", their: "there", too: "to", two: "to", four: "for", through: "threw", thru: "threw", and: "an" }; // homophones count as right ("an" is often heard as "and")
-const norm = (s) => s.toLowerCase().replace(/-/g, " ").replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean).map((w) => NUM[w] ?? w);
+// numbers as Whisper writes them ("$5,000", "11", "6") are spelled out first, so "five thousand dollars" matches
+const ONES = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split(" "), TENS = "  twenty thirty forty fifty sixty seventy eighty ninety".split(" ");
+const say = (n) => n < 20 ? ONES[n] : n < 100 ? TENS[Math.floor(n / 10)] + (n % 10 ? " " + ONES[n % 10] : "") : n < 1000 ? ONES[Math.floor(n / 100)] + " hundred" + (n % 100 ? " " + say(n % 100) : "") : say(Math.floor(n / 1000)) + " thousand" + (n % 1000 ? " " + say(n % 1000) : "");
+const spellNumbers = (s) => s.replace(/(\$?)(\d[\d,]*)(th)?/g, (m, dollar, d, th) => { const n = +d.replace(/,/g, ""); return n < 1e6 ? say(n) + (th ? "th" : "") + (dollar ? " dollars" : "") : m; });
+const norm = (s) => spellNumbers(s).toLowerCase().replace(/-/g, " ").replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean).map((w) => NUM[w] ?? w);
 function similarity(a, b) { // letters only, spaces ignored ("bot net" = "botnet"); 1 - edit distance / length
   const x = norm(a).join(""), y = norm(b).join(""); const d = Array.from({ length: x.length + 1 }, (_, i) => [i]);
   for (let j = 1; j <= y.length; j++) d[0][j] = j;

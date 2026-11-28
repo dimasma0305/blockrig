@@ -10,7 +10,7 @@ export type StoryFile = {
   title: string; slug: string; fps: number; width: number; height: number;
   voice?: { gapSeconds?: number; [k: string]: unknown }; music?: { theme: string; fromShot: string }[]; shots: StoryShot[];
 };
-export type Timings = { clips: Record<string, { duration: number; words: Word[] }>; music: { file: string; from: number; to: number; theme: string }[]; total: number };
+export type Timings = { clips: Record<string, { duration: number; words: Word[] }>; music: { file: string | null; from: number; to: number; theme: string }[]; total: number };
 
 export type Shot = StoryShot & {
   idx: number; faces: Record<string, string>; start: number; end: number; dur: number; startFrame: number; endFrame: number; audio: string | null;

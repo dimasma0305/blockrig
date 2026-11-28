@@ -13,7 +13,7 @@ export const Soundtrack: React.FC<{ timeline: Timeline; musicVolume?: number; vo
           <Audio src={staticFile(s.audio!)} volume={voiceVolume} />
         </Sequence>
       ))}
-      {MUSIC.map((m, i) => (
+      {MUSIC.map((m, i) => m.file && (
         <Sequence key={i} from={Math.round(m.from * FPS)} durationInFrames={Math.max(1, Math.round((m.to - m.from) * FPS))} name={`music ${m.theme}`}>
           <Audio src={staticFile(m.file)} volume={musicVolume} />
         </Sequence>

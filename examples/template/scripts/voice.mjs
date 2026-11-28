@@ -61,12 +61,12 @@ if (musicOnly) {
 } else {
   // Chatterbox loads a large model, so every line is voiced in one run of its own Python environment
   if (engine === "chatterbox") {
-    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
+    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.say || s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
     fs.writeFileSync(`${outDir}/lines.json`, JSON.stringify(lines));
     execFileSync(voicePy, ["scripts/voice/make_voice_chatterbox.py", "--lines", `${outDir}/lines.json`, "--config", JSON.stringify(story.voice?.chatterbox || {})], { stdio: ["ignore", "inherit", "ignore"] });
   }  // the same voice in plain Node, no Python (scripts/voice-js): Chatterbox via onnxruntime-node, Whisper via Transformers.js
   if (engine === "chatterbox-js") {
-    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
+    const lines = story.shots.filter((s) => s.narration).map((s) => ({ id: s.id, text: s.say || s.narration, emotion: s.emotion, out: `${outDir}/${s.id}.wav` }));
     fs.writeFileSync(`${outDir}/lines.json`, JSON.stringify(lines));
     execFileSync(process.execPath, ["scripts/voice-js/make_voice.mjs", "--lines", `${outDir}/lines.json`, "--config", JSON.stringify(story.voice?.chatterbox || {})], { stdio: "inherit" });
   }
@@ -103,6 +103,7 @@ let total = 0; const starts = {};
 for (const s of story.shots) { starts[s.id] = total; const d = timings.clips[s.id]?.duration ?? 0; total += Math.max(d + gap, s.minSeconds ?? 0); }
 timings.music = story.music.map((m, i) => {
   const from = starts[m.fromShot] ?? 0, to = i + 1 < story.music.length ? starts[story.music[i + 1].fromShot] : total;
+  if (m.theme === "none") return { theme: "none", file: null, from, to }; // a silent stretch (room tone): no music
   const file = `${outDir}/music-${i}.wav`;
   writeWav(file, compose(m.theme, to - from + 1.5, i + 1));
   return { theme: m.theme, file: file.replace(/^assets\//, ""), from, to };

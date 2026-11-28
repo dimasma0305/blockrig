@@ -30,6 +30,10 @@ that Whisper hears word for word *and* whose pitch is within the check's limits 
 `VOICE_ONLY=s04 npm run voice` re-voices one line to match the rest). CFG matters: without it 1 in 4 takes slurred
 or babbled; with it every CTF line passed in 1–3 takes. Per-emotion `cfg` is in `EMOTIONS`.
 
+Whisper writes numbers as digits ("$5,000", "11"): the matcher spells them out before comparing, so "five thousand
+dollars" is not flagged. Very short lines ("Thanks.", "After the Sun.") are the hardest: the model adds or drops words;
+a different emotion, or `say:` with a beat ("After... the Sun."), gives new takes.
+
 ## Emotion: say each line the way it means
 
 Every narrated shot has `emotion:` in docs/story.md. The narrator must sound like the line: "Rank... last." is

@@ -9,12 +9,13 @@ const { fontFamily } = loadFont("normal", { weights: ["800"], subsets: ["latin"]
 /** Where captions sit, as a fraction of the frame height (the debug overlay draws this band). */
 export const CAPTION_TOP = 0.62;
 
-export const Captions: React.FC<{ captions: Caption[]; top?: number; highlight?: string; size?: number }> = ({ captions, top = CAPTION_TOP, highlight = "#ffd60a", size = 104 }) => {
+/** `speakers`: shot id -> who says the line (dialogue): shown as a small tag above the caption, in that colour. */
+export const Captions: React.FC<{ captions: Caption[]; top?: number; highlight?: string; size?: number; speakers?: Record<string, { name: string; colour: string }> }> = ({ captions, top = CAPTION_TOP, highlight = "#ffd60a", size = 104, speakers }) => {
   const frame = useCurrentFrame(), { fps } = useVideoConfig(), t = frame / fps;
   const cap = captions.find((c) => t >= c.start && t < c.end);
   if (!cap) return null;
   const s = spring({ frame: frame - Math.round(cap.start * fps), fps, config: { damping: 12, stiffness: 220, mass: 0.6 } });
-  const words = cap.text.split(" ");
+  const words = cap.text.split(" "), who = speakers?.[cap.shot];
   return (
     <AbsoluteFill style={{ alignItems: "center", pointerEvents: "none" }}>
       <div style={{
@@ -24,6 +25,8 @@ export const Captions: React.FC<{ captions: Caption[]; top?: number; highlight?:
         color: "#ffffff", WebkitTextStroke: `${Math.round(size * 0.135)}px #000000`, paintOrder: "stroke fill",
         textShadow: "0 8px 0 rgba(0,0,0,0.55)",
       }}>
+        {who ? <div style={{ display: "inline-block", fontSize: size * 0.42, WebkitTextStroke: "0px", background: who.colour, color: "#fff", padding: `${size * 0.06}px ${size * 0.22}px`, borderRadius: size * 0.14, marginBottom: size * 0.12, border: `${Math.round(size * 0.05)}px solid #000`, textShadow: "none" }}>{who.name}</div> : null}
+        {who ? <br /> : null}
         {words.map((w, i) => {
           const clean = w.replace(/[^A-Z0-9']/gi, "");
           const hot = cap.highlight && clean.toUpperCase() === cap.highlight.toUpperCase();

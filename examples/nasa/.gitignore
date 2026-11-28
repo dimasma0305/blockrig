@@ -1,0 +1,19 @@
+node_modules
+dist
+out
+.browser-path
+.env
+# generated: rebuild with npm run docs / npm run voice
+src/generated/
+assets/audio/
+# downloaded third-party assets: never commit (see the assets skill)
+assets/cc0/
+assets/roblox/
+assets/textures/
+
+# downloaded assets (npm run assets)
+assets/kenney/
+assets/github/
+assets/hdri/
+assets/polypizza/
+assets/credits.json

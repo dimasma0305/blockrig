@@ -34,6 +34,10 @@ The comment at the top of `docs/story.md` is the format. Per shot:
 - `mood:` one word, for music and colour.
 - `light:` (optional) a lighting preset for the shot: day, golden, night, indoor, studio (world skill). Leave it out for the sky's own light.
 
+- `speaker:` (dialogue): who says the line (me, mom, dad...). The one narrator voices it with the line's `emotion:`, and the caption gets a small tag in that character's colour (Captions `speakers`). Never a second voice.
+- `say:` how the narrator pronounces a name or acronym ("C-T-Fs", "O-S-C-P", "kurenaifu"), same word count as the line; the captions keep the real spelling. Dialogue sketches with many silent beats read slower: `npm run check` measures pace over the spoken shots only.
+- In docs/audio.md "Music", `- s54: none` is silence ("the music stops").
+
 `npm run docs` checks all of this (captions cover narration, faces exist, weather/time known) and fails loudly.
 
 ## Before handing off

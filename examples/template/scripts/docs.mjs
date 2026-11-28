@@ -68,6 +68,8 @@ for (const s of shots) {
     const covered = norm(s.captions.map((c) => c.text).join(" "));
     if (covered !== norm(s.narration)) errors.push(`${s.id}: captions "${covered}" do not cover the narration "${norm(s.narration)}"`);
     for (const c of s.captions) { const n = c.text.split(/\s+/).length; if (n > 4) warnings.push(`${s.id}: caption "${c.text}" has ${n} words (2-4 read best)`); }
+    // "- say:" is how the narrator pronounces the line (names); it must keep the word count so captions stay in step
+    if (s.say && s.say.split(/\s+/).length !== s.narration.split(/\s+/).length) errors.push(`${s.id}: "say" has ${s.say.split(/\s+/).length} words, the line ${s.narration.split(/\s+/).length}`);
   } else if (!s.minSeconds) errors.push(`${s.id}: a silent shot needs "- min: <seconds>"`);
   if (!s.camera) warnings.push(`${s.id}: no camera note`);
   if (!s.action) warnings.push(`${s.id}: no action note`);
@@ -79,7 +81,7 @@ for (const s of shots) {
   if (s.narration && !s.emotion) warnings.push(`${s.id}: no emotion for the narrator (defaults to ${s.narration.trim().endsWith("!") ? "panic" : "neutral"})`);
   for (const part of (s.time ?? "").split("->")) { const t = part.trim(); if (t && !TIMES.includes(t)) errors.push(`${s.id}: unknown time "${t}"`); }
 }
-for (const m of music) { if (!ids.has(m.fromShot)) errors.push(`audio.md music: no shot "${m.fromShot}"`); if (!THEME_NAMES.includes(m.theme)) errors.push(`audio.md music: unknown theme "${m.theme}" (${THEME_NAMES.join(", ")})`); }
+for (const m of music) { if (!ids.has(m.fromShot)) errors.push(`audio.md music: no shot "${m.fromShot}"`); if (!THEME_NAMES.includes(m.theme) && m.theme !== "none") errors.push(`audio.md music: unknown theme "${m.theme}" (${THEME_NAMES.join(", ")})`); }
 if (!shots.length) errors.push("docs/story.md has no shots (### s01 · location)");
 
 const story = { $generated: "from docs/ by scripts/docs.mjs - edit the docs, not this file", title: front.title ?? "Untitled", slug: front.slug ?? "video", fps: Number(front.fps ?? 60), width, height, voice, music, shots };
