@@ -12,9 +12,24 @@ import { webpackOverride } from "./webpack.mjs";
 const CACHE = path.resolve("out/.cache/bundles");
 const walk = (d) => (fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.name === "node_modules" || e.name.startsWith(".") ? [] : e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)])) : []);
 
+/**
+ * Files outside src/ that src/ imports (relative imports such as "../assets/audio/timings.json"): webpack builds them
+ * into the bundle, so they belong in its hash. Missed, a re-voice reused a bundle with the old shot timings.
+ */
+export function importedFromOutside() {
+  const out = new Set(), srcDir = path.resolve("src");
+  for (const f of walk("src").filter((f) => /\.(ts|tsx|js|jsx|mjs)$/.test(f))) {
+    for (const m of fs.readFileSync(f, "utf8").matchAll(/(?:from|import)\s*\(?\s*["'](\.{1,2}\/[^"']+)["']/g)) {
+      const p = path.resolve(path.dirname(f), m[1]);
+      if (!p.startsWith(srcDir + path.sep) && fs.existsSync(p) && fs.statSync(p).isFile()) out.add(path.relative(process.cwd(), p));
+    }
+  }
+  return [...out];
+}
+
 /** A hash of every file the bundle is built from (contents, so a touch without a change keeps the bundle). */
 export function bundleHash() {
-  const files = [...walk("src"), ...walk("../../src"), "package-lock.json", "package.json", "scripts/webpack.mjs", "remotion.config.ts"].filter((f) => fs.existsSync(f)).sort();
+  const files = [...new Set([...walk("src"), ...walk("../../src"), ...importedFromOutside(), "package-lock.json", "package.json", "scripts/webpack.mjs", "remotion.config.ts"])].filter((f) => fs.existsSync(f)).sort();
   const h = crypto.createHash("sha1");
   for (const f of files) { h.update(f.replace(/\\/g, "/")); h.update(fs.readFileSync(f)); }
   return h.digest("hex").slice(0, 16);
