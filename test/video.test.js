@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { createRig, clips, cframeToMatrix } from "../src/index.js";
+import { createRig, clips, cframeToMatrix, createFace, EXPRESSIONS } from "../src/index.js";
 import {
   rng, easeInOut, smooth, createTimeline, speakersOf, V, pushIn, orbit, applyCamera, poseAt, groundRig, FEET, ON_SEAT,
   surfaceOf, restOn, daylight, mixDaylight, TIMES, createLighting, avatarAmbient, buildRobloxMap, partGeometry, facePlane, materialLook,
@@ -333,4 +333,74 @@ test("video: a seated character isn't 'inside' its own chair, and captions over 
   assert.ok(caps.some((i) => i.kind === "caption-over-face"), JSON.stringify(caps));
   assert.ok(!probe.check(cam, [{ name: "me", rig }]).some((i) => i.kind === "caption-over-face"), "only when captions are given");
   probe.free();
+});
+
+// ---- framing by where faces land
+import { frame, screenOf } from "../src/video/index.js";
+
+test("video: frame() puts every face at the chosen height, inside the margins, and out of the caption band", () => {
+  const a = V(0, 4.5, 0), b = V(0, 4.3, 5.5);
+  for (const from of [V(-1, 0.05, 0), V(-1, 0.4, 0.3), V(0.2, 0.1, 1)]) {
+    const c = frame([a, b], { from, fov: 50 });
+    assert.ok(c.fits);
+    const mean = (c.screen[0].y + c.screen[1].y) / 2; close(mean, 0.36, 0.01, "faces at faceY");
+    for (const q of c.screen) { assert.ok(q.x >= 0.1 && q.x <= 0.84, `x ${q.x}`); assert.ok(!(q.y >= 0.58 && q.y <= 0.72), `y ${q.y} in the captions`); }
+    // the Cam really frames them that way through a three.js camera
+    const cam = new THREE.PerspectiveCamera(50, 9 / 16, 0.3, 2000); applyCamera(cam, c, 0); cam.updateMatrixWorld(true);
+    const ndc = a.clone().project(cam); close((1 - ndc.y) / 2, c.screen[0].y, 1e-3); close((ndc.x + 1) / 2, c.screen[0].x, 1e-3);
+  }
+  const single = frame([a], { size: 0.1, fov: 45 }), wider = frame([a], { size: 0.1, fov: 45, wide: 1.5 });
+  close(wider.distance / single.distance, 1.5, 1e-9);
+  const far = frame([V(-10, 4, 0), V(10, 4, 0)], { from: V(0, 0, 1), fov: 45 });
+  assert.ok(far.distance > single.distance, "faces far apart: the camera backs off until both fit");
+  for (const q of far.screen) assert.ok(q.x >= 0.1 && q.x <= 0.84);
+  // a face that would sit low is lifted above the captions by the height search, never left in the band
+  const low = frame([a], { faceY: 0.65 }); assert.ok(!low.fits || !(low.screen[0].y >= 0.58 && low.screen[0].y <= 0.72));
+  assert.equal(screenOf([V(0, 0, -5)], V(0, 0, 0), V(0, 0, -1), 45, 1)[0].x, 0.5);
+});
+
+// ---- placing characters on what is under them
+import { surfaces, placeOn } from "../src/video/index.js";
+
+test("video: placeOn rests feet on the floor and hips in a soft bed, from a raycast (no measured heights)", () => {
+  const data = { parts: [
+    part({ name: "Floor", size: [40, 1, 40], cframe: { rot: I3, pos: [0, -0.5, 0] } }),
+    part({ name: "Bed", model: "BigBed", size: [6, 2, 4], material: 1312, cframe: { rot: I3, pos: [-10, 1, 0] } }),
+    part({ name: "Table", size: [4, 0.4, 4], cframe: { rot: I3, pos: [10, 3, 0] } }),
+  ], lights: [] };
+  const root = new THREE.Group(); root.add(buildRobloxMap(data, { meshes: {}, images: {} }).group);
+  const stage = new THREE.Mesh(new THREE.BoxGeometry(4, 2, 4), new THREE.MeshStandardMaterial()); stage.position.set(0, 1, 10); stage.userData.label = "Stage"; root.add(stage);
+  const ghost = new THREE.Mesh(new THREE.BoxGeometry(4, 8, 4), new THREE.MeshStandardMaterial()); ghost.position.set(0, 4, -10); ghost.userData.noCollide = true; root.add(ghost);
+  const g = surfaces(root), feet = (rig) => Math.min(rig.jointPosition("LeftFoot").y, rig.jointPosition("RightFoot").y) - 0.3;
+  const a = createRig(); assert.equal(placeOn(a, g, 3, 3).name, "Floor"); close(feet(a), 0, 1e-6);
+  const b = createRig(); assert.equal(placeOn(b, g, -10, 0, ON_SEAT).name, "BigBed/Bed");
+  close(b.jointPosition("LowerTorso").y - 0.35, 2 - 0.35, 1e-6, "hips sink into the bed by its softness");
+  const c = createRig(); assert.equal(placeOn(c, g, 0, 10).name, "Stage"); close(feet(c), 2, 1e-4, "a plain mesh");
+  const d = createRig(); assert.equal(placeOn(d, g, 10, 0, FEET, { below: 2 }).name, "Floor", "under the table, not on it"); close(feet(d), 0, 1e-6);
+  assert.equal(g.at(0, -10).name, "Floor", "noCollide things are not surfaces");
+  assert.equal(g.at(100, 100), null);
+});
+
+// ---- faces that follow the voice
+import { mouthAt, talk, faceFor } from "../src/video/index.js";
+
+test("video: the mouth opens on every syllable of the spoken words, and the face takes the line's emotion", () => {
+  const words = [{ word: "hello", start: 1, end: 1.5 }, { word: "there", start: 1.7, end: 2 }];
+  assert.equal(mouthAt(words, 0.5), 0, "before the line"); assert.equal(mouthAt(words, 1.6), 0, "between words");
+  assert.ok(mouthAt(words, 1.125) > 0.5, "mid first syllable of hel-lo"); assert.ok(mouthAt(words, 1.249) < 0.1, "between its syllables");
+  assert.ok(mouthAt(words, 1.775) > 0.5, "mid first syllable of the-re");
+  assert.equal(faceFor("panic"), "scared"); assert.equal(faceFor("smug"), "smug"); assert.equal(faceFor(undefined), "neutral");
+  const T = createTimeline(story, timings);
+  close(T.SHOTS[0].words[0].start, T.SHOTS[0].start + 0.1, 1e-9, "shots carry their words in video time");
+  // a drawn face: mouthOpen follows
+  const face = createFace({ expression: "neutral", blink: false }), rig = createRig({ face });
+  assert.ok(talk(rig, 0.8, "happy")); close(face.params().mouthOpen, 0.8, 1e-9); assert.equal(face.params().mouthCurve, EXPRESSIONS.happy.mouthCurve);
+  talk(rig, 0, "happy"); close(face.params().mouthOpen, EXPRESSIONS.happy.mouthOpen ?? 0, 1e-9, "closed: the expression's own mouth");
+});
+
+test("video: one set of frame zones for captions, the app buttons, frame() and the staging check", async () => {
+  const { ZONES, captionBand } = await import("../src/video/index.js");
+  assert.deepEqual(captionBand(), [ZONES.captions[0] - 0.03, ZONES.captions[0] + 0.07]);
+  const c = frame([V(0, 4, 0)], { size: 0.1 });
+  assert.ok(c.screen[0].x < ZONES.buttons.x[0], "clear of the app buttons");
 });

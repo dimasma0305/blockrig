@@ -23,7 +23,7 @@ A change that "looks right" but works differently from Roblox is a bug, even if 
 
 **Out of scope (don't add these to the library)**
 - Physics simulation, Humanoid movement and controllers, networking, game logic, UI frameworks.
-- Anything that needs React, Remotion, drei, postprocessing or another heavy runtime: components, hooks, render scripts and post effects stay in the video project (`examples/template/src/kit`).
+- drei light rigs, render scripts and anything look-specific stay in the video project. React / Remotion components that every video needs live in `blockrig/remotion` (and `blockrig/remotion/post`), with their runtimes as optional peer dependencies: never import them from `blockrig`, `blockrig/video`, `blockrig/voice` or `blockrig/pack`.
 - Story-specific things: a video's cast, wardrobe, world, shot direction, props and the content of its boards.
 - Any Roblox or creator asset itself (see Assets). Downloading is limited to `blockrig/pack/cache`: public bundle details, and files from links the user's own signed-in browser provides. Never read cookies or sign in for the user.
 
@@ -31,7 +31,7 @@ If a request is for something out of scope, say so and suggest doing it in the v
 
 ## The video toolkit (`blockrig/video`)
 
-- **Framework-free.** `three` is the only import (`blockrig/voice` imports nothing). Heavy or optional dependencies are passed in by the caller (Rapier: `createProbe(R, root)`, `loadRapier(() => import("@dimforge/rapier3d-compat"))`; canvases: `setCanvasFactory`; images: `loadImages(files, resolve)`).
+- **Framework-free.** `three` is the only import (`blockrig/voice` imports nothing); only `src/remotion/` may import react, remotion and the post libraries, written as plain JS (`createElement`) so the library needs no build step. Heavy or optional dependencies are passed in by the caller (Rapier: `createProbe(R, root)`, `loadRapier(() => import("@dimforge/rapier3d-compat"))`; canvases: `setCanvasFactory`; images: `loadImages(files, resolve)`).
 - **Frame-pure.** A frame depends only on its time: no state carried between frames, randomness seeded (`rng`), caches keyed by what they show (`panel.set(key, p)`). Remotion renders frames out of order in parallel tabs.
 - **Works on every supported three.js** (r128 → r184): no `three/examples` imports (they aren't loadable in Node on old releases), and tests that compare colours avoid colour-management round trips.
 - **Promote, don't copy.** When a fix in a video helps every video, move it here with a test, export it from `src/video/index.js`, type it in `src/video/index.d.ts`, and switch `examples/template` to import it. Older example videos keep their local `src/kit` copies until someone migrates them on purpose; never edit a video that's mid-render.

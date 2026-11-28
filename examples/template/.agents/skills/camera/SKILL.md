@@ -17,6 +17,21 @@ like any clip.
 never into a floor. Put a character on a surface with `restOn(top, "bed")`, not the raw top: hips sink ~0.35 studs
 into a mattress, which is what makes them look seated rather than perched on a board.
 
+## Frame by faces first (blockrig/video `frame`)
+
+For any shot of people, say where their faces go instead of placing the camera by hand:
+`frame([head(hero.rig), head(sister.rig)], { from: V(-1, 0.06, 0), fov: 56, faceY: 0.34, size: 0.07 })`.
+It works out the camera distance and height that put every face at `faceY` (from the top), keep the faces and
+their shoulders (`body`, 1.6 studs) inside the margins (clear of the app buttons), and keep faces out of the caption
+band. `size` is how big a head is (0.1 = medium shot, 0.16 = close); `wide: 1.3` backs off. It follows the subjects
+as they move. Hand-placed cameras (move, pushIn) are for moves that need a path; check them with `npm run collide`.
+
+## Put people on surfaces by raycast (blockrig/video `placeOn`)
+
+`const ground = surfaces(world.root)` once, then `placeOn(rig, ground, x, z)` (feet) or
+`placeOn(rig, ground, x, z, ON_SEAT, { below: 4 })` (hips on the seat under 4 studs): no hand-measured floor, seat
+or bed heights, and soft things take the body in by their softness.
+
 ## Camera (src/direction/camera.ts + blockrig/video camera recipes)
 
 Recipes: `move(from, to, p)` (dolly/crane), `pushIn(subject, dir, far, near, p)`, `orbit`, `follow`, `lowAngle`,

@@ -40,7 +40,9 @@ if (args[0]) {
 const packs = Object.entries(manifest.packs ?? {});
 if (!packs.length) { console.log("no packs yet: npm run pack -- bundle:<id> <name>  (or user:<name>, outfit:<id>, asset:<id>)"); process.exit(0); }
 
-const OUT = "assets/roblox/packs", index = {}, logged = new Set();
+const OUT = "assets/roblox/packs", logged = new Set();
+// packs already exported stay listed (a second npm run pack, or one that stops early, never drops them)
+const index = (() => { try { const old = JSON.parse(fs.readFileSync(`${OUT}/index.json`, "utf8")); return Object.fromEntries(Object.entries(old).filter(([k, key]) => manifest.packs?.[k] && fs.existsSync(`${OUT}/${key}/pack.json`))); } catch { return {}; } })();
 const describe = (p) => [p.bundleType === "Avatar" ? `${p.rigType ?? ""} avatar of ${p.name}` : "", Object.keys(p.body).length ? `body ${Object.keys(p.body).length} parts` : "", p.head ? `${p.head.dynamic ? "dynamic " : ""}head` : "",
   p.accessories.length ? `${p.accessories.length} accessories` : "", Object.keys(p.clothing).join(" "), Object.keys(p.animations).length ? `animations ${Object.entries(p.animations).map(([k, v]) => `${k}${v.length > 1 ? "x" + v.length : ""}`).join(" ")}` : "",
   p.bodyColors ? "body colours" : "", p.map ? `map ${p.map.parts.length} parts` : ""].filter(Boolean).join(", ");
@@ -48,7 +50,7 @@ let missing = [];
 async function round(first) {
   missing = [];
   for (const [name, ref] of packs) {
-    if (index[name]) continue;
+    if (index[name] && !first) continue;
     const r = await fillPack(ref, cache, { decodeDraco, refresh: first && refresh, log: (m) => console.log(`  ${name}: ${m}`) });
     if (r.pack) { exportPack(r.pack, cache, OUT); index[name] = r.pack.key; console.log(`${name} (${r.pack.ref} "${r.pack.name ?? ""}"): ${describe(r.pack)}`); }
     else { missing.push(...r.missing); if (!logged.has(name)) { logged.add(name); console.log(`${name} (${ref}): files still needed`); } }

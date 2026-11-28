@@ -15,6 +15,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import crypto from "node:crypto";
 import { pipeline, env } from "@huggingface/transformers";
 import { KokoroTTS } from "kokoro-js";
 import { loadChatterbox, SR } from "./chatterbox.mjs";
@@ -39,12 +40,25 @@ const ff = (src, dst, af, sr = 48000) => execFileSync("ffmpeg", ["-y", "-v", "er
 const pitch = (x) => medianPitch(x, 16000);
 const PAUSES = { commaPause: cfg.commaPause ?? 0.22, stopPause: cfg.stopPause ?? 0.4 };
 
+// Take cache: a line is voiced again only when what it is made from changes (its text, its voice sample, its mood's
+// settings, the pauses, the number of takes); VOICE_ONLY forces lines. Saves the long CPU runs for unchanged lines.
+const VOICES = cfg.voices ?? {}, voiceOf = (L) => voiceFor(L, VOICES);
+const takeOf = (l) => { try { return JSON.parse(fs.readFileSync(l.out + ".json", "utf8")); } catch { return null; } };
+const takeKey = (L) => { const who = voiceOf(L), mood = moodOf(L);
+  return crypto.createHash("sha1").update(JSON.stringify({ v: 2, text: L.text, voice: who === "narrator" ? { voice: cfg.voice, pitch: cfg.pitch } : VOICES[who], prompt: cfg.prompt, mood, emo: EMO(mood), pauses: PAUSES, takes: cfg.takes })).digest("hex").slice(0, 16); };
+const cached = (L) => !only && takeOf(L)?.key === takeKey(L) && fs.existsSync(L.out);
+const todo = lines.filter((L) => !cached(L));
+if (todo.length < lines.length) console.log(`${lines.length - todo.length} line(s) unchanged since they were voiced: kept (VOICE_ONLY=<ids> forces them)`);
+// nothing to voice and nobody off their voice's pitch: done without loading any model
+const pitchOutliers = () => pitchReport(ALL0.map((l) => { const m = takeOf(l); return { id: l.id, speaker: l.speaker, mood: moodOf(l), pitch: m?.yin >= 2 ? m.pitch : 0 }; }), VOICES).outliers;
+const ALL0 = JSON.parse(fs.readFileSync(arg("--lines"), "utf8"));
+if (!todo.length && !pitchOutliers().length) { console.log("every line is voiced and up to date"); process.exit(0); }
+
 console.log("loading Kokoro, Chatterbox and Whisper (ONNX, CPU)...");
 const kokoro = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "fp32", device: "cpu" });
 const cb = await loadChatterbox();
 const asr = await pipeline("automatic-speech-recognition", "onnx-community/whisper-small.en_timestamped", { dtype: "fp32" });
 // the voice samples: the narrator's (every line), or a speaker's own from cfg.voices (dialogue: Mom, Dad...)
-const VOICES = cfg.voices ?? {}, voiceOf = (L) => voiceFor(L, VOICES);
 async function useVoice(who) {
   const v = who === "narrator" ? { voice: cfg.voice, pitch: cfg.pitch } : VOICES[who];
   const k = await kokoro.generate(cfg.prompt, { voice: v.voice, speed: 0.95 });
@@ -52,7 +66,7 @@ async function useVoice(who) {
   ff(`${tmp}/k.wav`, `${tmp}/prompt.wav`, Math.abs(v.pitch - 1) > 1e-3 ? `rubberband=pitch=${v.pitch}:formant=shifted` : "anull", SR);
   await cb.setVoice(readPcm(`${tmp}/prompt.wav`, SR));
 }
-lines.sort((a, b) => voiceOf(a).localeCompare(voiceOf(b)));
+lines.sort((a, b) => voiceOf(a).localeCompare(voiceOf(b))); todo.sort((a, b) => voiceOf(a).localeCompare(voiceOf(b)));
 // each voice = what npm run check measures: the median pitch of that voice's lines already voiced (when VOICE_ONLY
 // re-voices a few), else its prompt's own pitch
 const ALL = JSON.parse(fs.readFileSync(arg("--lines"), "utf8"));
@@ -79,13 +93,12 @@ async function voiceLine(L, refPitch, round = 0) {
   const shipped = readPcm(L.out, 48000), b = addPauses(shipped, 48000, alignWords(L.text, best.heard.chunks ?? [], best.dur), PAUSES);
   if (b.added) writeWav(L.out, b.x, 48000);
   const duration = b.x.length / 48000;
-  fs.writeFileSync(L.out + ".json", JSON.stringify({ duration: +duration.toFixed(3), engine: "chatterbox-js", voice: voiceOf(L), emotion: mood, match: +best.match.toFixed(3), pitch: +best.hz.toFixed(1), yin: 2, words: b.words }));
+  fs.writeFileSync(L.out + ".json", JSON.stringify({ duration: +duration.toFixed(3), engine: "chatterbox-js", voice: voiceOf(L), emotion: mood, match: +best.match.toFixed(3), pitch: +best.hz.toFixed(1), yin: 2, key: takeKey(L), words: b.words }));
   console.log(`${L.id}  chatterbox-js ${mood.padEnd(8)} match ${best.match.toFixed(2)}  ${best.hz.toFixed(0).padStart(4)} Hz  ${duration.toFixed(2)}s  ${b.added ? "+" + b.added + " pause " : ""}${L.text}`);
 }
 
-const takeOf = (l) => { try { return JSON.parse(fs.readFileSync(l.out + ".json", "utf8")); } catch { return null; } };
 let current = null, refPitch = 0;
-for (const L of lines) {
+for (const L of todo) {
   if (voiceOf(L) !== current) {
     current = voiceOf(L); await useVoice(current);
     // (only takes measured with the same pitch tracker: yin 2)

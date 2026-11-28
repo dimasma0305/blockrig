@@ -21,6 +21,8 @@ npm run studio    # preview; Debug folder: Sandbox (one character, orbit with th
 npm run fast-gpu  # once per Windows laptop with two GPUs: render on the fast one (about 4x faster)
 npm run stills    # out/contact-sheet.jpg
 npm run render    # out/<slug>.mp4
+npm run make      # all of it (docs, voice if none, check, stills, collide) -> out/report.html; -- --render to render too
+npm run pack -- bundle:<id> <name>   # a whole Roblox pack by id (also user:<name>, outfit:<id>, asset:<id>)
 ```
 
 With real Roblox items (dynamic heads with expressions, anime face accessories, hair, shirts, pants, and free

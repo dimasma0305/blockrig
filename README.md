@@ -41,15 +41,18 @@ cd ../my-video && npm install
 5. **Collide.** `npm run collide` runs the Rapier staging check on the real frames. It finds cameras inside walls, faces hidden behind props, characters inside furniture, and characters floating, sunk or stiff on a soft bed.
 6. **Render.** `npm run render` renders `out/<slug>.mp4` (1080×1920, with the voice, music and captions). `npm run fast-gpu` (once, on laptops with two GPUs) makes renders about 4× faster.
 
+**Or all at once:** `npm run make` runs docs → voice (if there is none yet) → check → stills → collide, and writes `out/report.html`. The report shows what passed, each problem with its shot and frames, what needs you (a sign-in, a missing pack), the pace and pitch, the contact sheet and every shot's still. `npm run make -- --render` renders too when nothing is wrong. Re-voicing only redoes lines whose text, voice or mood changed.
+
 ## Module map
 
-Four entry points, all ESM with TypeScript types, and `three` as the only peer dependency:
+Six entry points, all ESM with TypeScript types. `three` is the only required peer dependency; the Remotion parts use the video's own React, Remotion and post-processing:
 
 | Import | What it's for |
 |---|---|
 | `blockrig` | **Characters**: R15/R6 rigs and bodies, Roblox `.mesh` / `.rbxm` / `.rbxmx` readers, layered clothing, accessories, welds and tools, faces (decals, FACS, drawn expressions), the Animator, IK. Follows Roblox's own mechanisms ([AGENTS.md](AGENTS.md)). |
 | `blockrig/video` | **The rest of the video**: everything a story short needs besides its characters, framework-free and frame-pure (a frame depends only on its time, so Remotion can render frames in any order and in parallel). |
-| `blockrig/pack` | **Whole Roblox packs by id**: a bundle (body package, dynamic head, animation pack, outfit) or a single asset (accessory, shirt, emote, Toolbox model), referenced as `bundle:356` or `asset:376548738`, downloaded once into a cache every video shares, and turned into rig parts, accessories, clothing, clips by slot, or a map. `blockrig/pack/cache` is the disk cache (Node). |
+| `blockrig/pack` | **Whole Roblox packs by id**: a bundle (body package, dynamic head, animation pack, outfit), a player's whole avatar (`user:<name>`), an outfit, or a single asset (accessory, shirt, emote, Toolbox model), referenced as `bundle:356`, `user:Roblox` or `asset:376548738`, downloaded once into a cache every video shares, and turned into rig parts, accessories, clothing, clips by slot, or a map. `blockrig/pack/cache` is the disk cache (Node). |
+| `blockrig/remotion` | **The 2D layers over the 3D canvas**: word-synced captions with speaker tags, the soundtrack, vignette, scanlines, glitch and flash cuts, a screen flash, the debug overlay with the app zones. `blockrig/remotion/post` adds the post effects (N8AO ambient occlusion, bloom, SMAA, ACES) with their fixes (no black frames). |
 | `blockrig/voice` | **The narration**: what each line is voiced as, whether a take is good, where the pauses go, and whether the whole thing is paced right. Pure JavaScript with no dependencies; the video runs the speech models (Chatterbox, Kokoro, Whisper) and ffmpeg. |
 
 What's in `blockrig/video`:
@@ -60,6 +63,9 @@ What's in `blockrig/video`:
 | motion | `rng`, `easeInOut`, `easeOut`, `smooth`, `lerp`, `clamp01` | Seeded randomness and easing that look the same in every render tab. |
 | pose | `poseAt`, `groundRig`, `FEET`, `KNEEL`, `SEAT`, `ON_SEAT` | Frame-pure posing with the Animator (seek each track; Roblox priorities and blending), and feet or hips placed on a surface. |
 | camera | `pushIn`, `orbit`, `move`, `follow`, `lowAngle`, `topDown`, `applyCamera` | Camera recipes for shorts; shake is seeded by frame. |
+| frame | `frame`, `screenOf`, `ZONES`, `captionBand` | Framing by where faces should land: give the faces and the side to shoot from, and the camera's distance and height put every face at the chosen height, inside the margins (clear of the app buttons, shoulders included) and out of the caption band. |
+| place | `surfaces`, `placeOn` | Characters rest on whatever is under them by raycast (Roblox map part boxes, meshes): feet on the floor, hips sunk into a soft bed. No hand-measured heights. |
+| talk | `mouthAt`, `talk`, `faceFor` | Lip sync from the voice's word timings (one open-close per syllable) on drawn faces and dynamic heads, and the line's emotion as the face. Timeline shots carry their `words`. |
 | lighting | `createLighting`, `TIMES`, `daylight`, `mixDaylight`, `LOOK`, `applyLook`, `avatarAmbient` | Sky dome, sun with soft shadows, fill and lightning; times of day (day, golden, dusk, night, storm) that blend across a shot. |
 | surfaces | `surfaceOf`, `restOn` | How far a body sinks into a bed, sofa, pillow, grass or floor, from the part's name or its Roblox `Material`. |
 | robloxMap | `buildRobloxMap`, `partGeometry`, `facePlane`, `materialLook`, `swallowingUnions`, `trimUnion` | Draws a Roblox map or model from its part list: Part shapes, wedges, mesh modifiers, MeshParts, Decals and Textures on `NormalId` faces, lights. Parts are merged per material. Also exports one solid collider box per visible part. Desk and table tops that are unions (drawn as one box) are trimmed so they don't cover the chair standing in them. |
@@ -114,13 +120,19 @@ Use a whole Roblox pack, not item by item: reference it by its Roblox id, downlo
 
 ```sh
 npm run pack -- bundle:356 rthro      # the Rthro Animation Package, named "rthro" in assets/manifest.json "packs"
-npm run pack -- bundle:949 boy        # a dynamic head with its mood and brows
+npm run pack -- bundle:192 korblox    # a body package: Korblox Deathspeaker (body parts, its hood, its outfit's colours)
+npm run pack -- user:Roblox player    # a player's whole avatar: worn items, emotes, body colours, scales, R6/R15
+npm run pack -- outfit:<id> look      # an outfit
 npm run pack -- asset:376548738 hair  # a single catalog item or Toolbox model
-npm run pack                          # every pack in the manifest
+npm run pack                          # every pack in the manifest (--refresh: fetch avatars and outfits again)
 ```
 
 - **Bundle details** come from Roblox's public catalog.
-- **The files** need your Roblox sign-in. When some are missing, the script writes a small browser script (`assets/roblox/pack-links.js`). Run it in the browser pane on https://assetdelivery.roblox.com while signed in, save what it returns, then run `npm run pack -- links <file>` and `npm run pack` again. Each round reveals the next layer: the bundle names its items, the items name their meshes, textures and keyframe sequences. It usually takes two or three rounds.
+- **The files** need your Roblox sign-in, round after round: the bundle names its items, the items name their meshes, textures and keyframe sequences. `npm run pack` keeps running until every pack is ready. It takes links in one of two ways:
+  - **A normal browser** (Chrome): run `assets/roblox/pack-links.js` once on https://assetdelivery.roblox.com. It feeds every round through a local link server on 127.0.0.1:8799.
+  - **The in-app browser**, which blocks pages from calling 127.0.0.1: each round, run `assets/roblox/pack-round.js` there and save what it returns as `assets/roblox/pack-links.txt`. The waiting script picks it up and writes the next round.
+
+  Links travel in a compact form. Roblox's rate limit (429) is retried with backoff.
 - **The cache:** files are stored once in `~/.cache/blockrig/roblox` (or `BLOCKRIG_CACHE`) by asset id, and copied into the video's git-ignored `assets/roblox/packs/`. Version 7 (Draco) meshes are stored as version 4, so the video needs no decoder.
 
 In the video:
@@ -141,7 +153,7 @@ A pack's items are sorted by their Roblox `AssetType`:
 - **Animations:** animation packs keep Roblox's own slot names and weights.
 - **Models:** drawn as maps (`describeMap`, then `buildRobloxMap`).
 
-The Sandbox debug composition plays a pack's clip with `clip: "rthro:run"`. Checked on the real Rthro Animation Package: all 10 clips load and play. Roblox items belong to Roblox and their creators: they stay out of git.
+The Sandbox debug composition shows a pack as a whole avatar (`who: "pack:korblox"`) and plays a pack's clip (`clip: "rthro:run"`). Checked on real files: the Rthro Animation Package (10 clips), the Korblox Deathspeaker body package (14 parts and its hood) running with the Rthro run, and `user:Roblox` (17 worn items). Roblox items belong to Roblox and their creators: they stay out of git.
 
 ## Problems found while making videos, fixed in the library
 
@@ -153,6 +165,11 @@ Every problem the videos' feedback logs (`examples/*/docs/feedback.md`) recorded
 | "Why does he say *rank last* so happily?" | An emotion per line; a line ending in "!" panics | `moodOf`, `EMOTIONS` (voice) |
 | The narrator sounded like a different person from line to line; "sad sounds like another voice" | One voice sample for every mood (no pitch shifting); every take's pitch kept near its voice's median (high-energy lines may go 35% up, drifting down stays at 20%) | `judgeTake`, `pitchLimit`, `pitchReport` (voice) |
 | The pitch tracker read every voice ~7% low (found while moving it) | YIN walks to the bottom of the dip | `medianPitch` (voice) |
+| Every shot's camera hand-placed; captions over faces (template s01, s07) | Framing by where faces land: `frame()` keeps them in the upper third, inside the margins, out of the captions | `frame` (video) |
+| Seat and floor heights measured by hand (nasa) | Characters placed on what is under them by raycast | `surfaces`, `placeOn` (video) |
+| Faces frozen while the narrator talks | Lip sync from the word timings, the face from the line's emotion | `mouthAt`, `talk`, `faceFor` (video) |
+| Captions, soundtrack, overlays and post effects copied into every video, and drifting apart | One tested copy | `blockrig/remotion`, `blockrig/remotion/post` |
+| Re-voicing everything after a one-word change (CPU Chatterbox is slow) | Takes are kept while their text, voice and mood are unchanged | template `make_voice.mjs` (take key) |
 | A take passed the voice script but failed `npm run check` (judged against the voice sample, checked against the median of the finished takes) | The checker lists outliers, and the voice script re-voices them against the median | `pitchReport` `outliers` (voice) |
 | Takes that said the line right were thrown out ("$5,000", "11", "an"/"and") | Numbers spelled out, homophones merged, letter-level match | `matchScore`, `spellNumbers` (voice) |
 | "Commas must be heard"; a glitch at pauses split "Sawit" in two | Real silence at commas and stops, only ever cut into silence, with fades | `addPauses` (voice) |
@@ -172,7 +189,7 @@ Every problem the videos' feedback logs (`examples/*/docs/feedback.md`) recorded
 | Frames that differ between render tabs | Seeded randomness, frame-pure posing and boards | `rng`, `poseAt`, `panel` (video) |
 | Body parts poking through clothes; beards at the wrong size; the head showing through face accessories; torches held backwards; gaps at elbows and knees | Character fixes | `blockrig` (see the [CHANGELOG](CHANGELOG.md)) |
 
-Some fixes are still in each video because they need a renderer or a model: post-effect black frames (`usePost` sanitises NaN before bloom), the look (ACES, low sun, little fill), Roblox face skin colours, and roads turned to run along the street.
+Some fixes are still in each video: the look (ACES, low sun, little fill), Roblox face skin colours, roads turned to run along the street, and the voice models themselves. Face accessories (pictures) can't lip sync; drawn faces and dynamic heads can.
 
 ## Made with BlockRig
 
@@ -232,7 +249,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 📦 **File readers**: `.mesh` **v1.00 → v7.00** (v1 text, LODs, bones, subsets, skinning, FACS; v7 Draco via a hook), binary **`.rbxm`** (LZ4 / ZSTD chunks) and XML **`.rbxmx`**, detected automatically.
 - ✍️ **Mesh writer** (v2/v3/v4/v6) and a **procedural coat generator**, so you can build and test without any third-party assets.
 - 📥 **Real Roblox animations**: import `KeyframeSequence` and `CurveAnimation` `.rbxm` files with full Pose CFrames, `Weight`, Roblox easing (including legacy Cubic's quirk), Loop, Priority, named keyframes and markers, for R15 and R6.
-- 🧪 **182 tests** (characters, the video toolkit and the voice), including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
+- 🧪 **191 tests** (characters, packs, the video toolkit and the voice), including golden regression snapshots, run on Node 20/22/24 × three.js r128/r184 in CI.
 - 🪶 No runtime dependencies: `three` is the only peer dependency (Rapier is yours to install only for the staging check). ESM source, plus a UMD build for `<script>` tags. TypeScript types included.
 
 ## Characters: quick start
@@ -627,7 +644,7 @@ flowchart LR
 ## Testing
 
 ```bash
-npm test             # 182 unit + regression tests (node:test, no browser needed)
+npm test             # 191 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
 npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html, faces.html, clothing.html and ik.html)

@@ -16,9 +16,11 @@ Config.setConcurrency(8);
 
 // BlockRig is linked from ../.. and has its own node_modules/three; make every import of "three" resolve to
 // this project's copy so there is exactly one three.js in the bundle.
+// BlockRig's video parts (blockrig/remotion, blockrig/remotion/post) import react, remotion, postprocessing...: they
+// come from this project too (resolve.modules), never a second copy.
 Config.overrideWebpackConfig((c) => ({
   ...c,
-  resolve: { ...c.resolve, alias: { ...(c.resolve?.alias as object), three: path.resolve("node_modules/three") } },
+  resolve: { ...c.resolve, modules: [path.resolve("node_modules"), "node_modules"], alias: { ...(c.resolve?.alias as object), three: path.resolve("node_modules/three") } },
 }));
 
 // Windows: if the project path is too long for the bundled browser to start, put the path of a copy of

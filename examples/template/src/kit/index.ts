@@ -6,7 +6,7 @@
 export {
   createTimeline, speakersOf, rng, clamp01, smooth, easeInOut, easeOut, lerp,
   poseAt, groundRig, FEET, KNEEL, SEAT, ON_SEAT,
-  V, move, pushIn, orbit, follow, lowAngle, topDown, applyCamera,
+  V, move, pushIn, orbit, follow, lowAngle, topDown, applyCamera, frame,
   LOOK, applyLook, avatarAmbient, TIMES, daylight, mixDaylight, createLighting,
   buildRobloxMap, surfaceOf, restOn,
   panel, pic, coverFit, videoCard, browserWindow, banner, poster, standee, loadImages,

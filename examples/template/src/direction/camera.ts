@@ -1,7 +1,7 @@
 // One camera recipe per shot (docs/story.md "camera" notes), built from the kit's recipes. Targets follow the
 // cast's joints, so a change in staging keeps the framing. Check each changed shot: npm run stills -- s03
 import * as THREE from "three";
-import { V, move, pushIn, follow, lowAngle, type Cam, type Shot } from "../kit";
+import { V, move, pushIn, follow, lowAngle, frame, type Cam, type Shot } from "../kit";
 import type { Cast } from "../cast/characters";
 import { LOCATIONS, type World } from "../world/World";
 
@@ -29,11 +29,8 @@ function shotCamera(shot: Shot, p: number, local: number, cast: Cast, world: Wor
     case "s04": return { pos: lawn.clone().add(V(-9, 1.3, -1.6)), target: world.heroHouse.door.clone().add(V(0, 6, 1)).lerp(head(hero.rig), 0.45), fov: 58, shake: local > 0.22 && local < 0.6 ? 0.25 : 0.05 }; // low, in front of the hero, up past him at the house
     case "s05": return move([V(lawn.x - 22, 5.5, lawn.z - 16), chest(hero.rig)], [V(lawn.x - 19, 5, lawn.z - 13), chest(hero.rig)], p, 46);
     case "s06": { const t = chest(hero.rig).add(V(0, 0.4, 0)); return move([t.clone().add(V(-6, -0.6, 2.4)), t], [t.clone().add(V(-10, 0.6, 4.5)), t], p, 44); }
-    case "s07": { // both kids side by side from the road, aimed below their heads: faces in the upper half, clear of the
-      // captions (aimed at her cloud, her face sat under "NOW IT ONLY RAINS..."), the cloud and its rain above her
-      const mid = head(hero.rig).lerp(head(sister.rig), 0.5);
-      return { pos: mid.clone().add(V(-17.5, 0.8, 0)), target: mid.clone().add(V(0, -2.3, 0)), fov: 56, shake: 0 };
-    }
+    case "s07": // both kids from the road: frame() puts both faces in the upper third, inside the margins, clear of the captions
+      return frame([head(hero.rig), head(sister.rig)], { from: V(-1, 0.06, 0), fov: 56, faceY: 0.34, size: 0.07 });
   }
   return follow(hero.rig.object.position, V(0, 6, 14));
 }

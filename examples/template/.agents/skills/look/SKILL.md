@@ -11,7 +11,9 @@ Build a character from a whole Roblox pack by its id instead of item by item: a 
 its mood, an outfit bundle, an animation pack, or any single catalog item.
 
 1. Find the id on the Roblox site: `roblox.com/bundles/<id>/...` is a bundle (`bundle:<id>`), `roblox.com/catalog/<id>/...`
-   an item (`asset:<id>`). Free official ones: Man Face 949, Woman Face 948, Rthro Animation Package 356, Stylish
+   an item (`asset:<id>`), `roblox.com/users/<id>/profile` a player whose whole avatar you want (`user:<id>`, or
+   `user:<username>`), and an outfit id `outfit:<id>`. A body package bundle (Korblox Deathspeaker 192) or a player's
+   avatar brings its body colours and scales too. Free official ones: Man Face 949, Woman Face 948, Rthro Animation Package 356, Stylish
    Animation Pack 83. Bundle contents are public: `https://catalog.roblox.com/v1/bundles/<id>/details`.
 2. `npm run pack -- bundle:<id> <name>` (assets skill, "Whole Roblox packs by id"): cached once on this machine,
    reused by every video, copied into the git-ignored `assets/roblox/packs/`.
@@ -49,6 +51,10 @@ Wrap every prop in `outlined()` so it matches the rig's outline. Layered clothin
 body under it automatically (HSR), so nothing pokes through.
 
 ## Faces
+
+Faces talk: `performance.ts` lip-syncs whoever says the line (its `speaker:`, else the first-person hero) from the
+voice's word timings (`mouthAt`, `talk`), in that shot's face or the line's emotion (`faceFor`). Drawn faces and
+dynamic heads move; face accessories are pictures and can't, so for a talking close-up prefer a dynamic head.
 
 `createFace({ expression, seed })`; per shot `faces:` in docs/story.md, applied by `act()` in performance.ts.
 

@@ -20,6 +20,7 @@
     "stills": "node scripts/docs.mjs && node scripts/stills.mjs",
     "check": "node scripts/docs.mjs && node scripts/check.mjs && tsc --noEmit",
     "render": "node scripts/docs.mjs && node scripts/render.mjs",
+    "make": "node scripts/make.mjs",
     "preview": "node scripts/preview.mjs",
     "collide": "node scripts/collide.mjs",
     "fast-gpu": "node scripts/fast-gpu.mjs"

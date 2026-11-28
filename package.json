@@ -26,6 +26,14 @@
       "types": "./src/pack/cache.d.ts",
       "default": "./src/pack/cache.js"
     },
+    "./remotion": {
+      "types": "./src/remotion/index.d.ts",
+      "default": "./src/remotion/index.js"
+    },
+    "./remotion/post": {
+      "types": "./src/remotion/post.d.ts",
+      "default": "./src/remotion/post.js"
+    },
     "./umd": "./dist/blockrig.umd.js",
     "./package.json": "./package.json"
   },
@@ -86,12 +94,38 @@
     "node": ">=20"
   },
   "peerDependencies": {
-    "three": ">=0.128.0"
+    "three": ">=0.128.0",
+    "react": ">=18",
+    "remotion": ">=4",
+    "@remotion/media": ">=4",
+    "@react-three/fiber": ">=8",
+    "postprocessing": ">=6",
+    "n8ao": ">=1"
   },
   "devDependencies": {
     "@dimforge/rapier3d-compat": "^0.21.0",
     "esbuild": "0.27.0",
     "playwright-core": "1.63.0",
     "three": "0.184.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "remotion": {
+      "optional": true
+    },
+    "@remotion/media": {
+      "optional": true
+    },
+    "@react-three/fiber": {
+      "optional": true
+    },
+    "postprocessing": {
+      "optional": true
+    },
+    "n8ao": {
+      "optional": true
+    }
   }
 }

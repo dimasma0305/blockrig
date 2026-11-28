@@ -8,6 +8,9 @@ description: Make the narration (one clip per shot, word timings) and music from
 `npm run voice` compiles docs, then `scripts/voice.mjs` writes `assets/audio/<shot>.wav`, per-word timings and the
 music into `assets/audio/timings.json`. Shot lengths and captions follow it.
 
+Takes are kept while a line's text, voice sample, mood settings and pauses are unchanged (`key` in its .wav.json):
+`npm run voice` only voices what changed, and loads no model when nothing did. `VOICE_ONLY=s03,s07` forces lines.
+
 The scripts only run the models (Chatterbox, Kokoro, Whisper, ffmpeg). Every decision is BlockRig's
 (`blockrig/voice`, tested there): the mood of a line (`moodOf`, `EMOTIONS`), which voice speaks it (`voiceOf`),
 whether a take is good (`judgeTake`: words, then pitch, then length), the caption word times (`alignWords`), pauses

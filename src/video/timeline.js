@@ -24,7 +24,9 @@ export function createTimeline(story, timings) {
     const clip = clips[s.id];
     const est = words(s.narration) / 2.7;
     const dur = Math.max((clip?.duration ?? est) + gap, s.minSeconds ?? 0, 0.5);
-    const shot = { ...s, idx, faces: s.faces ?? {}, start: t, end: t + dur, dur, startFrame: Math.round(t * FPS), endFrame: Math.round((t + dur) * FPS), audio: clip ? `audio/${s.id}.wav` : null };
+    const shot = { ...s, idx, faces: s.faces ?? {}, start: t, end: t + dur, dur, startFrame: Math.round(t * FPS), endFrame: Math.round((t + dur) * FPS), audio: clip ? `audio/${s.id}.wav` : null,
+      // the spoken words in video time (lip sync: mouthAt(shot.words, time))
+      words: (clip?.words ?? []).map((w) => ({ word: w.word, start: t + w.start, end: t + w.end })) };
     t += dur;
     return shot;
   });

@@ -13,6 +13,13 @@ post effects). Drag to orbit, scroll to zoom; edit its props (`who`, `clip` or "
 comparison), the camera turns around the character. Check faces, hair, clothes, clips and the light there before a
 shot or a full render.
 
+## One command: `npm run make`
+
+Runs docs → voice (if none yet) → check → stills → collide and writes `out/report.html`: what passed, each problem with
+its shot and frames, what needs the user (a sign-in, a missing pack), pace and pitch, the contact sheet and every
+shot's still. Read the report (and the stills it links) after every run; `npm run make -- --render` renders when
+nothing is wrong. The steps below are what it runs, one by one.
+
 ## Before a full render
 
 1. `npm run check` — docs compile, every take says its line (speech recognition), pace ~150–170 wpm, caption timing, types.

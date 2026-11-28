@@ -88,13 +88,16 @@ head's cage, not by its attachment: pick classic hair (SpecialMesh or MeshPart w
 
 ## Whole Roblox packs by id (`npm run pack`)
 
-For a whole bundle (a body package, a dynamic head with its mood, an animation pack, an outfit) or any single asset,
-reference it by its Roblox id instead of listing its items: `npm run pack -- bundle:356 rthro` (or `asset:<id> name`)
+For a whole bundle (a body package, a dynamic head with its mood, an animation pack, an outfit), a player's whole
+avatar (`user:<name or id>`), an outfit (`outfit:<id>`) or any single asset, reference it by its Roblox id instead of
+listing its items: `npm run pack -- bundle:356 rthro` (or `user:<name> name`, `asset:<id> name`)
 adds it to `assets/manifest.json` "packs" and fetches it. Files are downloaded once into the shared cache
-(`~/.cache/blockrig/roblox`) and reused by every video. When files are missing, it writes `assets/roblox/pack-links.js`:
-run it in the browser pane on https://assetdelivery.roblox.com (the user signed in to Roblox), save what it returns to a
-file, then `npm run pack -- links <file>` and `npm run pack` again. Repeat until it prints "packs ready" (usually 2-3
-rounds). "Authentication required" means the browser isn't signed in to Roblox: ask the user to sign in there.
+(`~/.cache/blockrig/roblox`) and reused by every video. While files are missing it keeps running (start it in the
+background). In the in-app browser pane, on https://assetdelivery.roblox.com with the user signed in to Roblox: run
+`assets/roblox/pack-round.js` (javascript tool), save what it returns as `assets/roblox/pack-links.txt`, and repeat
+with the new `pack-round.js` until it prints "packs ready" (usually 2-3 rounds). In a normal browser (the user's
+Chrome), `assets/roblox/pack-links.js` run once feeds every round by itself; the in-app browser blocks it.
+`--refresh` fetches players' avatars and outfits again. "Authentication required" means the browser isn't signed in to Roblox: ask the user to sign in there.
 In code: `usePacks()` (src/cast/packs.ts) and `rigFromPack` / `packs.<name>.clip("run")` from `blockrig/pack`;
 see a clip in the Sandbox with `clip: "rthro:run"`.
 

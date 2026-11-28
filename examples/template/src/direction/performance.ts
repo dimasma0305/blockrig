@@ -1,7 +1,7 @@
 // What every character does in every shot: where they stand, which clips play, their face. Pure function of
 // (shot, local time): call it every frame. Unused characters are hidden. Follow docs/story.md "action" notes.
 import * as THREE from "three";
-import { poseAt, groundRig, FEET, ON_SEAT, type Layer } from "blockrig/video";
+import { poseAt, groundRig, FEET, ON_SEAT, mouthAt, talk, faceFor, type Layer } from "blockrig/video";
 import { facsExpression } from "blockrig";
 import type { Shot } from "../kit";
 import * as C from "../cast/clips";
@@ -72,5 +72,9 @@ export function perform(shot: Shot, local: number, p: number, cast: Cast, world:
       break;
     }
   }
+  // lip sync: whoever says the line (its `speaker:`, else the first-person narrator, the hero) talks along with the
+  // voice's words, in the shot's face for them or the line's emotion (blockrig/video mouthAt / talk)
+  const who = (shot.speaker && (cast as any)[shot.speaker]) || hero, name = who === hero ? "hero" : shot.speaker ?? "";
+  if (who?.rig.object.visible && !who.faceSets) talk(who.rig, mouthAt(shot.words, shot.start + local), shot.faces?.[name] ?? faceFor(shot.emotion));
   return out;
 }

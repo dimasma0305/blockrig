@@ -5,7 +5,10 @@
 export { rng, clamp01, smooth, easeInOut, easeOut, lerp } from "./motion.js";
 export { createTimeline, speakersOf } from "./timeline.js";
 export { V, move, pushIn, orbit, follow, lowAngle, topDown, applyCamera } from "./camera.js";
+export { frame, screenOf } from "./frame.js";
 export { poseAt, groundRig, FEET, KNEEL, SEAT, ON_SEAT } from "./pose.js";
+export { surfaces, placeOn } from "./place.js";
+export { mouthAt, talk, faceFor, EMOTION_FACE } from "./talk.js";
 export { surfaceOf, restOn } from "./surfaces.js";
 export { LOOK, applyLook, avatarAmbient, TIMES, daylight, mixDaylight, createLighting } from "./lighting.js";
 export { buildRobloxMap, partGeometry, facePlane, materialLook, swallowingUnions, trimUnion } from "./robloxMap.js";
@@ -16,3 +19,4 @@ export { Plan, polygon, rect, circle, points, inside, intersects } from "./plan.
 export { layer, groundConflicts, checkGround, LAYER_STEP } from "./ground.js";
 export { lightsByLocation } from "./lights.js";
 export { parseStory, parseAudio, checkStory, compileStory, WEATHER_NAMES, LIGHT_PRESET_NAMES } from "./story.js";
+export { ZONES, captionBand } from "./zones.js";

@@ -15,6 +15,11 @@ export type StoryShot = {
   action?: string; camera?: string; faces?: Record<string, string>; weather?: string; mood?: string; minSeconds?: number;
   /** who says the line in a dialogue shot (a cast key); the narrator when absent */
   speaker?: string;
+  /** how the narrator says it (blockrig/voice moods) */ emotion?: string;
+  /** how a name is pronounced (same word count) */ say?: string;
+  /** on-screen explainer */ note?: string;
+  /** lighting preset */ light?: string;
+  /** time of day, "a -> b" across the shot */ time?: string;
 };
 export type StoryFile = {
   title: string; slug: string; fps: number; width: number; height: number;
@@ -23,6 +28,8 @@ export type StoryFile = {
 export type Timings = { clips: Record<string, { duration: number; words: Word[] }>; music: { file: string | null; from: number; to: number; theme: string }[]; total: number };
 export type Shot = StoryShot & {
   idx: number; faces: Record<string, string>; start: number; end: number; dur: number; startFrame: number; endFrame: number; audio: string | null;
+  /** the spoken words in video time (for mouthAt) */
+  words: Word[];
 };
 export type Caption = { text: string; highlight: string; start: number; end: number; shot: string; speaker: string | null };
 export type SpeakerTag = { name: string; colour: string };
@@ -47,6 +54,18 @@ export function follow(subject: THREE.Vector3, offset: THREE.Vector3, ahead?: TH
 export function lowAngle(subject: THREE.Vector3, dir: THREE.Vector3, dist?: number, fov?: number): Cam;
 export function topDown(center: THREE.Vector3, height?: number, tilt?: number, fov?: number): Cam;
 export function applyCamera(cam: THREE.PerspectiveCamera, c: Cam, frame: number): void;
+export type FrameOpts = {
+  /** direction from the subjects towards the camera (y tilts it) */ from?: THREE.Vector3; fov?: number; aspect?: number;
+  /** where faces sit, from the top (0..1) */ faceY?: number;
+  /** allowed face x range and y range (fractions) */ x?: [number, number]; y?: [number, number];
+  /** bands faces must stay out of (the captions) */ avoid?: [number, number][];
+  minDistance?: number; maxDistance?: number;
+  /** fraction of the frame height a 1.2-stud head covers (0.1 = medium) */ size?: number;
+  /** > 1 backs off further */ wide?: number;
+  /** studs either side of each face kept inside the margins (shoulders, arms); default 1.6 */ body?: number;
+};
+export function frame(faces: THREE.Vector3[], o?: FrameOpts): Cam & { distance: number; screen: { x: number; y: number; z: number }[]; fits: boolean };
+export function screenOf(points: THREE.Vector3[], pos: THREE.Vector3, forward: THREE.Vector3, fov: number, aspect: number): { x: number; y: number; z: number }[];
 
 // ---- pose
 export type Layer = { clip: any; at?: number; fade?: number; weight?: number; speed?: number };
@@ -57,6 +76,20 @@ export const FEET: Contacts;
 export const KNEEL: Contacts;
 export const SEAT: Contacts;
 export const ON_SEAT: Contacts;
+export type SurfaceHit = { y: number; name: string; material?: number; object: THREE.Object3D };
+export interface Surfaces { at(x: number, z: number, o?: { below?: number; skip?: (o: THREE.Object3D) => boolean }): SurfaceHit | null }
+/** A downward probe of the surfaces under root: Roblox map part boxes and solid meshes (noCollide things skipped). */
+export function surfaces(root: THREE.Object3D): Surfaces;
+/** Rest a rig on the surface under (x, z) (feet, or hips with ON_SEAT), sunk by its softness (restOn). */
+export function placeOn(rig: any, ground: Surfaces, x: number, z: number, contacts?: Contacts, o?: { below?: number; skip?: (o: THREE.Object3D) => boolean }): SurfaceHit | null;
+
+// ---- faces that follow the voice
+export const EMOTION_FACE: Record<string, string>;
+export function faceFor(emotion: string | undefined, fallback?: string): string;
+/** Mouth openness 0..1 at time t: one open-close per syllable of the word being spoken. */
+export function mouthAt(words: Word[] | undefined, t: number, o?: { strength?: number }): number;
+/** Set the expression with the mouth opened by `open` (drawn faces: mouthOpen; dynamic heads: JawDrop). False for image faces. */
+export function talk(rig: any, open: number, expressionName?: string): boolean;
 
 // ---- surfaces
 export type Surface = { name: string; sink: number };
@@ -191,3 +224,8 @@ export function parseStory(md: string): { front: Record<string, string>; shots: 
 export function parseAudio(md: string): { voice: StoryFile["voice"] & Record<string, any>; music: { theme: string; fromShot: string }[] };
 export function checkStory(story: { shots: (StoryShot & Record<string, any>)[]; music?: { theme: string; fromShot: string }[] }, o?: StoryCheckOpts): { errors: string[]; warnings: string[]; words: number };
 export function compileStory(storyMd: string, audioMd?: string, o?: StoryCheckOpts): { story: StoryFile; errors: string[]; warnings: string[]; words: number };
+
+// ---- frame zones of a vertical short
+export const ZONES: { captions: [number, number]; buttons: { x: [number, number]; y: [number, number] }; bottom: number; top: number };
+/** The band a watched face must stay out of while a caption shows. */
+export function captionBand(top?: number): [number, number];
