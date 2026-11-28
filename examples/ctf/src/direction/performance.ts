@@ -18,7 +18,7 @@ export function act(p: Person, layers: Layer[], t: number, expr?: string) {
   if (p.faceSets) { // Roblox face accessories: show the set for this emotion
     const show = new Set(p.faceSets[expr ?? "neutral"] ?? p.faceSets.neutral ?? []);
     for (const set of Object.values(p.faceSets)) for (const o of set) o.visible = show.has(o);
-  } else if (expr) p.face.set(expr, { fade: 0 });
+  }
   groundRig(p.rig, 0, FEET);
 }
 const facing = (from: { x: number; z: number }, to: { x: number; z: number }) => Math.atan2(to.x - from.x, to.z - from.z);

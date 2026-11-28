@@ -3,7 +3,7 @@
 // hoods, and anime face accessories per emotion. Without them: drawn clothes, procedural hair, live drawn faces.
 // Hand props (torches, lanterns, buckets, seed sacks, the badge, a shovel) are welded on and shown per shot.
 import * as THREE from "three";
-import { createRig, createFace } from "blockrig";
+import { createRig } from "blockrig";
 import { hoodie, teamJacket, tee, jeans, shorts, cargo } from "./wardrobe";
 import { hair, outlined, AT, type HairStyle } from "./props";
 import { rng } from "../kit/rng";
@@ -30,7 +30,8 @@ function person(name: string, o: {
   skin: string; shirt: HTMLCanvasElement; pants: HTMLCanvasElement; shape?: string; scale?: object; hair?: THREE.Object3D; expression?: string; seed?: number; look?: Look;
 }): Person {
   const rb = o.look, roblox = !!rb?.faces;
-  const face = roblox ? null : createFace({ expression: o.expression ?? "neutral", blink: false, seed: o.seed ?? 1 });
+  // faces are Roblox's only (dynamic heads, face accessories, face Decals): without the Roblox items, no face is drawn
+  const face = null;
   const rig = createRig({ shape: o.shape as any, scale: o.scale as any, bodyColors: skin(rb?.skin ?? o.skin), clothing: { shirt: rb?.shirt ?? o.shirt, pants: rb?.pants ?? o.pants }, ...(face ? { face } : {}), outline: 0.035, shadows: true } as any);
   if (rb?.hair) rig.addAccessory(rb.hair.mesh, { attachment: rb.hair.attachment, map: rb.hair.map, scale: rb.hair.scale, offset: rb.hair.offset });
   else if (o.hair && !(rb?.extra ?? []).length) rig.attachTo(o.hair, "HairAttachment"); // a crown or beard look goes without drawn hair

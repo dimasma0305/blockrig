@@ -120,8 +120,7 @@ test("face animation: FaceControls NumberPoses import and play through the Anima
 
 test("FACS expressions: the drawn expression names, valid FaceControls, in range", async () => {
   const { FACS_EXPRESSIONS, facsExpression, FACE_CONTROLS } = await import("../src/facs.js");
-  const { EXPRESSIONS } = await import("../src/face.js");
-  for (const name of Object.keys(EXPRESSIONS)) assert.ok(FACS_EXPRESSIONS[name], `no FACS expression for ${name}`);
+  for (const name of ["neutral", "happy", "sad", "angry", "shocked", "scared", "smug"]) assert.ok(FACS_EXPRESSIONS[name], `no FACS expression for ${name}`);
   for (const [name, fc] of Object.entries(FACS_EXPRESSIONS)) for (const [c, v] of Object.entries(fc)) {
     assert.ok(FACE_CONTROLS.includes(c), `${name}: ${c} is not a FaceControl`);
     assert.ok(v >= 0 && v <= 1, `${name}: ${c} = ${v}`);

@@ -238,7 +238,7 @@ The 3D thumbnails you can export from Roblox are static OBJ files: no skeleton, 
 - 🙂 **Dynamic heads**: Roblox FACS heads posed by the 50 `FaceControls`, with corrective poses, mood animations and face keys in imported clips.
 - 👕 **Roblox avatars**: `BodyColors`, classic **Shirt / Pants / T-shirt** templates composited the Roblox way, and **body packages** whose joints are built from their rig attachments (`BuildRigFromAttachments`), with accessories on body attachments too.
 - 🧍 **Every classic body**: **R6** (six parts, classic pivots) and **R15** in five shapes (`classic`, `slender`, `buff`, `tall`, `child`) or your own proportions, with Roblox-style `height / width / depth / head` scaling, swappable body-part meshes, and R15 ⇄ R6 clip retargeting. R15 limb parts overlap at the joints with the sizes of Roblox's own R15 block rig (`R15_OVERLAP`), so bent elbows and knees look the way they do in Roblox.
-- 😃 **Live facial expressions**: 17 built-in expressions drawn from 21 blendable parameters (brows, eye shape, look direction, wink, `><` and `x` eyes, mouth curve/open/skew, teeth, tongue, blush, tears, sweat), with automatic blinking, talking, smooth fades and `face:` markers inside clips. Works on BlockRig heads or as a decal on any head.
+- 😃 **Faces, the Roblox way**: dynamic heads (FACS), face accessories and classic face Decals that swap instantly. (Removed: the drawn, animated faces.)
 - 🦴 **R15 skeleton** with Motor6D-style joints. Poses are written in the character's own axes (`{ RightUpperArm: [Math.PI, 0, 0] }` is "arm straight up"), whatever way each bone's local axes point.
 - 🧥 **Layered clothing** as a real `SkinnedMesh` using the garment's own weights, **fitted to the body through its WrapLayer/WrapTarget cages** (matched by template UV, like Roblox) and stacked by `Order`. **Hidden Surface Removal** stops the body poking through it.
 - 🎩 **Rigid accessories, welds and tools**: attachment matching (`Handle = Body · BodyAttachment · HandleAttachment⁻¹`), drawn at the handle's own size (SpecialMesh `Scale` / `Offset`, MeshPart `Size`), face shells lifted so the head never shows through, `Weld`-style C0/C1 welds, and `Humanoid:EquipTool`'s RightGrip with `Tool.Grip`, plus `clips.toolHold` (Roblox's tool pose) so held torches and swords stand upright.
@@ -429,7 +429,7 @@ Welded objects follow their part. `equipTool` builds Roblox's RightGrip weld: Pa
 ```js
 const rig = createRig({ bodyColors, shadows: true });   // cast + receive (outlines never cast); rig.setShadows(cast, receive)
 const twin = rig.clone();                               // same options, accessories, clothing, welds, IK, hipHeight
-const other = rig.clone({ face: createFace() });        // ...with a face of its own
+const other = rig.clone({ face: createFace({ images }) }); // ...with a face Decal of its own
 rig.addAccessory(new THREE.BoxGeometry(1, 0.3, 1), { attachment });  // a three.js geometry works wherever a parsed mesh does
 rig.update(dt);                                         // faces + IK without an Animator
 rig.dispose();                                          // free what the rig made (not your textures or welded props)
@@ -464,7 +464,7 @@ rig.faceControls.JawDrop = 0.8;
 rig.faceControls.LeftEyeClosed = rig.faceControls.RightEyeClosed = 1;
 rig.applyFaceControls();                                      // the Animator does this on every update
 
-Object.assign(rig.faceControls, facsExpression("sad"));        // presets with the drawn expression names (happy, shocked, ...)
+Object.assign(rig.faceControls, facsExpression("sad"));        // FaceControls presets by name (happy, sad, shocked, ...)
 rig.applyFaceControls();
 
 const mood = keyframeSequenceToClip(parseRbxm(moodAnimationBytes)); // FaceControls NumberPoses become face keys
@@ -473,51 +473,22 @@ new Animator(rig).play(mood);
 
 Face controls blend by priority and weight like joints, and controls an animation stops driving go back to 0. The head's texture (the face painted over transparent skin) is layered over `HeadColor3`. Checked on the official *Woman Face* and *Man Face* heads; their FACS bones only translate, and rotation channels are read but not applied yet. Hand-written clips can key faces too: `{ t: 0.5, poses: {}, faces: { JawDrop: 0.6 } }`.
 
-## Expressions
+## Faces, the Roblox way
 
-<img src="docs/faces.png" alt="Eighteen blocky heads showing BlockRig expressions: neutral, happy, grin, laugh, smug, wink, determined, angry, furious, roar, shocked, scared, sad, hurt, sleepy, embarrassed, dazed and talking" width="100%">
+Faces are Roblox's own, and behave as in Roblox. BlockRig draws no faces of its own.
 
-```js
-import { createRig, createFace, Animator } from "blockrig";
-
-const face = createFace({ expression: "determined" });   // blinks on its own
-const rig = createRig({ face });                          // wrapped onto the block head, updated by the Animator
-
-rig.setExpression("furious", { fade: 0.15 });            // blend to another expression
-rig.setExpression({ mouthOpen: 0.8, browY: 0.6 });       // or set any parameters directly
-face.lookAt(0.6, -0.2);                                  // eyes follow a target
-face.talk(true);                                         // mouth flaps until talk(false)
-
-// switch faces from inside a clip
-const taunt = { name: "taunt", length: 1.2, keyframes: [/* ... */],
-  markers: [{ t: 0.1, name: "face:smug" }, { t: 0.8, name: "face:laugh" }] };
-```
-
-### Face decals, the Roblox way
-
-Classic Roblox faces are a `Decal` named `face` on the `Head`. Changing the expression means replacing its `Texture`, and the change is instant. BlockRig does the same with images you supply:
+- **Dynamic heads** (see above): FACS heads driven by their `FaceControls`, by animations (mood clips, face keys in clips) or by `facsExpression("sad")` presets.
+- **Face accessories**: anime faces and other face shells, worn with `rig.addAccessory` on `FaceCenterAttachment` / `FaceFrontAttachment`.
+- **Classic face Decals**: a `Decal` named `face` on the `Head`. Changing the face replaces its `Texture`, instantly.
 
 ```js
-const face = createFace({ images: { calm: calmImg, angry: angryImg, hurt: hurtImg, blink: blinkImg }, expression: "calm" });
+const face = createFace({ images: { calm: calmImg, angry: angryImg }, expression: "calm" });
 const rig = createRig({ face });        // or rig.addFaceDecal(face) on a downloaded avatar's head
 rig.setExpression("angry");             // instant swap, like setting Decal.Texture
-rig.setExpression("hurt", { fade: 0.2 }); // optional crossfade (BlockRig extra)
+// or from a clip: a KeyframeMarker named "face:angry"
 ```
 
-Image names can be anything. A name with no image falls back to the procedural face, and `images.blink` (optional) shows while the face blinks. BlockRig ships no Roblox decals; use images you have the right to use.
-
-### Procedural expressions (BlockRig extra)
-
-Each expression is a set of numbers, so any two blend smoothly. You can mix your own with `mixFace(a, b, t)`, or draw a single frame onto any 2D canvas with `drawFace(ctx, params, style)`. For heads that aren't BlockRig's barrel, such as downloaded avatars, `rig.addFaceDecal(face, { radius, height, arc })` puts the live face on a curved decal that follows the neck. Style options are `ink`, `eyeColor`, `glow` (glowing monster eyes) and `background` (an opaque decal that covers a baked-in face).
-
-| Parameter | Range | | Parameter | Range |
-|---|---|---|---|---|
-| `browAngle` | −1 worried → 1 angry | | `mouthCurve` | −1 frown → 1 smile |
-| `browY` | −1 low → 1 raised | | `mouthOpen` | 0 → 1 |
-| `eyeOpen`, `squint`, `eyeSize` | blink, smiling eyes, size | | `mouthWidth`, `mouthSkew` | width, smirk |
-| `whites` | 0 ink → 1 white with pupil | | `teeth`, `tongue` | 0 → 1 |
-| `lookX`, `lookY` | −1 → 1 | | `blush`, `tears`, `sweat` | 0 → 1 |
-| `wink`, `wince`, `ko` | right-eye wink, `><`, `x` | | `brows` | 0 hidden → 1 |
+The images come from you (face decals you have the right to use); BlockRig ships none.
 
 ## Import Roblox animations
 
@@ -600,9 +571,9 @@ anim.play(salute, { fade: 0.15 });
 | `keyframeSequenceToClip(roots, { name, rigType, cubicLegacy })` | Roblox `KeyframeSequence` → clip (Pose CFrame → Transform, Weight, easing, markers). |
 | `rig.setJointOffset(name, x, y, z)` | Translation part of a joint's Transform. |
 | `toR6(clip)` · `toR15(clip)` · `retargetAll(clips, fn)` | Retarget clips between rig types. |
-| `createFace({ expression, images, ink, eyeColor, glow, background, blink })` | A live face: `.set(name or params, { fade })`, `.lookAt(x, y)`, `.talk(on)`, `.update(dt)`, `.onChange(fn)` |
-| `rig.setExpression(...)` · `rig.addFaceDecal(face, o)` · `rig.face` | Drive the rig's face; markers named `face:<expression>` do it from a clip. |
-| `EXPRESSIONS` · `FACE_DEFAULTS` · `expression()` · `mixFace()` · `drawFace()` · `createFaceDecal()` | Expression data and drawing. |
+| `createFace({ images, expression, background })` | A classic face Decal: `.set(name)` swaps the image instantly, `.onChange(fn)`. |
+| `rig.setExpression(name)` · `rig.addFaceDecal(face, o)` · `rig.face` | Swap the face Decal's image; KeyframeMarkers named `face:<name>` do it from a clip. |
+| `createFaceDecal(face, o)` | The curved decal mesh `addFaceDecal` uses. |
 | `rig.setPose(pose)` / `rig.resetPose()` | `{ Joint: [x, y, z], rootOffset: [x, y, z] }` in radians and studs. |
 | `rig.setJoint(name, x, y, z)` · `setJointQuat(name, q)` · `nudgeJoint(name, x, y, z)` | Set one joint, or add on top of the current pose (good for look-at). |
 | `rig.addLayeredClothing(mesh, { map?, color?, lod?, wrap?, hideCovered? })` | Skinned garment from `parseMesh` (v4+) or `makeCoat()`; with `wrap` cages and a caged body, fitted to the body and stacked by Order. Body surfaces it covers are hidden (HSR) unless `hideCovered: false`. |
@@ -645,7 +616,7 @@ flowchart LR
 npm test             # 190 unit + regression tests (node:test, no browser needed)
 npm run test:update  # refresh golden snapshots after an intentional change, then review the diff
 npm run screenshots  # re-render docs/*.png with a local Chrome/Edge
-npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html, faces.html, clothing.html and ik.html)
+npm run demo         # http://127.0.0.1:8787/examples/ (also bodies.html, clothing.html and ik.html)
 ```
 
 - **Unit tests** cover LZ4 vectors and corrupt input, every mesh version (round-trips through the writer, subset index resolution, FACS skipping, the Draco hook, truncation and bad indices), `.rbxm` raw/LZ4/ZSTD chunks and all property encodings, CFrame maths, joint axes, every expression (valid parameters, the right shapes for open mouths, `x` and `><` eyes), face blending, blinking, look/talk, face markers and decals, every body shape and scale (feet on the floor, symmetry, parts on their joints), R6 pivots, retargeting, body-part swaps, skinning at rest and in motion, retargeting, accessories, easing curves, interpolation, looping, priorities, weights, fades, markers and root motion. The video toolkit is tested too: voice-timed shots and captions, frame-pure posing and camera shake, Roblox part shapes and `NormalId` faces, map merging and colliders, the staging check against real Rapier colliders, boards on a mock canvas, the layout plan, ground layers, story checks, Roblox union trimming, and every narration fix (number matching, pitch, pauses, pace, take judging).

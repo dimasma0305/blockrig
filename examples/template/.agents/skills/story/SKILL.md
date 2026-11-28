@@ -29,7 +29,7 @@ The comment at the top of `docs/story.md` is the format. Per shot:
 - `action:` one action the rig can do (clips in `src/cast/clips.ts`: walk, run, sit, point, shrug, armsCrossed, lookUp, gasp, panic, slump, cheer, celebrate…). Emotion = pose + face.
 - `camera:` position, tightness, at most one move; vary it every shot (wide, close, low, top-down, over-shoulder).
 - `emotion:` how the narrator says it, from the line's meaning (neutral, happy, excited, panic, shocked, scared, sad, serious, smug, angry, whisper). Read the story aloud in your head and mark each line; vary it, since a flat run of one mood is boring. Never use "!" just to add energy to a sad line.
-- `faces:` BlockRig expressions (neutral happy grin laugh smug wink determined angry furious roar shocked scared sad hurt sleepy embarrassed dazed).
+- `faces:` face expressions (dynamic-head presets / face-accessory sets: neutral happy grin laugh smug wink determined angry furious roar shocked scared sad hurt sleepy embarrassed dazed).
 - `weather:` and `time:` for every outdoor shot; `a -> b` changes across the shot (storm -> golden for relief).
 - `mood:` one word, for music and colour.
 - `light:` (optional) a lighting preset for the shot: day, golden, night, indoor, studio (world skill). Leave it out for the sky's own light.

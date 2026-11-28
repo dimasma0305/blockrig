@@ -678,7 +678,7 @@ export function createRig(o = {}) {
     /** Cast and/or receive shadows on every mesh of the rig, now and for parts added later (outlines never cast). */
     setShadows(cast = true, receive = cast) { shadowCast = !!cast; shadowReceive = !!receive; shade(model); return rig; },
     /**
-     * Advance faces and IK without an Animator (the Animator does this itself): blends and blinks the live face,
+     * Advance faces and IK without an Animator (the Animator does this itself): redraws a face Decal that changed,
      * poses a dynamic head from faceControls, and solves the IKControls.
      */
     update(dt = 0) { rig.solveIK(); rig.updateFace(dt); return rig; },
@@ -822,14 +822,14 @@ export function createRig(o = {}) {
     /** BodyColors ("#rrggbb" by region) and clothing in use, or null for a BlockRig-coloured body. */
     get avatar() { return avatarMode ? { bodyColors: { ...avatar.colors }, clothing: { ...avatar.clothing } } : null; },
 
-    /** The live face (createFace controller) driving this rig's head, if any. */
+    /** The face Decal (createFace) on this rig's head, if any. */
     get face() { return faceState.face; },
-    /** Change expression with a fade (needs a live face). */
-    setExpression(nameOrParams, o) { if (faceState.face) faceState.face.set(nameOrParams, o); return rig; },
-    /** Advance the live face (blending, blinking, talking). The Animator calls this for you. */
-    updateFace(dt) { const f = faceState.face; if (f && f.update(dt) && faceState.rewrap) faceState.rewrap(); rig.applyFaceControls(); },
+    /** Show another face image (replaces the face Decal's Texture, instantly, as in Roblox). */
+    setExpression(name) { if (faceState.face) faceState.face.set(name); return rig; },
+    /** Redraw the face Decal if it changed, and pose a dynamic head. The Animator calls this for you. */
+    updateFace() { const f = faceState.face; if (f && f.update() && faceState.rewrap) faceState.rewrap(); rig.applyFaceControls(); },
     /**
-     * Show a live face as a decal on this rig's head (for heads that are not BlockRig's own barrel,
+     * Show a face Decal on this rig's head (for heads that are not BlockRig's own barrel,
      * e.g. downloaded avatars). The decal follows the neck joint.
      */
     addFaceDecal(face, o = {}) {

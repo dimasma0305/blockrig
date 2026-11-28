@@ -34,7 +34,7 @@ A pack that comes back with "Authentication required" needs the user signed in t
 Packs are Roblox's and their creators': the files never go in git (the cache lives in the user's home folder).
 
 **Assets first:** whole packs (above), or real Roblox items from the catalog one by one (`assets` skill): dynamic heads (Man Face,
-Woman Face) whose expressions come from FaceControls (`facsExpression("sad")`, same names as the drawn faces), free
+Woman Face) whose expressions come from FaceControls (`facsExpression("sad")`), free
 official hair, classic shirts and pants. `npm run roblox`; renders use them by default. The drawn wardrobe and procedural hair below are the fallback for videos
 that will be published or committed, where catalog items can't be used.
 
@@ -52,7 +52,9 @@ body under it automatically (HSR), so nothing pokes through.
 
 ## Faces
 
-`createFace({ expression, seed })`; per shot `faces:` in docs/story.md, applied by `act()` in performance.ts.
+Roblox faces only, with Roblox behaviour: a dynamic head (FaceControls: `facsExpression(name)`), face accessories
+(`faceSets`, one set per emotion), or a classic face Decal (`createFace({ images })`: swapping its image is instant).
+No drawn or animated faces. Per shot `faces:` in docs/story.md, applied by `act()` in performance.ts.
 
 ## Real Roblox items
 
@@ -79,7 +81,7 @@ Characters, from https://www.youtube.com/shorts/Xd_yEnAdiGo:
 - classic blocky bodies, very pale slightly pink skin (girls `#fcf3f0`, boys `#f0cdb0`), detailed layered outfits;
 - big fluffy anime hair with bangs and volume, never hiding the eyes;
 - 2D anime faces (big highlighted eyes, small mouth, blush) that change every line; shocked = blank white eyes and
-  an open mouth. Roblox face accessories per emotion (`faceSets`, first choice); drawn faces only when none are downloaded.
+  an open mouth. Roblox face accessories per emotion (`faceSets`), or a dynamic head; without the Roblox items there is no face.
   Roblox-accurate: face textures are drawn untouched; many paint a face plate in the skin tone they were made for
   (catalog items come in "White" / "Light" versions), so the character's skin is set to that plate colour (measured
   on load, `plate`), as a player wears the face that matches their skin. Most anime "faces" are whole head

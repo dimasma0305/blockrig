@@ -4,6 +4,8 @@
 
 BlockRig's purpose is now making Roblox-style story videos fast and good: the characters plus the rest of the video.
 
+- **Faces are Roblox's only.** Removed the drawn, animated faces: `drawFace`, `EXPRESSIONS`, `FACE_DEFAULTS`, `expression`, `mixFace`, parameter faces, blinking, `lookAt`, `talk` and image crossfades (`fade`), plus `examples/faces.html` and `docs/faces.png`. `createFace({ images })` is a classic face Decal: `set(name)` replaces its image instantly, as in Roblox; `face:<name>` clip markers and `rig.setExpression(name)` still swap it. Moving faces are dynamic heads (`facsExpression`, FaceControls) and face accessories. Story `faces:` names are checked against the FACS presets. The videos' no-Roblox fallback no longer draws a face.
+
 - **Avatars by user or outfit:** `user:<name or id>` (users API, then avatar API: worn items, equipped emotes, body colours, scales, R6/R15) and `outfit:<id>`. A bundle's outfit brings its colours and scales; `rigFromPack` uses them. Roblox's 429 is retried with backoff. Checked on real files: Korblox Deathspeaker (bundle 192) built and running; `user:Roblox` resolves 17 items.
 - **The browser step, simpler:** links travel compactly. `npm run pack` waits and keeps fetching round after round: a normal browser feeds it through a 127.0.0.1 link server (`linkServer`, `browserLoop`); the in-app browser (which blocks 127.0.0.1) runs `pack-round.js` and saves `pack-links.txt`.
 - **`frame()`**: framing by where faces land (height, margins with shoulders, out of the caption band). **`ZONES` / `captionBand`**: one source for the captions, the app zones, framing and the staging check.

@@ -14,7 +14,6 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { applyLook, LOOK, TIMES, createLighting, useAssetLibrary, layer, avatarAmbient, type AssetLibrary } from "../kit";
 import { rigFromPack } from "blockrig/pack";
-import { createFace } from "blockrig";
 import { usePost, POST_DEFAULTS } from "../kit/post";
 import { LightRig, LIGHT_PRESETS } from "../kit/lightRig";
 import { ASSETS } from "../world/assets";
@@ -49,10 +48,9 @@ function Stage({ lib, rb, packs, p }: { lib: AssetLibrary; rb: RobloxCast | null
     // every Roblox pack that brings a body, a head or accessories, as a whole avatar: who = "pack:<name>"
     for (const [name, lp] of Object.entries(packs)) {
       if (!Object.keys(lp.bodyParts).length && !lp.head && !lp.accessories.length) continue;
-      // no dynamic head in the pack: a drawn face, like the template's own characters
-      const face = lp.head?.dynamic ? null : createFace({ expression: "neutral", blink: false, seed: 1 });
-      const rig = rigFromPack(lp, { outline: 0.035, shadows: true, ...(face ? { face } : {}) }); avatarAmbient(rig.object);
-      all.push({ rig, face, name: `pack:${name}`, dynamic: !!lp.head?.dynamic } as any);
+      // its own face only: a dynamic head, or the pack's face Decal (wearPack puts it on); no drawn face
+      const rig = rigFromPack(lp, { outline: 0.035, shadows: true }); avatarAmbient(rig.object);
+      all.push({ rig, face: null, name: `pack:${name}`, dynamic: !!lp.head?.dynamic } as any);
     }
     // every Roblox hair in the manifest on every character, hidden: the `hair` prop shows one (or "own")
     const hairs = new Map<any, { own: THREE.Object3D[]; pool: Record<string, THREE.Object3D> }>();

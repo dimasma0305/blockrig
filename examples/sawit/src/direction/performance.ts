@@ -18,7 +18,7 @@ const placeAt = (p: Person, v: THREE.Vector3, rotY: number) => place(p, v.x, v.z
 export function act(p: Person, layers: Layer[], t: number, face: string | undefined, ground = 0, contacts = FEET) {
   poseAt(p.rig, layers, t);
   if (p.faceSets) { const show = new Set(p.faceSets[face ?? "neutral"] ?? p.faceSets.neutral ?? []); for (const set of Object.values(p.faceSets)) for (const o of set) o.visible = show.has(o); }
-  else if (p.face) { if (face) p.face.set(face, { fade: 0 }); p.rig.updateFace(0); }
+  else p.rig.updateFace();
   groundRig(p.rig, ground, contacts);
 }
 const faceOf = (shot: Shot, who: string, fallback = "neutral") => shot.faces?.[who] ?? fallback;

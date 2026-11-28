@@ -13,7 +13,7 @@
 //   - camera: crane down   - action: ...   - emotion: flat   - speaker: mom   - say: ...   - min: 2   - faces: me=scared
 // audio.md: "## Voice" (engine, voice, pitch, gap, tempo, exaggeration, cfg, commaPause, stopPause, panic),
 //           "## Voices" (- mom: af_heart 1.0), "## Music" (- s01: goofy-piano).
-import { EXPRESSIONS } from "../face.js";
+import { FACS_EXPRESSIONS } from "../facs.js";
 import { EMOTION_NAMES } from "../voice/takes.js";
 import { TIMES } from "./lighting.js";
 
@@ -68,12 +68,12 @@ export function parseAudio(md) {
 }
 
 /**
- * Check a story: `{ errors, warnings, words }`. Names a video can extend: `expressions` (BlockRig's EXPRESSIONS),
+ * Check a story: `{ errors, warnings, words }`. Names a video can extend: `expressions` (dynamic-head expressions, FACS_EXPRESSIONS),
  * `weather`, `times` (TIMES), `emotions` (blockrig/voice), `lights` (lighting presets), `themes` (music; unchecked if
  * not given). `none` is always a valid music theme (silence).
  */
 export function checkStory(story, o = {}) {
-  const expressions = o.expressions ?? Object.keys(EXPRESSIONS), weather = o.weather ?? WEATHER_NAMES, times = o.times ?? Object.keys(TIMES);
+  const expressions = o.expressions ?? Object.keys(FACS_EXPRESSIONS), weather = o.weather ?? WEATHER_NAMES, times = o.times ?? Object.keys(TIMES);
   const emotions = o.emotions ?? EMOTION_NAMES, lights = o.lights ?? LIGHT_PRESET_NAMES, themes = o.themes;
   const norm = (s) => s.toUpperCase().replace(/[^A-Z0-9' ]/g, " ").split(/\s+/).filter(Boolean).join(" ");
   const errors = [], warnings = [], ids = new Set();
@@ -92,7 +92,7 @@ export function checkStory(story, o = {}) {
     if (!s.camera) warnings.push(`${s.id}: no camera note`);
     if (!s.action) warnings.push(`${s.id}: no action note`);
     if (s.light && !lights.includes(s.light)) errors.push(`${s.id}: light "${s.light}" is not a lighting preset (${lights.join(", ")}; leave it out for the sky's own light)`);
-    for (const [who, face] of Object.entries(s.faces ?? {})) if (!expressions.includes(face)) errors.push(`${s.id}: face "${face}" for ${who} is not a BlockRig expression (${expressions.join(", ")})`);
+    for (const [who, face] of Object.entries(s.faces ?? {})) if (!expressions.includes(face)) errors.push(`${s.id}: face "${face}" for ${who} is not a face expression (${expressions.join(", ")})`);
     for (const part of (s.weather ?? "").split(/->|;/)) { const w = part.trim().split(/\s+/)[0]; if (w && !weather.includes(w)) errors.push(`${s.id}: unknown weather "${w}"`); }
     if (s.emotion && !emotions.includes(s.emotion)) errors.push(`${s.id}: unknown emotion "${s.emotion}" (${emotions.join(", ")})`);
     for (const part of (s.time ?? "").split("->")) { const t = part.trim(); if (t && !times.includes(t)) errors.push(`${s.id}: unknown time "${t}"`); }

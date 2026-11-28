@@ -187,8 +187,8 @@ export class Animator {
       if (wasPlaying && dt !== 0) for (const m of seq) {
         const hit = back ? (wrapped ? m.t < prev || m.t >= now : m.t >= now && m.t < prev) : (wrapped ? m.t > prev || m.t <= now : m.t > prev && m.t <= now);
         if (!hit) continue;
-        // "face:<expression>" markers change the rig's live face
-        if (m.name.startsWith("face:") && rig.setExpression) rig.setExpression(m.name.slice(5), m.fade !== undefined ? { fade: m.fade } : undefined);
+        // "face:<name>" markers swap the face Decal's image (a KeyframeMarker a script would react to in Roblox)
+        if (m.name.startsWith("face:") && rig.setExpression && rig.face?.images?.[m.name.slice(5)]) rig.setExpression(m.name.slice(5));
         if (m.kind === "keyframe") tr.keyframeReached.fire(m.name);
         else { const s = tr._markers.get(m.name); if (s) s.fire(m.value ?? ""); }
         this.listeners.forEach((fn) => fn(m.name, tr.clip, m.value));

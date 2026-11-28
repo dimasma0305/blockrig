@@ -77,8 +77,9 @@ export interface Rig {
   setHead(mesh: MeshInput, o?: { scale?: number[]; offset?: number[]; attachments?: Record<string, number[]>; map?: THREE.Texture | null; color?: THREE.ColorRepresentation }): THREE.Mesh;
   headBounds(): THREE.Box3;
   readonly face: Face | null;
-  setExpression(nameOrParams: ExpressionName | string | Partial<FaceParams>, o?: { fade?: number }): Rig;
-  updateFace(dt: number): void;
+  /** Show another face image (instant, like replacing a face Decal's Texture). */
+  setExpression(name: string): Rig;
+  updateFace(dt?: number): void;
   addFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
   readonly bodyAttachments: Record<string, BodyAttachment>;
   /** Weld an object to a body part (or "Head"): Object = Part * C0 * C1^-1, like a Weld. */
@@ -251,32 +252,17 @@ export const PRIORITY: Record<Priority, number>;
 export const clips: Record<"idle" | "wave" | "showtime" | "run" | "card" | "victory" | "toolHold", Clip>;
 export function makeCoat(o?: { slices?: number; length?: number; puff?: number; tails?: boolean }): ParsedMesh;
 export function lz4Block(src: Uint8Array, outLen: number): Uint8Array;
-export type FaceParams = {
-  eyeOpen: number; eyeSize: number; squint: number; whites: number; lookX: number; lookY: number; wink: number; wince: number; ko: number;
-  brows: number; browAngle: number; browY: number;
-  mouthCurve: number; mouthOpen: number; mouthWidth: number; mouthSkew: number; teeth: number; tongue: number;
-  blush: number; sweat: number; tears: number;
-};
 export type ExpressionName = "neutral" | "happy" | "grin" | "laugh" | "smug" | "wink" | "determined" | "angry" | "furious" | "roar" | "shocked" | "scared" | "sad" | "hurt" | "sleepy" | "embarrassed" | "dazed";
-export const FACE_DEFAULTS: Readonly<FaceParams>;
-export const EXPRESSIONS: Readonly<Record<ExpressionName, Partial<FaceParams>>>;
-export function expression(nameOrParams: ExpressionName | Partial<FaceParams>, base?: FaceParams): FaceParams;
-export function mixFace(a: FaceParams, b: FaceParams, t: number): FaceParams;
-export interface FaceStyle { size?: number; ink?: string; eyeColor?: string | null; glow?: string | null; background?: string | null }
-export function drawFace(ctx: CanvasRenderingContext2D, params: Partial<FaceParams>, style?: FaceStyle): void;
+/** A classic Roblox face Decal: its Texture is one of `images`; set() replaces it instantly. */
 export interface Face {
-  isFace: true; canvas: HTMLCanvasElement | null; name: string; current: FaceParams; target: FaceParams;
-  set(nameOrParams: ExpressionName | string | Partial<FaceParams>, o?: { fade?: number }): Face;
-  readonly usingImage: boolean;
-  images: Record<string, CanvasImageSource>;
-  lookAt(x?: number, y?: number): Face;
-  talk(on?: boolean): Face;
+  isFace: true; canvas: HTMLCanvasElement | null; name: string | null; images: Record<string, CanvasImageSource>; background: string | null;
+  set(name: string): Face;
+  readonly usingImage: true;
   onChange(fn: (face: Face) => void): Face;
-  params(): FaceParams;
-  update(dt: number): boolean;
+  update(): boolean;
   draw(): Face;
 }
-export function createFace(o?: FaceStyle & { canvas?: HTMLCanvasElement; blink?: boolean; expression?: ExpressionName | string | Partial<FaceParams>; seed?: number; images?: Record<string, CanvasImageSource>; imageOffset?: number }): Face;
+export function createFace(o?: { images?: Record<string, CanvasImageSource>; expression?: string; size?: number; background?: string | null; canvas?: HTMLCanvasElement }): Face;
 export function createFaceDecal(face: Face, o?: { radius?: number; height?: number; arc?: number; y?: number; segments?: number }): THREE.Mesh;
 export const POSE_EASING_STYLE: Record<number, string>;
 export const POSE_EASING_DIRECTION: Record<number, EasingDirection>;

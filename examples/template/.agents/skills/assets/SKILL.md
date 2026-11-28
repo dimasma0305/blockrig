@@ -22,7 +22,7 @@ hair before building anything in code; the code-built kit is only a fallback. Do
 | birds | no verified CC0 animated bird: poly.pizza static birds (Bird `8Ph79kHbt9s`, Flying gull `eMNhHDZakYp`, Sparrow `3rTjKefT184`) and flap them in code | Khronos Fox for an animated reference | CC-BY 3.0 (credit "Poly by Google") |
 | sky, sun, clouds, light | Poly Haven HDRI: `kloofendal_48d_partly_cloudy_puresky` (day), `venice_sunset`, `qwantani_dusk_2_puresky`, `rogland_clear_night`, `satara_night`, `overcast_soil_puresky`, `kiara_1_dawn` | ambientCG `EveningSkyHDRI049A`, `NightEnvironmentHDRI011` | CC0 |
 | road, grass, wood, brick, fabric, concrete, tile textures | Poly Haven: `asphalt_02`, `road_damaged`, `grass_ground`, `brown_planks_04`, `brick_4`, `denim_fabric`, `brushed_concrete`, `brown_floor_tiles` | ambientCG: `Asphalt033`, `Road012A`, `Grass004`, `Bricks105`, `Planks040`, `Fabric087`, `Concrete049`, `Tiles141` | CC0 |
-| faces / expressions | Roblox catalog faces and face accessories (see below), first choice | BlockRig's drawn expressions (`createFace`) when no Roblox items are downloaded | Roblox (videos allowed) |
+| faces / expressions | Roblox catalog faces and face accessories (see below), first choice | Roblox only: dynamic heads, face accessories, or classic face decals (no drawn faces) | Roblox (videos allowed) |
 | clothes, hair, accessories | Roblox catalog, first choice | the drawn wardrobe and procedural hair | Roblox (videos allowed) |
 
 ### How to download each (for scripts/fetch-assets.mjs)

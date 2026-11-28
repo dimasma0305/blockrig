@@ -17,7 +17,7 @@ export function act(p: Person, layers: Layer[], t: number, face: string | undefi
     const show = new Set(p.faceSets[face ?? "neutral"] ?? p.faceSets.neutral ?? []);
     for (const set of Object.values(p.faceSets)) for (const o of set) o.visible = show.has(o);
   } else if (p.dynamic) { Object.assign(p.rig.faceControls, facsExpression(face ?? "neutral")); p.rig.applyFaceControls(); } // Roblox dynamic head
-  else { if (face) p.face.set(face, { fade: 0 }); p.rig.updateFace(0); } // drawn face: redraw the live texture
+  else if (p.face?.images?.[face ?? ""]) { p.face.set(face!); p.rig.updateFace(); } // a classic face Decal with that image
   groundRig(p.rig, ground, contacts);
 }
 const faceOf = (shot: Shot, who: string, fallback = "neutral") => shot.faces?.[who] ?? fallback;

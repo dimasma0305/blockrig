@@ -5,7 +5,7 @@ export { parseRbxmx } from "./rbxmx.js";
 export { cframeToMatrix, matrixToCFrame, motor6D, accessoryWeld } from "./cframe.js";
 export { R15_BIND, R15_JOINTS, R15_FLOOR, R15_NECK_Y, HEAD_ATTACHMENTS } from "./skeleton.js";
 export { createRig, meshFromGeometry, headGeometry, HEAD_CORNER, FACE_LIFT, faceTexture, createFaceDecal, loadRobloxTexture, setSRGB } from "./rig.js";
-export { createFace, drawFace, expression, mixFace, EXPRESSIONS, FACE_DEFAULTS } from "./face.js";
+export { createFace } from "./face.js";
 export { Animator, AnimationTrack, Signal, ease, PRIORITY } from "./animator.js";
 export { clips } from "./clips.js";
 export { makeCoat } from "./garment.js";

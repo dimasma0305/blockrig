@@ -81,8 +81,8 @@ export function facsBoneOffsets(facs, values, out = new Float32Array(facs.rows *
 }
 
 // ---- expressions as FaceControls, for dynamic heads ----
-// The same names as the drawn expressions (EXPRESSIONS in face.js), so a story can say "sad" and get it on either
-// kind of head. Values follow FACS: a smile is LipCornerPuller + CheekRaiser, sadness is InnerBrowRaiser +
+// Named sets of FaceControls values (a BlockRig convenience: Roblox has the controls, not the names), so a story can
+// say "sad". Values follow FACS: a smile is LipCornerPuller + CheekRaiser, sadness is InnerBrowRaiser +
 // LipCornerDown, surprise is brows up + UpperLidRaiser + JawDrop, anger is BrowLowerer + Corrugator + LipPresser.
 const both = (name, v) => ({ [`Left${name}`]: v, [`Right${name}`]: v });
 export const FACS_EXPRESSIONS = {

@@ -76,10 +76,8 @@ Keep this table current. **Parity** means it behaves like Roblox. **Approximatio
 | `Animator:LoadAnimation`, `AnimationTrack` (`Play/Stop(fadeTime)`, `AdjustSpeed`, `AdjustWeight(w, fadeTime)`, `TimePosition`, `Looped`, `Priority`, `Length`, `IsPlaying`, `WeightCurrent/Target`, `GetTimeOfKeyframe`, `GetMarkerReachedSignal`, `KeyframeReached`, `Stopped`, `Ended`, `DidLoop`), `GetPlayingAnimationTracks` | `animator.loadAnimation()` / `play()` -> `AnimationTrack` (camelCase), `Signal.connect()` | Parity (note 6) |
 | Body scaling `BodyHeightScale` / `BodyWidthScale` / `BodyDepthScale` / `HeadScale` | `createRig({ scale })` | Approximation (note 7) |
 | `BodyTypeScale` / `BodyProportionScale` (Rthro blending) | `shape: "slender" | "buff" | "tall" | "child"` | **Extra**: not Roblox's tables (note 7) |
-| Classic face: a `Decal` named `face` on `Head`, `Face = Front`; changing the expression = replacing its `Texture` (instant) | `createFace({ images })` + `rig.addFaceDecal()` / head wrap; `set(name)` swaps instantly | Parity |
+| Classic face: a `Decal` named `face` on `Head`, `Face = Front`; changing the face = replacing its `Texture` (instant) | `createFace({ images })` + `rig.addFaceDecal()` / head wrap; `set(name)` swaps instantly | Parity |
 | Dynamic heads: FACS (`FaceControls` properties driving head bones; 2- and 3-pose correctives) | `parseFacs()`, `rig.faceControls` + `applyFaceControls()`, face NumberPoses in `keyframeSequenceToClip()`, Animator blending | Parity for translation FACS (note 9) |
-| Procedural drawn expressions (`EXPRESSIONS`, `drawFace`, parameter blending, auto-blink, talk) | `createFace()` without images | **Extra** |
-| Crossfading face images | `set(name, { fade })` | **Extra** (opt-in) |
 | R15 ⇄ R6 clip retargeting | `toR6` / `toR15` | **Extra**: Roblox plays nothing across rig types |
 | Procedural coat `makeCoat()`, outline shader | | **Extra** (test fixture / style) |
 | `BasePart` (`Part.Shape` Ball / Block / Cylinder along X, `WedgePart`, `CornerWedgePart`, `Size`, `CFrame`, `Color`, `Transparency`), `SpecialMesh` / `BlockMesh` / `CylinderMesh` modifiers, `MeshPart` fitted to `Size`, `Decal` / `Texture` on `NormalId` faces, `PointLight` / `SpotLight` | `buildRobloxMap()` (`blockrig/video`) | Approximation (note 12) |

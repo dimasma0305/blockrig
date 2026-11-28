@@ -1,146 +1,49 @@
+// Classic Roblox faces: a Decal named "face" whose Texture is replaced, instantly, to change the face. Nothing is drawn
+// by BlockRig itself (no procedural expressions, blinking or crossfades).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFace, drawFace, expression, mixFace, EXPRESSIONS, FACE_DEFAULTS } from "../src/face.js";
+import { createFace } from "../src/face.js";
 import { createRig } from "../src/rig.js";
 import { Animator } from "../src/animator.js";
 import { mockCanvas } from "./helpers/mock-canvas.js";
 
-const near = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) <= eps, `${a} != ${b}`);
-const ops = (c) => c.calls.map((x) => x[0]);
+const img = (id) => ({ width: 420, height: 420, id });
 
-test("every expression only uses known parameters with sane values", () => {
-  assert.ok(Object.keys(EXPRESSIONS).length >= 15);
-  for (const [name, e] of Object.entries(EXPRESSIONS)) {
-    for (const [k, v] of Object.entries(e)) {
-      assert.ok(k in FACE_DEFAULTS, `${name}: unknown parameter ${k}`);
-      assert.ok(Number.isFinite(v) && v >= -1 && v <= 1.5, `${name}.${k} = ${v}`);
-    }
-    const full = expression(name);
-    assert.deepEqual(Object.keys(full).sort(), Object.keys(FACE_DEFAULTS).sort());
-  }
-  assert.throws(() => expression("confused-ish"), /unknown expression/);
-  assert.equal(expression({ mouthOpen: 0.5 }).mouthOpen, 0.5);
+test("face Decal: replacing its Texture is instant (Roblox's only face behaviour); unknown names throw", () => {
+  const c = mockCanvas(), happy = img("happy"), mad = img("mad");
+  const f = createFace({ canvas: c, images: { happy, mad } });
+  const drawn = () => c.calls.filter((x) => x[0] === "drawImage").map((x) => x[1].id);
+  assert.equal(f.name, "happy", "starts on the first image");
+  assert.deepEqual(drawn(), ["happy"]);
+  let changes = 0; f.onChange(() => changes++);
+  f.update(); c.reset(); assert.equal(f.update(), false, "nothing changed: no redraw"); assert.deepEqual(drawn(), []);
+  f.set("mad"); c.reset(); assert.equal(f.update(), true);
+  assert.deepEqual(drawn(), ["mad"], "one frame: the new image only, no blend");
+  assert.equal(changes, 2, "the first update (the initial picture) and the swap"); assert.equal(f.usingImage, true);
+  assert.throws(() => f.set("grin"), /no face image "grin"/);
+  assert.equal(createFace({ canvas: mockCanvas(), images: { a: img("a"), b: img("b") }, expression: "b" }).name, "b");
+  const none = createFace({ canvas: mockCanvas() }); assert.equal(none.name, null, "no images: an empty Decal");
 });
 
-test("drawFace: each expression draws, and its features show up as the right shapes", () => {
-  const c = mockCanvas();
-  const draw = (name) => { c.reset(); drawFace(c.getContext(), expression(name)); return ops(c); };
-  for (const name of Object.keys(EXPRESSIONS)) { const o = draw(name); assert.equal(o[0], "save"); assert.equal(o.at(-1), "restore"); }
-  // a closed mouth is one stroked curve; an open one is filled and clipped (for teeth/tongue)
-  assert.ok(!draw("neutral").includes("clip"));
-  assert.ok(draw("roar").includes("clip") && draw("roar").includes("fillRect"));
-  // x eyes and >< eyes are strokes, not filled ellipses
-  const dazed = draw("dazed"), hurt = draw("hurt");
-  assert.ok(dazed.filter((x) => x === "lineTo").length >= 4);
-  assert.ok(hurt.filter((x) => x === "lineTo").length >= 4);
-  // a background colour fills the decal before drawing (to cover a baked-in face)
-  c.reset(); drawFace(c.getContext(), expression("happy"), { background: "#ddd" });
-  assert.deepEqual(c.calls.find((x) => x[0] === "fillRect"), ["fillRect", 0, 0, 256, 256]);
-});
-
-test("mixFace blends linearly", () => {
-  const a = expression("neutral"), b = expression("angry"), m = mixFace(a, b, 0.25);
-  near(m.browAngle, a.browAngle + (b.browAngle - a.browAngle) * 0.25);
-});
-
-test("createFace: fades towards the target, instant when fade is 0", () => {
-  const f = createFace({ canvas: mockCanvas(), blink: false });
-  f.set("angry", { fade: 0.2 });
-  f.update(0.1);
-  assert.ok(f.current.browAngle > 0.4 && f.current.browAngle < 1);
-  for (let i = 0; i < 60; i++) f.update(0.05);
-  near(f.current.browAngle, 1, 1e-3);
-  f.set("sad", { fade: 0 });
-  near(f.current.browAngle, EXPRESSIONS.sad.browAngle);
-  assert.equal(f.name, "sad");
-});
-
-test("createFace: blinks on its own, never while knocked out", () => {
-  const f = createFace({ canvas: mockCanvas(), seed: 3 });
-  let closed = 0;
-  for (let i = 0; i < 600; i++) { f.update(1 / 60); if (f.params().eyeOpen < 0.3) closed++; }
-  assert.ok(closed > 0, "should blink within 10 s");
-  const ko = createFace({ canvas: mockCanvas(), expression: "dazed" });
-  for (let i = 0; i < 600; i++) { ko.update(1 / 60); assert.equal(ko.blinkT, -1); }
-});
-
-test("createFace: lookAt and talk feed into the drawn parameters; onChange fires on redraw", () => {
-  const f = createFace({ canvas: mockCanvas(), blink: false });
-  let n = 0; f.onChange(() => n++);
-  f.lookAt(0.5, -0.25); f.update(0.016);
-  near(f.params().lookX, 0.5); near(f.params().lookY, -0.25);
-  assert.ok(n >= 1);
-  const quiet = n; f.update(0.016); assert.equal(n, quiet, "no redraw when nothing changed");
-  f.talk(true); let open = 0; for (let i = 0; i < 20; i++) { f.update(0.02); open = Math.max(open, f.params().mouthOpen); }
-  assert.ok(open > 0.3);
-});
-
-test("rig + animator: face markers change the expression and the animator keeps the face updating", () => {
-  const face = createFace({ canvas: mockCanvas(), blink: false });
+test("face Decal on a rig: rig.setExpression and face:<name> markers swap the image; other markers are ignored", () => {
+  const face = createFace({ canvas: mockCanvas(), images: { calm: img("calm"), rage: img("rage") } });
   const rig = createRig({ face });
   assert.equal(rig.face, face);
   const an = new Animator(rig);
-  an.play({ name: "taunt", length: 1, markers: [{ t: 0.1, name: "face:furious" }, { t: 0.6, name: "face:laugh" }], keyframes: [{ t: 0, poses: { Neck: { r: [0, 0, 0] } } }] }, { fade: 0 });
-  an.update(0.2); for (let i = 0; i < 10; i++) an.update(0.02);
-  assert.equal(face.name, "furious");
-  near(face.current.browAngle, 1, 0.05);
-  an.update(0.5);
-  assert.equal(face.name, "laugh");
-  rig.setExpression("sad", { fade: 0 });
-  assert.equal(face.name, "sad");
+  an.play({ name: "x", length: 1, markers: [{ t: 0.1, name: "face:rage" }, { t: 0.3, name: "face:unknown" }], keyframes: [{ t: 0, poses: { Neck: { r: [0, 0, 0] } } }] }, { fade: 0 });
+  an.update(0.15); assert.equal(face.name, "rage");
+  an.update(0.2); assert.equal(face.name, "rage", "a marker naming no image changes nothing");
+  rig.setExpression("calm"); rig.updateFace(); assert.equal(face.name, "calm");
 });
 
-test("addFaceDecal puts a live face on any rig's head", () => {
-  const face = createFace({ canvas: mockCanvas(), blink: false });
+test("addFaceDecal puts a face Decal on any rig's head", () => {
+  const face = createFace({ canvas: mockCanvas(), images: { smile: img("smile"), grin: img("grin") } });
   const rig = createRig({ body: false });
   const decal = rig.addFaceDecal(face, { radius: 0.7 });
   assert.equal(decal.parent, rig.head);
   assert.equal(rig.face, face);
   decal.geometry.computeBoundingBox();
   assert.ok(decal.geometry.boundingBox.min.z < -0.6, "decal sits on the -Z (face) side");
-  rig.setExpression("grin"); rig.updateFace(1);
+  rig.setExpression("grin"); rig.updateFace();
   assert.equal(face.name, "grin");
-});
-
-test("image faces: swap instantly like a Roblox face Decal, crossfade only when asked", () => {
-  const happy = { width: 420, height: 420, id: "happy" }, mad = { width: 420, height: 420, id: "mad" }, blink = { width: 420, height: 420, id: "blink" };
-  const c = mockCanvas();
-  const f = createFace({ canvas: c, images: { happy, mad, blink }, expression: "happy", blink: false });
-  const drawn = () => c.calls.filter((x) => x[0] === "drawImage").map((x) => x[1].id);
-  c.reset(); f.update(0.016);
-  assert.deepEqual(drawn(), ["happy"]);
-  f.set("mad"); // default: instant swap
-  assert.equal(f.layer.mix, 1);
-  c.reset(); f.update(0.016);
-  assert.deepEqual(drawn(), ["mad"]);
-  f.set("happy", { fade: 0.2 }); // opt-in crossfade draws both, the old one fading out
-  c.reset(); f.update(0.1);
-  assert.deepEqual(drawn(), ["mad", "happy"]);
-  const alphas = c.calls.filter((x) => x[0] === "=globalAlpha").map((x) => x[1]);
-  assert.ok(alphas.some((a) => a > 0.4 && a < 0.6));
-  for (let i = 0; i < 10; i++) f.update(0.05);
-  c.reset(); f.draw(); assert.deepEqual(drawn(), ["happy"]);
-  assert.equal(f.usingImage, true);
-});
-
-test("image faces: names without an image fall back to the procedural face; blink image shows while blinking", () => {
-  const c = mockCanvas();
-  const happy = { width: 420, height: 420, id: "happy" }, blink = { width: 420, height: 420, id: "blink" };
-  const f = createFace({ canvas: c, images: { happy, blink }, expression: "happy", seed: 3 });
-  f.set("angry");
-  assert.equal(f.usingImage, false);
-  f.set("happy");
-  let sawBlink = false;
-  for (let i = 0; i < 600 && !sawBlink; i++) { c.reset(); f.update(1 / 60); sawBlink = c.calls.some((x) => x[0] === "drawImage" && x[1].id === "blink"); }
-  assert.ok(sawBlink, "the blink image should appear within 10 s");
-});
-
-test("face markers swap image faces instantly", () => {
-  const c = mockCanvas();
-  const face = createFace({ canvas: c, images: { calm: { width: 1, height: 1 }, rage: { width: 1, height: 1 } }, expression: "calm", blink: false });
-  const rig = createRig({ face });
-  const an = new Animator(rig);
-  an.play({ name: "x", length: 1, markers: [{ t: 0.1, name: "face:rage" }], keyframes: [{ t: 0, poses: { Neck: { r: [0, 0, 0] } } }] }, { fade: 0 });
-  an.update(0.15);
-  assert.equal(face.name, "rage"); assert.equal(face.layer.mix, 1);
 });

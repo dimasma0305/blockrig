@@ -3,7 +3,7 @@
 // (assets/roblox, the default once downloaded): premium catalog hair and anime face accessories per emotion;
 // without them: procedural hair and live drawn faces.
 import * as THREE from "three";
-import { createRig, createFace } from "blockrig";
+import { createRig } from "blockrig";
 import { hoodie, teamJacket, chefJacket, uniformShirt, tee, cargo, jeans, shorts } from "./wardrobe";
 import { hair, baseballCap, chefHat, headphones, visor, glasses, laptop, rankTag, outlined, AT, type HairStyle } from "./props";
 import { rng } from "../kit/rng";
@@ -22,7 +22,8 @@ function person(name: string, o: {
   rb?: Rb;
 }): Person {
   const roblox = !!o.rb?.faces;
-  const face = roblox ? null : createFace({ expression: o.expression ?? "neutral", blink: false, seed: o.seed ?? 1 });
+  // faces are Roblox's only (dynamic heads, face accessories, face Decals): without the Roblox items, no face is drawn
+  const face = null;
   const rig = createRig({ shape: o.shape as any, scale: o.scale as any, bodyColors: skin(o.rb?.skin ?? o.skin), clothing: { shirt: o.shirt, pants: o.pants }, ...(face ? { face } : {}), outline: 0.035, shadows: true } as any);
   if (o.rb?.hair) rig.addAccessory(o.rb.hair.mesh, { attachment: o.rb.hair.attachment, map: o.rb.hair.map, scale: o.rb.hair.scale, offset: o.rb.hair.offset });
   else if (o.hair) rig.attachTo(o.hair, "HairAttachment");
