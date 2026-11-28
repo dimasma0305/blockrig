@@ -71,6 +71,8 @@ for (const s of shots) {
   } else if (!s.minSeconds) errors.push(`${s.id}: a silent shot needs "- min: <seconds>"`);
   if (!s.camera) warnings.push(`${s.id}: no camera note`);
   if (!s.action) warnings.push(`${s.id}: no action note`);
+  const LIGHTS = ["day", "golden", "night", "indoor", "studio"]; // src/kit/lightRig.tsx LIGHT_PRESETS
+  if (s.light && !LIGHTS.includes(s.light)) errors.push(`${s.id}: light "${s.light}" is not a lighting preset (${LIGHTS.join(", ")}; leave it out for the sky's own light)`);
   for (const [who, face] of Object.entries(s.faces ?? {})) if (!EXPRESSIONS.includes(face)) errors.push(`${s.id}: face "${face}" for ${who} is not a BlockRig expression (${EXPRESSIONS.join(", ")})`);
   for (const part of (s.weather ?? "").split(/->|;/)) { const w = part.trim().split(/\s+/)[0]; if (w && !WEATHER.includes(w)) errors.push(`${s.id}: unknown weather "${w}"`); }
   if (s.emotion && !EMOTIONS.includes(s.emotion)) errors.push(`${s.id}: unknown emotion "${s.emotion}" (${EMOTIONS.join(", ")})`);

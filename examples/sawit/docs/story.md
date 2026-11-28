@@ -44,6 +44,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: calm
+- light: day
 
 ### s02 · village
 > Sawit on the hills. Sawit by the school. Sawit where the playground used to be.
@@ -56,6 +57,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: funny
+- light: day
 
 ### s03 · forest
 > And if a forest is left unplanted... it burns that night.
@@ -67,6 +69,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: night
 
 ### s04 · forest
 > By morning, it's sawit. Rows and rows of it. Like magic.
@@ -78,6 +81,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: golden
 - mood: eerie
+- light: golden
 
 ### s05 · village
 > Everybody says it's the Sawit Spirit. Even the King says so.
@@ -89,6 +93,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: calm
+- light: day
 
 ### s06 · palace
 > And the King is the nicest man in the kingdom.
@@ -101,6 +106,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: happy
+- light: day
 
 ### s07 · village
 > He gives every family free seeds!
@@ -113,6 +119,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: happy
+- light: day
 
 ### s08 · forest
 > My grandpa owns the last real forest. The only place birds still sing.
@@ -125,6 +132,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: golden
 - mood: warm
+- light: golden
 
 ### s09 · forest
 > Every night he sits at the edge, so the spirit won't come.
@@ -137,6 +145,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: dusk
 - mood: tense
+- light: golden
 
 ### s10 · forest
 > Last night... Grandpa fell asleep.
@@ -149,6 +158,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: night
 
 ### s11 · village
 
@@ -158,6 +168,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: night
 - min: 1.4
 
 ### s12 · village
@@ -171,6 +182,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: panic
+- light: night
 
 ### s13 · forest
 > But the spirit wasn't a spirit.
@@ -183,6 +195,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: night
 
 ### s14 · forest
 > It was three men. With torches.
@@ -195,6 +208,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: night
 
 ### s15 · forest
 
@@ -204,6 +218,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: night
 - min: 1.5
 
 ### s16 · palace
@@ -217,6 +232,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: night
 
 ### s17 · room
 > Through the kitchen, up the stairs, behind a painting of the King.
@@ -229,6 +245,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: sneaky
+- light: indoor
 
 ### s18 · room
 > A giant map. Every forest in the kingdom, crossed out in red.
@@ -241,6 +258,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: indoor
 
 ### s19 · room
 > Only one was left. Grandpa's.
@@ -253,6 +271,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: indoor
 
 ### s20 · room
 > Next to it, a mountain of gold.
@@ -265,6 +284,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: indoor
 
 ### s21 · room
 > Every bottle of sawit oil we sell goes to one company. The King's company.
@@ -277,6 +297,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: angry
+- light: indoor
 
 ### s22 · room
 > Free seeds. Free fire. He buys our sawit for one coin... and sells it for a hundred.
@@ -289,6 +310,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: angry
+- light: indoor
 
 ### s23 · room
 > Then the door opened.
@@ -301,6 +323,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: indoor
 
 ### s24 · room
 
@@ -310,6 +333,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: indoor
 - min: 1.4
 
 ### s25 · room
@@ -323,6 +347,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: tense
+- light: indoor
 
 ### s26 · palace
 > So I grabbed his map, jumped out the window and ran!
@@ -335,6 +360,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: panic
+- light: night
 
 ### s27 · village
 > I woke up every kid I knew.
@@ -347,6 +373,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: determined
+- light: night
 
 ### s28 · forest
 > Buckets from the bakery. Hoses from the school. All night long.
@@ -359,6 +386,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: night
 - mood: action
+- light: night
 
 ### s29 · forest
 > And the fire... went out.
@@ -371,6 +399,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: golden
 - mood: relief
+- light: golden
 
 ### s30 · forest
 > In the morning, the King brought the whole town to watch the last forest turn into sawit.
@@ -383,6 +412,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: calm
+- light: day
 
 ### s31 · forest
 > But it didn't.
@@ -394,6 +424,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: funny
+- light: day
 
 ### s32 · forest
 
@@ -403,6 +434,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: tense
+- light: day
 - min: 1.4
 
 ### s33 · forest
@@ -416,6 +448,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: tense
+- light: day
 
 ### s33b · forest
 > And the golden badge a guard dropped by the burning tree.
@@ -428,6 +461,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: tense
+- light: day
 
 ### s33c · forest
 > The guard looked at the King and said: he paid us to do it!
@@ -440,6 +474,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: tense
+- light: day
 
 ### s34 · forest
 > The King said: it was the spirit!
@@ -452,6 +487,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: funny
+- light: day
 
 ### s35 · forest
 > Nobody clapped this time.
@@ -463,6 +499,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: funny
+- light: day
 
 ### s36 · village
 > Now we plant trees again. Real ones.
@@ -475,6 +512,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: golden
 - mood: happy
+- light: golden
 
 ### s37 · village
 > And the King? He plants sawit. All by himself.
@@ -487,6 +525,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: golden
 - mood: funny
+- light: golden
 
 ### s38 · forest
 > But last night... I saw a torch in the forest again.
@@ -498,3 +537,4 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: fog
 - time: night
 - mood: eerie
+- light: night

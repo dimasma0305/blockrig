@@ -24,6 +24,7 @@
     "fast-gpu": "node scripts/fast-gpu.mjs"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "9.8.2",
     "@remotion/bundler": "4.0.544",
     "@remotion/cli": "4.0.544",

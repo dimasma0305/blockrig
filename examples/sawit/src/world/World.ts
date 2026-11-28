@@ -295,14 +295,14 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     /** Fire strengths per key for this shot (0..1). */
     fires: {} as Record<string, number>,
     smokes: {} as Record<string, number>,
-    update(o: { location: string; weather: Weather; daylight: Daylight; time: number; local: number; camera: THREE.Camera; fire: Record<string, number>; smoke: Record<string, number>; inside?: boolean; birds?: boolean }) {
+    update(o: { location: string; weather: Weather; daylight: Daylight; time: number; local: number; camera: THREE.Camera; fire: Record<string, number>; smoke: Record<string, number>; inside?: boolean; birds?: boolean; ownLight?: boolean }) {
       const inside = o.location === "room";
       focus.copy((LOCATIONS as any)[o.location] ?? LOCATIONS.village);
       const w = inside ? { ...o.weather, rain: 0, snow: 0, wet: 0, fog: 0, lightning: [] } : o.weather;
       const overcast = Math.min(1, w.rain * 0.9 + w.snow * 0.5);
       const { flash } = weather.update(w, o.time, o.local, o.camera);
       const skyName = overcast > 0.45 ? "storm" : skyFor(o.daylight), night = o.daylight.stars > 0.6;
-      scene.background = inside ? new THREE.Color("#0d0a08") : lib.sky(skyName); scene.environment = env(skyName);
+      scene.background = inside ? new THREE.Color("#0d0a08") : lib.sky(skyName); if (!o.ownLight) scene.environment = env(skyName); // ownLight: a LightRig preset lights this shot
       scene.backgroundIntensity = (night ? 0.28 : 1) + flash * 2.5; scene.environmentIntensity = inside ? 0.12 : night ? 0.3 : 1;
       lighting.update({ time: o.daylight, overcast, flash, focus: inside ? focus : (o.camera as THREE.PerspectiveCamera).position.clone().setY(0) });
       gl.toneMappingExposure = LOOK.exposure * o.daylight.exposure * (inside ? 1.1 : night ? 0.95 : 1);

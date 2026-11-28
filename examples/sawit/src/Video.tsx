@@ -9,6 +9,8 @@ import { applyLook, Captions, Soundtrack, Vignette, FlashCut, LightningFlash, De
 import { ASSETS } from "./world/assets";
 import { createProbe, loadRapier } from "./kit/collide";
 import { usePost, POST_DEFAULTS } from "./kit/post";
+import { LightRig, LIGHT_PRESETS } from "./kit/lightRig";
+import { SoftShadows } from "@react-three/drei";
 import { useRobloxCast, type RobloxCast } from "./cast/roblox";
 import { T, weatherAt, daylightAt } from "./story";
 import { buildCast } from "./cast/characters";
@@ -17,6 +19,7 @@ import { perform, faceFlames } from "./direction/performance";
 import { cameraFor } from "./direction/camera";
 
 // roblox: Roblox items (default once downloaded); collide: log staging problems per frame (npm run collide)
+const USES_LIGHT_PRESETS = T.SHOTS.some((s: any) => s.light);
 export type VideoProps = { debug?: boolean; roblox?: boolean; collide?: boolean; post?: boolean };
 
 function Scene({ lib, rb, rapier, post = true }: { lib: AssetLibrary; rb: RobloxCast | null; rapier: any; post?: boolean }) {
@@ -32,11 +35,14 @@ function Scene({ lib, rb, rapier, post = true }: { lib: AssetLibrary; rb: Roblox
   applyCamera(camera, cameraFor(shot, p, local, cast, world), frame);
   camera.updateMatrixWorld(true);
   faceFlames(cast, camera, time);
-  world.update({ location: shot.location ?? "village", weather: weatherAt(shot, p), daylight: daylightAt(shot, p), time, local, camera, fire: state.fire, smoke: state.smoke, birds: state.birds });
+  const light = (shot as any).light as string | undefined; // docs/story.md "- light: golden"
+  world.update({ ownLight: !!(light && LIGHT_PRESETS[light]), location: shot.location ?? "village", weather: weatherAt(shot, p), daylight: daylightAt(shot, p), time, local, camera, fire: state.fire, smoke: state.smoke, birds: state.birds });
   const probe = useMemo(() => (rapier ? createProbe(rapier, world.root) : null), [rapier, world]);
   if (probe) console.log("COLLIDE " + JSON.stringify({ frame, shot: shot.id, issues: probe.check(camera, cast.all) }));
   return (
     <>
+      {USES_LIGHT_PRESETS && <SoftShadows size={18} samples={16} focus={0.6} />}
+      {light && LIGHT_PRESETS[light] && <LightRig key={light} preset={light} softShadows={false} />}
       {cast.all.map((q, i) => <primitive key={i} object={q.rig.object} />)}
       {cast.all.filter((q) => q.water).map((q, i) => <primitive key={`w${i}`} object={q.water!} />)}
     </>
