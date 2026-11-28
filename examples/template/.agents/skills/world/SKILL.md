@@ -20,7 +20,8 @@ scene.background = lib.sky("day");                                  // Poly Have
 const grass = lib.pbr("grass", { repeat: [w / 6, d / 6] });         // PBR set at real size
 ```
 
-**Roblox version (the default when downloaded): free Toolbox maps.** A house, a room or a street someone built in Roblox looks
+**Roblox version (the default when downloaded): free Toolbox maps.** (A Toolbox model can also come as a pack by id:
+`npm run pack -- asset:<id> house`; `packs.house.map` is ready for `buildRobloxMap(data, { meshes, images })`.) A house, a room or a street someone built in Roblox looks
 more like the reference shorts than any kit. Add it to `assets/manifest.json` (`{ "mapHouseA": { "assetId": 317197851,
 "kind": "map" } }`), fetch it with the Roblox loop (`assets` skill), and draw it with `buildRobloxMap` (blockrig/video):
 parts, wedges, corner wedges, balls, cylinders, mesh modifiers, MeshParts with their textures, decals, textures and
@@ -153,17 +154,20 @@ for the same reason: depth precision.
 outdoor shot; then `npm run collide` (review skill): it finds cameras inside walls, faces hidden behind trees or
 poles, and characters inside props or floating.
 
-## Roblox maps: check the unions (learned on the nasa video)
+## Roblox maps: unions (learned on the nasa video)
 
 Unions (CSG) are drawn as their bounding box. An L-shaped desk top became one 13 x 12 stud slab that covered the
-chair, so the hero sat through the desk in every shot. Before staging in a map, list its UnionOperations with
-their sizes (map.json, `cls`/`union`); a large one over the acting area is skipped (`buildRobloxMap(..., { skip })`)
-and replaced with a simple box where the real shape is. `npm run collide` names them ("inside Desk/Union").
-A seat the hero sits in (a gaming chair) is one box per part to the collision check: drop its colliders
-(`group.userData.colliders`) and check the face in stills instead.
+chair, so the hero sat through the desk in every shot. `buildRobloxMap` now handles that case itself: a desk or table
+top union that furniture pokes up through is trimmed to the largest rectangle clear of it (the console says
+"trimmed ... Desk/Union"; `map.dropped` lists them with their stand-ins; `unions: "skip"` or `"box"` to change it).
+Other unions (walls, roofs, dormers) stay boxes: if one still covers the acting area, `skip` it and draw a simple
+box where the real shape is. `npm run collide` names them ("inside Desk/Union").
+A character seated with `ON_SEAT` is never "inside" its own seat (the probe ignores the model under its hips), so
+gaming chairs need no collider surgery any more.
 
 ## Render speed: lights per place
 
 Every light costs every pixel of every material, wherever it is. With five places each lit by its own lamps, all of
-them were shading every frame. Switch each place's lights on only while the camera is there (nasa World.ts
-`lamps`: the nearest location owns a light; the sun is shared).
+them were shading every frame. Switch each place's lights on only while the camera is there:
+`const lamps = lightsByLocation(root, LOCATIONS)` once (blockrig/video: the nearest location owns a light; the sun
+and sky lights are shared), then `lamps.show(shot.location)` every frame.

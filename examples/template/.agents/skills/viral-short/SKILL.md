@@ -14,7 +14,8 @@ every 1–3 s, and 2–4 words of caption are always on screen. One twist at the
 ## Order (each stage has a skill)
 
 1. **story** → `docs/story.md`. Show the user the hook and one-line plot before anything else.
-2. **look / world / materials** → `docs/visuals.md`, then `src/cast`, `src/world`. Lay each location out on the 2D
+2. **look / world / materials** → `docs/visuals.md`, then `src/cast`, `src/world`. Avatars and their movement from
+   whole Roblox packs by id first (`npm run pack -- bundle:<id> <name>`, look skill). Lay each location out on the 2D
    plan first (`world` skill: zones, a stage per shot, footprints). Check `Lineup`, `PlanLab`, `MaterialBoard`, `WeatherLab`.
 3. **voice** → `docs/audio.md`, `npm run voice`, `npm run check`.
 4. **camera / vfx** → `src/direction`, effects. Stills after every change, then `npm run collide` until it finds nothing.
@@ -31,7 +32,8 @@ https://www.youtube.com/shorts/wVjP5B-94MM (shade, texture, light, sky). Open th
 - **Assets first, don't reinvent:** models, textures, skies, clouds, animals, props, faces, clothes, hair and
   animations come from downloadable assets (`assets` skill, `assets/manifest.json`; Roblox catalog items and Toolbox maps
   first: Roblox allows them in videos). Code-built pieces are a fallback, with the reason in `docs/visuals.md`.
-- **Characters** (`look` skill): classic blocky bodies, very pale slightly pink skin, big fluffy hair with bangs that
+- **Characters** (`look` skill): whole Roblox avatars from packs by id (`rigFromPack`), moving with a Roblox animation
+  pack (`packs.rthro.clip("walk")`), or classic blocky bodies, very pale slightly pink skin, big fluffy hair with bangs that
   never hides the eyes, 2D anime faces that change with every line, layered detailed outfits, an accent each; evenly
   lit (`avatarAmbient`). Girl and boy leads that look like they belong in a popular Roblox story channel.
 - **Light and sky** (`world` skill, "The look"): warm low afternoon sun, long crisp shadows, little flat fill, deep
@@ -46,7 +48,7 @@ https://www.youtube.com/shorts/wVjP5B-94MM (shade, texture, light, sky). Open th
   beat at "...", ~150–190 wpm overall with 0.35–0.45 s between lines.
 - **Staging** (`camera` skill): faces never under captions; nobody inside walls, props or each other; seated people
   sink into soft seats; the camera never inside anything. `npm run collide` proves it.
-- **Licences:** Roblox allows Roblox avatars and catalog items in videos, monetized too (Developer Relations, devforum.roblox.com/t/1843674, 2022): use them freely in the shorts. The downloaded FILES stay out of git (assets/roblox, fetched per machine by `npm run roblox`): videos yes, redistributing asset files no. Everything else committed is original or CC0; music is always original.
+- **Licences:** Roblox allows Roblox avatars and catalog items in videos, monetized too (Developer Relations, devforum.roblox.com/t/1843674, 2022): use them freely in the shorts. The downloaded FILES stay out of git (assets/roblox, fetched per machine by `npm run roblox` / `npm run pack`; packs are cached once per machine in ~/.cache/blockrig/roblox): videos yes, redistributing asset files no. Everything else committed is original or CC0; music is always original.
 
 ## Quality bar (every item, before every full render)
 
@@ -60,6 +62,13 @@ Look at stills next to the reference shorts and tick each line; anything that fa
    every surface textured; weather matches the line.
 6. Captions clear of faces and app buttons on every shot (`DEBUG=1 npm run stills`).
 7. The user's latest feedback (docs/feedback.md) is visibly addressed.
+
+## Where things live
+
+BlockRig does the shared work, tested: characters (`blockrig`), Roblox packs by id (`blockrig/pack`), the video
+toolkit (`blockrig/video`: timeline, cameras, lighting, Roblox maps, layout plan, staging check, boards) and the
+narration decisions (`blockrig/voice`). When a video turns up a problem that would hit the next video too, fix it
+there with a test (BlockRig's AGENTS.md), not only in this copy.
 
 ## Hand-over
 

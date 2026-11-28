@@ -51,12 +51,14 @@ const say = {
   sunk: (g) => `${g.who} is sunk ${g.worst} studs into ${g.what}`,
   stiff: (g) => `${g.who} rests on top of ${g.what} without sinking in (it is soft: ~${g.worst} studs, use restOn())`,
   overlap: (g) => `${g.who} and ${g.what} stand inside each other`,
+  "caption-over-face": (g) => `${g.who}'s face is behind the captions (at ${Math.round(g.worst * 100)}% of the frame height): aim lower or keep the face in the upper half`,
 };
+const describe = (g) => (say[g.kind] ?? ((x) => `${x.kind}: ${x.who} / ${x.what}`))(g);
 const list = [...groups.values()];
 fs.mkdirSync("out", { recursive: true });
 fs.writeFileSync("out/collide.json", JSON.stringify({ every, roblox, frames: frames.size, problems: list }, null, 1));
 if (!frames.size) { console.log("no frames reported: is the probe wired into Video.tsx (collide prop)?"); process.exit(2); }
 if (!list.length) { console.log(`collide: ${frames.size} frames, nothing found`); process.exit(0); }
-for (const g of list) console.log(`${g.shot}  ${say[g.kind](g)}  (frames ${g.first}-${g.last}, ${sec(g.first)}-${sec(g.last)} s, ${g.count}x)`);
+for (const g of list) console.log(`${g.shot}  ${describe(g)}  (frames ${g.first}-${g.last}, ${sec(g.first)}-${sec(g.last)} s, ${g.count}x)`);
 console.log(`collide: ${list.length} problem(s) in ${frames.size} frames -> out/collide.json. Check each with: npm run stills -- <shot>@<0..1>`);
 process.exit(1);

@@ -10,7 +10,9 @@ description: Stage the acting and frame the shots - performance.ts (who stands w
 Per shot: `place(person, x, z, rotY)` then `act(person, layers, local, face, ground, contacts)`. Rigs face +Z;
 `facing(from, to)` gives the rotation. Layers are BlockRig clips (`src/cast/clips.ts`) with `at` (start offset),
 `fade`, `weight`, `speed`; `poseAt` seeks them so any frame is exact. Contacts: `FEET` (standing), `ON_SEAT` (sitting
-on furniture: hips on the seat, legs hang). New action → add a clip, check it in PoseLab.
+on furniture: hips on the seat, legs hang). New action → add a clip, check it in PoseLab. Roblox's own walk, run,
+idle, jump, climb and swim come from an animation pack (`packs.rthro.clip("run")`, look skill): use them as layers
+like any clip.
 **Soft things give way** (blockrig/video `surfaceOf`/`restOn`): a body sinks into a bed, sofa or pillow and a little into grass,
 never into a floor. Put a character on a surface with `restOn(top, "bed")`, not the raw top: hips sink ~0.35 studs
 into a mattress, which is what makes them look seated rather than perched on a board.
@@ -29,7 +31,7 @@ ground and a hazy horizon. Outdoor close-ups: low and level; wides: high only wh
 
 ## Framing mistakes we made (check every new shot for these)
 
-- **Caption over the face**: captions sit at 62% height. Aim slightly *below* the head (chest) for medium shots, and keep the face in the upper half. Floating tags above heads make this worse.
+- **Caption over the face**: captions sit at 62% height. Aim slightly *below* the head (chest) for medium shots, and keep the face in the upper half. Floating tags above heads make this worse. `npm run collide` reports it ("caption-over-face") for any watched face inside the caption band while a caption shows.
 - **Camera inside something**: wide props (hair, headphones, statues, trees, fences, lamp posts) swallow over-the-shoulder cameras. Prefer profile or front three-quarter, and move the camera rather than the world.
 - **Blocked hero**: crowds, fences, trees and poles between camera and hero. Go top-down, low, or to the other side.
 - **Seated characters floating or standing on furniture**: use `ON_SEAT`, not feet contacts, and `restOn()` for soft seats.
