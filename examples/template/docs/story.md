@@ -110,7 +110,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - captions: NOW IT ONLY RAINS... | WHEN *SHE* LIES
 - action: sister smiles sweetly; one small cloud rains only on her
 - emotion: smug
-- camera: two-shot, hero in the foreground looking at the camera
+- camera: two-shot from the road, both kids side by side, faces in the upper half (clear of the captions), her cloud raining above her
 - faces: hero=smug, sister=happy
 - weather: clear
 - time: golden
