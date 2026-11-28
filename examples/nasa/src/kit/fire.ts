@@ -2,7 +2,7 @@
 // between frames (vfx skill). Flames are camera-facing planes with a scrolling-noise shader (additive, not tone
 // mapped), embers and smoke loop on t, and each fire has one flickering point light.
 import * as THREE from "three";
-import { rng } from "./rng";
+import { rng } from "blockrig/video";
 
 const NOISE = `
   float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }

@@ -17,8 +17,8 @@ import { ALL } from "../cast/clips";
 import { act, place } from "../direction/performance";
 import { useRobloxCast, type RobloxCast } from "../cast/roblox";
 import { useAssetLibrary, type AssetLibrary } from "../kit/assets";
-import { buildRobloxMap } from "../kit/robloxMap";
-import { points as planPoints } from "../kit/plan";
+import { buildRobloxMap } from "blockrig/video";
+import { points as planPoints } from "blockrig/video";
 import { buildWorld } from "../world/World";
 import { ASSETS } from "../world/assets";
 

@@ -3,8 +3,9 @@
 //   VOICE_ENGINE=chatterbox (expressive, offline on a GPU; see make_voice_chatterbox.py) | kokoro (open model, offline) | edge (Microsoft neural voice, online;
 //   ask the user first) | sapi (Windows' built-in voice, offline placeholder). Default: story.voice.engine, else sapi.
 import fs from "node:fs";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { compose, writeWav } from "./music.mjs";
+import { trimToSpeech, encodeWav, estimateWords, musicSections } from "blockrig/voice";
 
 const story = JSON.parse(fs.readFileSync("src/generated/story.json", "utf8"));
 const engine = process.env.VOICE_ENGINE || story.voice?.engine || "sapi";
@@ -17,39 +18,15 @@ const venvPy = (name) => `${home}/.venvs/${name}/${process.platform === "win32" 
 const voicePy = process.env.VOICE_PY || ["blockrig-voice", "chatterbox"].map(venvPy).find((f) => fs.existsSync(f));
 if ((engine === "chatterbox" || engine === "kokoro") && !voicePy) { console.error(`The ${engine} voice is not installed: run npm run setup-voice (or set VOICE_ENGINE=sapi for a placeholder).`); process.exit(1); }
 // Fast-paced narration: trim each clip to its speech (TTS pads both ends, which adds up to long gaps between
-// lines) and shift the word timings to match. Pauses inside a line ("Rank... last.") are kept.
+// lines) and shift the word timings to match. Pauses inside a line ("Rank... last.") are kept. The decisions (where
+// the speech is, estimated word times, music sections) are BlockRig's (blockrig/voice), tested there.
+const SR = 48000;
 function trimClip(file, words) {
-  const err = spawnSync("ffmpeg", ["-hide_banner", "-i", file, "-af", "silencedetect=noise=-40dB:d=0.06", "-f", "null", "-"], { encoding: "utf8" }).stderr || "";
-  const dur = probe(file);
-  const starts = [...err.matchAll(/silence_start: ([\d.]+)/g)].map((m) => +m[1]), ends = [...err.matchAll(/silence_end: ([\d.]+)/g)].map((m) => +m[1]);
-  const head = starts.length && starts[0] < 0.02 ? ends[0] ?? 0 : 0;                 // silence at the very start
-  const tail = starts.length && starts[starts.length - 1] > head && (ends[starts.length - 1] ?? dur) >= dur - 0.02 ? starts[starts.length - 1] : dur; // and at the end
-  const from = Math.max(0, head - 0.03), to = Math.min(dur, tail + 0.06);
-  const tmp = file.replace(/.wav$/, ".trim.wav");
-  execFileSync("ffmpeg", ["-y", "-v", "error", "-i", file, "-ss", from.toFixed(3), "-to", to.toFixed(3), tmp]);
-  fs.renameSync(tmp, file);
-  return { duration: +(to - from).toFixed(3), words: words.map((w) => ({ ...w, start: Math.max(0, +(w.start - from).toFixed(3)), end: Math.max(0, +(w.end - from).toFixed(3)) })) };
-}
-const probe = (f) => parseFloat(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f]).toString());
-
-// estimated word timings (offline voice): spread each phrase's speaking time over its words by syllables
-const syllables = (w) => Math.max(1, (w.toLowerCase().replace(/[^a-z]/g, "").match(/[aeiouy]+/g) || []).length);
-function estimateWords(text, phrases, duration) {
-  const words = text.split(/\s+/).filter(Boolean);
-  const spans = phrases.length ? phrases : [{ start: 0, end: duration }];
-  // assign words to phrases in order, proportional to phrase length
-  const total = spans.reduce((a, p) => a + (p.end - p.start), 0), wsyl = words.map(syllables), syl = wsyl.reduce((a, b) => a + b, 0);
-  const out = []; let wi = 0;
-  for (const p of spans) {
-    // a phrase that carries its own text (kokoro) takes exactly its words; otherwise a share by length
-    const share = p.text ? p.text.split(/\s+/).filter(Boolean).reduce((n, w) => n + syllables(w), 0) : Math.max(1, Math.round((syl * (p.end - p.start)) / total));
-    let acc = 0; const group = [];
-    while (wi < words.length && (acc < share || p === spans[spans.length - 1])) { group.push(wi); acc += wsyl[wi]; wi++; }
-    let t = p.start; const gs = group.reduce((a, i) => a + wsyl[i], 0) || 1;
-    for (const i of group) { const d = ((p.end - p.start) * wsyl[i]) / gs; out.push({ word: words[i], start: +t.toFixed(3), end: +(t + d).toFixed(3) }); t += d; }
-  }
-  while (wi < words.length) { out.push({ word: words[wi], start: duration, end: duration }); wi++; }
-  return out;
+  const buf = execFileSync("ffmpeg", ["-v", "error", "-i", file, "-f", "f32le", "-ac", "1", "-ar", String(SR), "pipe:1"], { maxBuffer: 1e9 });
+  const x = new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4);
+  const t = trimToSpeech(x, SR, words, { quiet: 0.01 }); // about -40 dB under the peak, as ffmpeg's silencedetect was
+  fs.writeFileSync(file, encodeWav(t.x, SR));
+  return { duration: t.duration, words: t.words };
 }
 
 const timings = { engine, fps: story.fps, clips: {} };
@@ -97,16 +74,13 @@ if (musicOnly) {
   }
 }
 
-// total length -> music sections
-const gap = story.voice?.gapSeconds ?? 0.12;
-let total = 0; const starts = {};
-for (const s of story.shots) { starts[s.id] = total; const d = timings.clips[s.id]?.duration ?? 0; total += Math.max(d + gap, s.minSeconds ?? 0); }
-timings.music = story.music.map((m, i) => {
-  const from = starts[m.fromShot] ?? 0, to = i + 1 < story.music.length ? starts[story.music[i + 1].fromShot] : total;
-  if (m.theme === "none") return { theme: "none", file: null, from, to }; // a silent stretch (room tone): no music
-  const file = `${outDir}/music-${i}.wav`;
-  writeWav(file, compose(m.theme, to - from + 1.5, i + 1));
-  return { theme: m.theme, file: file.replace(/^assets\//, ""), from, to };
+// total length -> music sections (theme "none" is a silent stretch: no music)
+const { total, sections } = musicSections(story, Object.fromEntries(Object.entries(timings.clips).map(([id, c]) => [id, c.duration])));
+timings.music = sections.map((m) => {
+  if (m.silent) return { theme: "none", file: null, from: m.from, to: m.to };
+  const file = `${outDir}/music-${m.index}.wav`;
+  writeWav(file, compose(m.theme, m.to - m.from + 1.5, m.index + 1));
+  return { theme: m.theme, file: file.replace(/^assets\//, ""), from: m.from, to: m.to };
 });
 timings.total = total;
 fs.writeFileSync(`${outDir}/timings.json`, JSON.stringify(timings, null, 1));

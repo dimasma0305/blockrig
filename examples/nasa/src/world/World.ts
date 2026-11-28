@@ -4,10 +4,10 @@
 // others so two never share a frame. Screens and boards (src/world/boards.ts) carry all the on-screen text.
 import * as THREE from "three";
 import { createLighting, applyFog, LOOK, rng, type AssetLibrary, type Weather, type Daylight } from "../kit";
-import { buildRobloxMap } from "../kit/robloxMap";
+import { buildRobloxMap } from "blockrig/video";
 import { createCascades, type Cascades } from "../kit/cascades";
-import { layer, checkGround } from "../kit/ground";
-import { restOn } from "../kit/surfaces";
+import { layer, checkGround, lightsByLocation } from "blockrig/video";
+import { restOn } from "blockrig/video";
 import type { RobloxCast } from "../cast/roblox";
 import { HOUSES } from "./assets";
 import { screen, banner, fanFlag, calendar, timerTag, poster, standee } from "./boards";
@@ -196,7 +196,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     const sc = screen(1.3, 0.8); sc.position.set(0, 0.55, 0.35); sc.rotation.set(-0.25, 0, 0); (sc.material as THREE.Material).side = THREE.DoubleSide; sc.set(["TCP1P", "PRACTICE TABS", "BUG BOUNTY TABS"][i % 3], 0.3 + i * 0.07); g.add(sc);
     g.visible = false; g.userData.noCollide = true; root.add(g); return g;
   });
-  const town = { spots: [V3(-14, 0, 8), V3(-9, 0, 9.5), V3(-4, 0, 8.2), V3(1, 0, 9.3), V3(6.5, 0, 8), V3(12, 0, 9), V3(-11, 0, -8.5), V3(-2, 0, -8.2), V3(9, 0, -9)].map((v) => v.add(TW)), laptops: townLaptops };
+  const town = { spots: [V3(-14, 0, 8), V3(-9, 0, 9.5), V3(-4, 0, 6.4), V3(1, 0, 9.3), V3(6.5, 0, 8), V3(12, 0, 9), V3(-11, 0, -8.5), V3(-2, 0, -8.2), V3(9, 0, -9)].map((v) => v.add(TW)), laptops: townLaptops };
 
   // confetti for the birthday: seeded boxes that fall through the shot (frame-pure)
   const confetti = new THREE.InstancedMesh(new THREE.BoxGeometry(0.22, 0.04, 0.14), new THREE.MeshBasicMaterial({ toneMapped: false }), 240);
@@ -212,12 +212,8 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   const env = (name: string) => (envs[name] ??= pmrem.fromEquirectangular(lib.sky(name)).texture);
   const timer = timerTag(); timer.visible = false; root.add(timer);
   checkGround(root);
-  // render speed: every light costs every pixel of every material, wherever it is, so each place's lamps are only on
-  // while the camera is there (the nearest location owns a light; the sun is shared)
-  const lamps: { light: THREE.Light; at: string }[] = [];
-  root.updateMatrixWorld(true);
-  root.traverse((o: any) => { if (!o.isLight || o.isDirectionalLight || o.isHemisphereLight || o.isAmbientLight) return; const p = o.getWorldPosition(new THREE.Vector3());
-    let best = "room", bd = Infinity; for (const [k, v] of Object.entries(LOCATIONS)) { const d = Math.hypot(p.x - v.x, p.z - v.z); if (d < bd) { bd = d; best = k; } } lamps.push({ light: o, at: best }); });
+  // render speed: each place's lamps are only on while the camera is there (blockrig/video lightsByLocation)
+  const lamps = lightsByLocation(root, LOCATIONS);
   scene.add(root);
 
   const skyFor = (d: Daylight) => (d.stars > 0.6 ? "night" : d.sunDir[1] < 0.5 ? "golden" : "day");
@@ -225,7 +221,7 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
     root, lib, room, lap, nursery, town, pre, hall, friendRoom, props, mon, babyScreen, babyLaptop, tcp, tablet, lobbyBoard, timer, restOn,
     update(o: { location: string; weather: Weather; daylight: Daylight; time: number; local: number; camera: THREE.Camera; ownLight?: boolean; confetti?: { at: THREE.Vector3; t: number } | null }) {
       const focus = (LOCATIONS as any)[o.location] ?? LOCATIONS.room;
-      for (const l of lamps) l.light.visible = l.at === o.location;
+      lamps.show(o.location);
       const skyName = skyFor(o.daylight);
       scene.background = lib.sky(skyName); if (!o.ownLight) scene.environment = env(skyName);
       scene.backgroundIntensity = 1; scene.environmentIntensity = LOOK.env * 0.7;

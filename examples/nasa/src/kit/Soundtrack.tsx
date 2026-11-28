@@ -2,7 +2,7 @@
 // Remotion public folder), where `npm run voice` writes them.
 import { Sequence, staticFile } from "remotion";
 import { Audio } from "@remotion/media";
-import type { Timeline } from "./timeline";
+import type { Timeline } from "blockrig/video";
 
 export const Soundtrack: React.FC<{ timeline: Timeline; musicVolume?: number; voiceVolume?: number }> = ({ timeline, musicVolume = 0.2, voiceVolume = 1 }) => {
   const { SHOTS, MUSIC, FPS } = timeline;

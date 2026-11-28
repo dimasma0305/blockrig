@@ -1,10 +1,10 @@
 // What every character does in every shot (docs/story.md "action" notes): where they stand, which clips play, their
 // face, which story props show and what the screens say. A pure function of (shot, local time): called every frame.
 import * as THREE from "three";
-import { poseAt, groundRig, FEET, ON_SEAT, SEAT, type Layer } from "../kit/pose";
+import { poseAt, groundRig, FEET, ON_SEAT, SEAT, type Layer } from "blockrig/video";
 import { facsExpression } from "blockrig";
 import type { Shot } from "../kit";
-import { easeInOut } from "../kit/rng";
+import { easeInOut } from "blockrig/video";
 import * as C from "../cast/clips";
 import type { Cast, Person } from "../cast/characters";
 import { LOCATIONS, type World } from "../world/World";

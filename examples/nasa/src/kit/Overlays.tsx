@@ -1,9 +1,9 @@
 // 2D layers over the 3D canvas (CSS, because an EffectComposer blanks Remotion's frames): vignette, optional
 // scanlines, an RGB glitch on chosen cuts, a white flash on cuts, and the lightning flash.
 import { AbsoluteFill, useCurrentFrame } from "remotion";
-import { rng } from "./rng";
+import { rng } from "blockrig/video";
 import { lightningAt } from "./weather";
-import type { Timeline } from "./timeline";
+import type { Timeline } from "blockrig/video";
 
 export const Vignette: React.FC<{ strength?: number }> = ({ strength = 0.5 }) => (
   <AbsoluteFill style={{ background: `radial-gradient(ellipse at center, rgba(0,0,0,0) 52%, rgba(0,0,12,${strength}) 100%)`, pointerEvents: "none" }} />

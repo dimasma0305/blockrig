@@ -3,7 +3,7 @@
 // Check each changed shot: npm run stills -- s03
 import * as THREE from "three";
 import { V, move, orbit, type Cam, type Shot } from "../kit";
-import { easeInOut } from "../kit/rng";
+import { easeInOut } from "blockrig/video";
 import type { Cast, Person } from "../cast/characters";
 import { LOCATIONS, type World } from "../world/World";
 import { meFor } from "./performance";
@@ -39,7 +39,7 @@ function shotCamera(shot: Shot, p: number, local: number, cast: Cast, world: Wor
   const scr = R.screenAt.clone();
   switch (id) {
     // ---- the hook: the street where everyone hacks, crane down from above to street level
-    case "s01": { const T = LOCATIONS.town; return move([V(T.x - 26, 30, T.z + 34), V(T.x - 2, 2, T.z - 2)], [V(T.x - 10, 4.2, T.z + 21), V(T.x - 1, 6.5, T.z - 8)], p, 56); }
+    case "s01": { const T = LOCATIONS.town; return move([V(T.x - 26, 30, T.z + 34), V(T.x - 4, -4, T.z + 8)], [V(T.x - 10, 5.5, T.z + 21), V(T.x - 1, 2.6, T.z - 8)], p, 58); } // aims at the crowd on the way down: faces clear of the captions
     // ---- frozen at the desk, from the screen side
     case "s54": { const L = world.lap.position, t = head(me).lerp(L, 0.45); return { pos: L.clone().add(V(-3.2, 2.4, -6.2).multiplyScalar(1 - 0.15 * e)), target: t.add(V(0, 0.2, 0)), fov: 52, shake: 0 }; }
     case "s02": { const L = world.lap.position, t = head(me).lerp(L, 0.25); return { pos: L.clone().add(V(-2.2, 1.8, -4.2).multiplyScalar(1 - 0.1 * e)), target: t.add(V(0, 0.3, 0)), fov: 46, shake: 0 }; }
@@ -51,7 +51,7 @@ function shotCamera(shot: Shot, p: number, local: number, cast: Cast, world: Wor
     case "s07": { const b = world.nursery.baby, m = head(dad).lerp(head(mom), 0.5); return { pos: b.clone().add(V(2.5, 5.5, 5)), target: m.add(V(0, -1.6, 0)), fov: 50, shake: 0 }; }
     case "s08": return on(mom, -0.25, 6.5, 0.2, 40, p, 0.1);
     // ---- preschool
-    case "s09": { const S = LOCATIONS.preschool; return move([V(S.x + 3, 10, S.z + 21), V(S.x, 3.5, S.z - 6)], [V(S.x + 1, 6.5, S.z + 14), V(S.x, 3.5, S.z - 7)], p, 52); }
+    case "s09": { const S = LOCATIONS.preschool; return move([V(S.x + 2, 7.8, S.z - 12.5), V(S.x, 0.5, S.z + 3)], [V(S.x + 1, 5.5, S.z - 10.5), V(S.x, 0.8, S.z + 3)], p, 54); } // from the board side: the toddlers face the camera, clear of the captions
     case "s10": { if (p < 0.45) { const b = world.pre.board.clone(); return { pos: b.clone().add(V(0, -1.0, 15)), target: b.clone().add(V(0, -0.6, 0)), fov: 46, shake: 0 }; } return on(me, 0.25, 3.6, 0.2, 40); }
     case "s11": return on(friend, 0.45, 6.5, 2.2, 42, p, 0.25);
     case "s12": { const h = head(friend), l = world.pre.laptops[0].position; return { pos: h.clone().add(V(0.9, 0.7, 2.0)), target: l.clone().lerp(h, 0.25), fov: 46, shake: 0 }; }

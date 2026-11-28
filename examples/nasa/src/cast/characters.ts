@@ -5,8 +5,8 @@ import { createRig, createFace } from "blockrig";
 import { hoodie, tee, jeans, shorts } from "./wardrobe";
 import { hair, outlined, AT, type HairStyle } from "./props";
 import { partyHat } from "../world/storyProps";
-import { rng } from "../kit/rng";
-import { avatarAmbient } from "../kit/lighting";
+import { rng } from "blockrig/video";
+import { avatarAmbient } from "blockrig/video";
 import type { RobloxCast, RobloxHead, RobloxHair } from "./roblox";
 
 export type Person = { rig: any; face: any; name: string; dynamic?: boolean; faceSets?: Record<string, THREE.Object3D[]> };

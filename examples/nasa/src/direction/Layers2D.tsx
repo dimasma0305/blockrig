@@ -3,7 +3,7 @@
 // ACCESS GRANTED, and the cut to black at the end.
 import { AbsoluteFill, useCurrentFrame, spring, interpolate } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Montserrat";
-import { rng } from "../kit/rng";
+import { rng } from "blockrig/video";
 import type { Timeline } from "../kit";
 
 const { fontFamily } = loadFont("normal", { weights: ["800"], subsets: ["latin"] });

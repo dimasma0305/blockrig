@@ -5,7 +5,7 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig, delayRender, continueRen
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { applyLook, Captions, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera, useAssetLibrary, type AssetLibrary } from "./kit";
+import { applyLook, Captions, CAPTION_TOP, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera, useAssetLibrary, type AssetLibrary } from "./kit";
 import { ASSETS } from "./world/assets";
 import { createProbe, loadRapier } from "./kit/collide";
 import { usePost, POST_DEFAULTS } from "./kit/post";
@@ -45,7 +45,9 @@ function Scene({ lib, rb, rapier, post = true, cam }: { lib: AssetLibrary; rb: R
   // only in some shots would otherwise leave ghost colliders from the first frame (npm run collide)
   const lastProbe = useRef<any>(null);
   const probe = useMemo(() => { lastProbe.current?.free?.(); lastProbe.current = rapier ? createProbe(rapier, world.root) : null; return lastProbe.current; }, [rapier, world, shot.id]);
-  if (probe) console.log("COLLIDE " + JSON.stringify({ frame, shot: shot.id, issues: probe.check(camera, cast.all) }));
+  // while a caption is on screen, a watched face inside its band is a problem too ("caption-over-face")
+  const captionBand: [number, number] | undefined = T.captionAt(time) ? [CAPTION_TOP - 0.03, CAPTION_TOP + 0.07] : undefined;
+  if (probe) console.log("COLLIDE " + JSON.stringify({ frame, shot: shot.id, issues: probe.check(camera, cast.all, { captions: captionBand }) }));
   return (
     <>
       {/* soft (PCSS) shadows for the whole video when any shot names a preset; that shot's image-based light */}

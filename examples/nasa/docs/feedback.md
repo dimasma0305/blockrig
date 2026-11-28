@@ -38,6 +38,8 @@ undone later. One line per item: date, what they said, what we did, where.
 
 ## This video
 
+- 2026-11-28 "Render it again, now using our new things" → nasa runs on BlockRig's library: src/kit re-exports blockrig/video (timeline, pose, camera, lighting, Roblox maps, plan, ground layers, surfaces, collide probe), lights via lightsByLocation, scripts on blockrig/voice + compileStory (identical compiled story), collide also checks captions over faces (s01 and s09 re-aimed, one kid stepped back). Render 4 min 49 s.
+
 - 2026-11-28 "Make the render faster" → lights switched per location and soft-shadow samples 16 → 10 (11% faster, measured), and 30 fps (user's choice; half the frames).
 - 2026-11-28 "So many things collide" → npm run collide: the desk's CSG top (a 13x12 slab over the chair) replaced, the gaming chair kept as a seat (cushion collider only), crane path cleared, props that move are not colliders, colliders rebuilt per shot. Result: nothing found.
 

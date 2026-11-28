@@ -3,7 +3,7 @@
 // event names appear only as plain text, never as logos. Drawn in code because no asset carries these words;
 // each `set(key, p)` redraws only when what it shows changes (frame-pure: the picture is a function of key and p).
 import * as THREE from "three";
-import { rng } from "../kit/rng";
+import { rng } from "blockrig/video";
 import { BRAND, type BrandName } from "./brands";
 
 const FONT = "Arial Black, Arial, sans-serif";

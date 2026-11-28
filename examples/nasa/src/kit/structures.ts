@@ -3,7 +3,7 @@
 // a bed, lamps, desk, sofa, TV, shelves and a rug. Everything is original and deterministic from a seed.
 // Sizes follow Roblox scale: a character is ~5 studs tall, a door ~7, a storey ~10.
 import * as THREE from "three";
-import { rng } from "./rng";
+import { rng } from "blockrig/video";
 import { material, roadMarkings, windowTexture, TEXTURES, type TexOpts } from "./textures";
 
 // ---- geometry with UVs in studs, so one material (repeat 1/studs) fits faces of any size ----
