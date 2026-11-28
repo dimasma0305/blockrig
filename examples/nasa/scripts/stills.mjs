@@ -9,8 +9,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { bundle } from "@remotion/bundler";
 import { renderStill, selectComposition, ensureBrowser } from "@remotion/renderer";
+import { getBundle } from "./bundle.mjs";
 
 const story = JSON.parse(fs.readFileSync("src/generated/story.json", "utf8"));
 const timings = JSON.parse(fs.readFileSync("assets/audio/timings.json", "utf8"));
@@ -27,10 +27,7 @@ const inputProps = { debug: !!process.env.DEBUG, roblox: process.env.ROBLOX !== 
 
 const browserExecutable = fs.existsSync(".browser-path") ? fs.readFileSync(".browser-path", "utf8").trim() : null;
 await ensureBrowser({ browserExecutable });
-const serveUrl = await bundle({
-  entryPoint: path.resolve("src/index.ts"), publicDir: path.resolve("assets"),
-  webpackOverride: (c) => ({ ...c, resolve: { ...c.resolve, alias: { ...(c.resolve?.alias ?? {}), three: path.resolve("node_modules/three") } } }),
-});
+const { serveUrl } = await getBundle(); // built once, reused until the code changes (scripts/bundle.mjs)
 const chromiumOptions = { gl: "angle" };
 const composition = await selectComposition({ serveUrl, id: compId, browserExecutable, chromiumOptions, inputProps });
 fs.mkdirSync("out/stills", { recursive: true });
