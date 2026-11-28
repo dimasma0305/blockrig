@@ -98,6 +98,25 @@ of hand-tuned offsets:
 `ROBLOX=0` for the all-original cut) draws every zone and footprint over the real street from above. Adding a location:
 give it its own plan and a stage for each of its shots.
 
+## Lighting presets (src/kit/lightRig.tsx, drei)
+
+By default the sky photo (HDRI) lights each scene. For a shot that needs a mood, name a preset in docs/story.md
+(`- light: golden`): its image-based light is made of glowing shapes (drei `<Lightformer>`s rendered once into an
+environment map) instead of the photo, and the whole video gets contact-hardening soft shadows (`<SoftShadows>`,
+PCSS: sharp where a foot meets the ground, soft further away). Presets:
+
+| Preset | For |
+|---|---|
+| day | bright Roblox afternoon: white sky softbox, blue fill, warm ground bounce |
+| golden | late afternoon: low warm strip, little blue fill, warm rim |
+| night | moonlit blue top, cool moon rim, orange firelight from low on one side |
+| indoor | rooms: warm ceiling softbox, cool window, dark walls |
+| studio | close-ups: big soft key, dim fill, bright rim |
+
+Keep the shot's `time:` consistent with it (the sun and exposure still come from `time:`). Try presets in the
+Sandbox first (`light` prop, `soft` for the soft shadows). Add a preset by adding an entry to `LIGHT_PRESETS` and to
+the list in scripts/docs.mjs. Both are frame-pure (the environment renders once, the PCSS noise depends on the pixel).
+
 ## Ground layers: never two surfaces at one height (src/kit/ground.ts)
 
 Flat ground pieces that lie on each other (grass, a field of soil, a road, a square, burnt ground) flicker when two

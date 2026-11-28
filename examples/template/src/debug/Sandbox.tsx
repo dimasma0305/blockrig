@@ -13,14 +13,15 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { applyLook, LOOK, TIMES, createLighting, useAssetLibrary, layer, type AssetLibrary } from "../kit";
 import { usePost, POST_DEFAULTS } from "../kit/post";
+import { LightRig, LIGHT_PRESETS } from "../kit/lightRig";
 import { ASSETS } from "../world/assets";
 import { buildCast, HAIR } from "../cast/characters";
 import { ALL } from "../cast/clips";
 import { act, place } from "../direction/performance";
 import { useRobloxCast, type RobloxCast } from "../cast/roblox";
 
-export type SandboxProps = { who: string; clip: string; face: string; hair: string; spin: number; time: string; post: boolean; ao: number; bloom: number; roblox: boolean };
-export const SANDBOX_DEFAULTS: SandboxProps = { who: "hero", clip: "all", face: "cycle", hair: "own", spin: 0.5, time: "day", post: true, ao: POST_DEFAULTS.ao, bloom: POST_DEFAULTS.bloom, roblox: true };
+export type SandboxProps = { who: string; clip: string; face: string; hair: string; spin: number; time: string; light: string; soft: boolean; post: boolean; ao: number; bloom: number; roblox: boolean };
+export const SANDBOX_DEFAULTS: SandboxProps = { who: "hero", clip: "all", face: "cycle", hair: "own", spin: 0.5, time: "day", light: "golden", soft: true, post: true, ao: POST_DEFAULTS.ao, bloom: POST_DEFAULTS.bloom, roblox: true };
 const FACES = ["neutral", "happy", "laugh", "smug", "determined", "angry", "furious", "shocked", "scared", "sad", "embarrassed", "sleepy", "dazed"];
 const ALL_HAIR = [...HAIR.boy, ...HAIR.girl];
 export const CLIP_SECONDS = 2.5;
@@ -60,10 +61,12 @@ function Stage({ lib, rb, p }: { lib: AssetLibrary; rb: RobloxCast | null; p: Sa
   const names = Object.keys(ALL), ci = p.clip === "all" ? Math.floor(t / CLIP_SECONDS) % names.length : Math.max(0, names.indexOf(p.clip));
   const face = p.face === "cycle" ? FACES[Math.floor(t / 1.2) % FACES.length] : p.face;
   place(who, 0, 0, 0); act(who, [{ clip: (ALL as any)[names[ci]] }], p.clip === "all" ? t % CLIP_SECONDS : t, face);
-  const day = TIMES[p.time] ?? TIMES.day;
+  // light: "hdri" = the sky photo lights the scene (as before); a preset = drei Lightformers + PCSS soft shadows (kit/lightRig.tsx)
+  const preset = LIGHT_PRESETS[p.light], day = TIMES[preset ? preset.time : p.time] ?? TIMES.day;
   built.lighting.update({ time: day, focus: new THREE.Vector3() });
   const sky = day.stars > 0.6 ? "night" : day.sunDir[1] < 0.5 ? "golden" : "day";
-  scene.background = lib.sky(sky); scene.environment = lib.sky(sky); scene.environmentIntensity = day.stars > 0.6 ? 0.3 : 1; scene.backgroundIntensity = day.stars > 0.6 ? 0.3 : 1;
+  scene.background = lib.sky(sky); scene.backgroundIntensity = day.stars > 0.6 ? 0.3 : 1;
+  if (!preset) { scene.environment = lib.sky(sky); scene.environmentIntensity = day.stars > 0.6 ? 0.3 : 1; }
   gl.toneMappingExposure = LOOK.exposure * day.exposure;
 
   // the camera: orbit by hand in Studio; when rendered, a slow turn around the character
@@ -80,7 +83,7 @@ function Stage({ lib, rb, p }: { lib: AssetLibrary; rb: RobloxCast | null; p: Sa
   useFrame(() => controls.current?.update(), 0);
   const post = usePost({ ...POST_DEFAULTS, ao: p.ao, bloom: p.bloom }, p.post);
   post?.set({ ao: p.ao, bloom: p.bloom });
-  return null;
+  return preset ? <LightRig key={p.light + String(p.soft)} preset={p.light} softShadows={p.soft} /> : null;
 }
 
 export const Sandbox: React.FC<Partial<SandboxProps>> = (props) => {
@@ -98,7 +101,7 @@ export const Sandbox: React.FC<Partial<SandboxProps>> = (props) => {
         <Stage lib={lib} rb={rb} p={p} />
       </ThreeCanvas>}
       <div style={{ ...label, top: 120 }}>{p.who} · {names[ci]} · {face}{p.hair !== "own" ? ` · ${p.hair === "cycle" ? ALL_HAIR[Math.floor(frame / fps / 2) % ALL_HAIR.length] : p.hair}` : ""}</div>
-      <div style={{ ...label, top: 175, fontSize: 28, WebkitTextStroke: "5px #000" }}>{p.time} · effects {p.post ? `on (AO ${p.ao}, bloom ${p.bloom})` : "off"}</div>
+      <div style={{ ...label, top: 175, fontSize: 28, WebkitTextStroke: "5px #000" }}>{LIGHT_PRESETS[p.light] ? `light: ${p.light}` : `${p.time} (sky light)`} · effects {p.post ? `on (AO ${p.ao}, bloom ${p.bloom})` : "off"}</div>
     </AbsoluteFill>
   );
 };

@@ -32,6 +32,7 @@ The comment at the top of `docs/story.md` is the format. Per shot:
 - `faces:` BlockRig expressions (neutral happy grin laugh smug wink determined angry furious roar shocked scared sad hurt sleepy embarrassed dazed).
 - `weather:` and `time:` for every outdoor shot; `a -> b` changes across the shot (storm -> golden for relief).
 - `mood:` one word, for music and colour.
+- `light:` (optional) a lighting preset for the shot: day, golden, night, indoor, studio (world skill). Leave it out for the sky's own light.
 
 `npm run docs` checks all of this (captions cover narration, faces exist, weather/time known) and fails loudly.
 

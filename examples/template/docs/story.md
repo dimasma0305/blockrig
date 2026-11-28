@@ -27,6 +27,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear | overcast | fog | drizzle | rain | storm | snow | blizzard   (add "lightning 0.3" for a strike at 0.3 s)
 - time: day | golden | dusk | night | storm
 - mood: a word for the music and colour (calm, tense, panic, relief, funny)
+- light: golden   (optional lighting preset: day, golden, night, indoor, studio; see the world skill)
 - min: 1.2   (hold at least this long, seconds)
 -->
 
@@ -55,6 +56,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: tense
+- light: indoor
 
 ### s03 · bedroom
 > I said... not me!
@@ -67,6 +69,7 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: day
 - mood: funny
+- light: indoor
 
 ### s04 · street
 - action: thunder: the sky goes dark, rain slams the street, lightning strikes
@@ -112,4 +115,5 @@ How to write a shot (scripts/docs.mjs compiles this file into src/generated/stor
 - weather: clear
 - time: golden
 - mood: funny
+- light: golden
 - min: 2.2

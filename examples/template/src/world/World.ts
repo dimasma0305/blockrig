@@ -177,14 +177,14 @@ export function buildWorld(gl: THREE.WebGLRenderer, scene: THREE.Scene, lib: Lib
   const focus = new THREE.Vector3(), skyFor = (d: Daylight) => (d.stars > 0.6 ? "night" : d.sunIntensity < 1.2 ? "storm" : d.sunDir[1] < 0.5 ? "golden" : "day");
   return {
     root, lib, lawn, heroHouse: heroHouse!, houses, bedSpot, bedView, roomBox, plan, roadHalf, sidewalkHalf, dog, sidewalkY: 0.35,
-    update(o: { location: string; weather: Weather; daylight: Daylight; time: number; local: number; camera: THREE.Camera; cloudAt?: THREE.Vector3 | null }) {
+    update(o: { location: string; weather: Weather; daylight: Daylight; time: number; local: number; camera: THREE.Camera; cloudAt?: THREE.Vector3 | null; ownLight?: boolean }) {
       const inside = o.location === "bedroom";
       focus.copy((LOCATIONS as any)[o.location] ?? LOCATIONS.street);
       const w = inside ? { ...o.weather, rain: 0, snow: 0, wet: 0, fog: 0, lightning: [] } : o.weather;
       const overcast = Math.min(1, w.rain * 0.9 + w.fog * 0.5 + w.snow * 0.5);
       const { flash } = weather.update(w, o.time, o.local, o.camera);
       const skyName = overcast > 0.45 ? "storm" : skyFor(o.daylight);
-      scene.background = lib.sky(skyName); scene.environment = env(skyName);
+      scene.background = lib.sky(skyName); if (!o.ownLight) scene.environment = env(skyName); // ownLight: a LightRig preset lights this shot (kit/lightRig.tsx)
       scene.backgroundIntensity = (skyName === "storm" ? 0.55 : 1) * (1 + flash * 2.5); scene.environmentIntensity = (skyName === "storm" ? 0.6 : 1) * (inside ? 0.6 : 1);
       lighting.update({ time: o.daylight, overcast, flash, focus: inside ? focus : (o.camera as THREE.PerspectiveCamera).position.clone().setY(0) });
       gl.toneMappingExposure = LOOK.exposure * o.daylight.exposure * (inside ? 1.05 : 1);
