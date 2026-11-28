@@ -19,6 +19,10 @@ under hair, in corners), **bloom on HDR-bright pixels only** (threshold 1.35: fi
 does not), **SMAA**, and **ACES** tone mapping with the renderer's exposure. Fire and glow materials should be
 `toneMapped: false` and brighter than 1 so they bloom. Everything is a function of the frame (no temporal
 accumulation), so parallel tabs match. Tune per video in `POST_DEFAULTS`; try changes in the Sandbox first.
+Lessons: bloom uses the **Kawase** blur, not the mipmap blur (on some daylight frames the mipmap blur turned whole
+frames black, NaN, even with clean input); a sanitize pass keeps every pixel finite and within 0..64 after the scene
+render and after AO; buffers are sized from the video, not the canvas (it can be 0 on a tab's first frames). After a
+full render, scan it for black frames (render skill) before sending it.
 The sun's shadows are soft PCF (`shadow.radius`), 4096 px, fitted around the camera's focus.
 
 ## In the kit

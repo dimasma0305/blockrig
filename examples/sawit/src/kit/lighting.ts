@@ -10,6 +10,7 @@ export const LOOK = { toneMapping: THREE.ACESFilmicToneMapping, exposure: 0.9, s
 export function applyLook(gl: THREE.WebGLRenderer) {
   gl.toneMapping = LOOK.toneMapping; gl.toneMappingExposure = LOOK.exposure; gl.shadowMap.type = LOOK.shadowMap;
   const w = globalThis as any; // once per tab: which GPU renders (headless Chrome can fall back to software)
+  if (!w.__lossWatched) { w.__lossWatched = true; gl.domElement.addEventListener("webglcontextlost", () => console.error("WEBGL CONTEXT LOST in this tab")); }
   if (!w.__gpuLogged) { w.__gpuLogged = true; const c = gl.getContext(), d = c.getExtension("WEBGL_debug_renderer_info"); console.log("GPU " + (d ? c.getParameter(d.UNMASKED_RENDERER_WEBGL) : c.getParameter(c.RENDERER))); }
 }
 /** Roblox lights avatars with strong ambient light, so faces and clothes stay readable in shade (reference shorts):

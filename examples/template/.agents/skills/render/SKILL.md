@@ -9,7 +9,9 @@ description: Render the final video and its share copies - npm run render (out/<
 2. `npm run render` → `out/<slug>.mp4` (1080×1920, 60 fps, H.264 CRF 18). Run it in the background. It prints an ffprobe summary; a missing audio stream means no voice yet.
 3. `node scripts/render.mjs --debug` → `out/<slug>-debug.mp4` with the overlay burned in, for reviewing framing with the user (never for posting).
 4. `npm run preview -- --to <dir> [--start s --len s]` → a 720p MP4 and a short GIF (GitHub shows GIFs inline, not MP4s from a repo).
-5. Pull a frame sheet from the MP4 and look at it (review skill), then send the MP4 to the user.
+5. Pull a frame sheet from the MP4 and look at it (review skill), and scan it for black frames:
+   `ffmpeg -i out/<slug>.mp4 -vf "fps=2,scale=64:-1,signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=out/yavg.txt" -f null -`
+   then list times with YAVG under ~15 that are not night shots. Then send the MP4 to the user.
 
 ## Notes
 

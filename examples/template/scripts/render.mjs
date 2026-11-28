@@ -11,7 +11,7 @@ const debug = process.argv.includes("--debug"), roblox = !process.argv.includes(
 const out = `out/${story.slug}${roblox ? "" : "-cc0"}${debug ? "-debug" : ""}.mp4`;
 fs.mkdirSync("out", { recursive: true });
 fs.writeFileSync("out/props.json", JSON.stringify({ debug, roblox })); // a file: JSON on a Windows command line is fragile
-const r = spawnSync("npx", ["remotion", "render", "Story", out, "--crf=18", "--props=out/props.json"], { stdio: "inherit", shell: process.platform === "win32" });
+const r = spawnSync("npx", ["remotion", "render", "Story", out, "--crf=18", "--props=out/props.json", "--timeout=180000"], { stdio: "inherit", shell: process.platform === "win32" });
 if (r.status !== 0) process.exit(r.status ?? 1);
 const probe = execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration:stream=codec_type,r_frame_rate", "-of", "compact", out]).toString();
 console.log(probe.trim());
