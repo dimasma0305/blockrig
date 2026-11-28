@@ -9,6 +9,7 @@ import { Captions, Soundtrack, Vignette, Scanlines, GlitchCut, LightningFlash, D
 import { ASSETS } from "./world/assets";
 import { useRobloxCast, type RobloxCast } from "./cast/roblox";
 import { createProbe, loadRapier } from "./kit/collide";
+import { usePost, POST_DEFAULTS } from "./kit/post";
 import { T, weatherAt } from "./story";
 import { buildCast } from "./cast/characters";
 import { buildWorld } from "./world/World";
@@ -17,10 +18,11 @@ import { cameraFor, applyCamera } from "./direction/camera";
 
 // collide: log staging problems per frame (npm run collide)
 // roblox: Roblox hair and faces (the default once downloaded: Roblox allows its items in videos)
-export type VideoProps = { debug?: boolean; collide?: boolean; roblox?: boolean };
+export type VideoProps = { debug?: boolean; collide?: boolean; roblox?: boolean; post?: boolean };
 
-function Scene({ lib, rapier, rb }: { lib: AssetLibrary; rapier: any; rb: RobloxCast | null }) {
+function Scene({ lib, rapier, rb, post = true }: { lib: AssetLibrary; rapier: any; rb: RobloxCast | null; post?: boolean }) {
   const frame = useCurrentFrame(), time = frame / T.FPS;
+  usePost(POST_DEFAULTS, post); // ambient occlusion, bloom, MSAA, ACES (src/kit/post.ts); { post: false } renders without
   const { camera, gl, scene } = useThree() as any;
   // straight to the canvas with AgX tone mapping and soft shadows (an EffectComposer blanks Remotion's frames)
   const world = useMemo(() => { gl.toneMapping = THREE.AgXToneMapping; gl.toneMappingExposure = 1.25; gl.shadowMap.type = THREE.PCFShadowMap; return buildWorld(gl, scene, lib); }, [gl, scene, lib]);
@@ -54,7 +56,7 @@ function useRapier(enabled: boolean) {
   return r;
 }
 
-export const Video: React.FC<VideoProps> = ({ debug, collide, roblox }) => {
+export const Video: React.FC<VideoProps> = ({ debug, collide, roblox, post }) => {
   const { width, height } = useVideoConfig();
   const lib = useAssetLibrary(ASSETS); // downloaded models and textures, loaded before the canvas mounts
   const rapier = useRapier(!!collide);
@@ -62,9 +64,9 @@ export const Video: React.FC<VideoProps> = ({ debug, collide, roblox }) => {
   return (
     <AbsoluteFill style={{ background: "#060a1e" }}>
       {lib && rapier !== undefined && rb !== undefined && <ThreeCanvas width={width} height={height} shadows dpr={1}
-        gl={{ antialias: true, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
+        gl={{ antialias: post === false, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
         camera={{ fov: 50, near: 0.05, far: 1200, position: [0, 10, 30] }}>
-        <Scene lib={lib} rapier={rapier} rb={rb} />
+        <Scene lib={lib} rapier={rapier} rb={rb} post={post !== false} />
       </ThreeCanvas>}
       <Lightning />
       <Scanlines alpha={0.1} />

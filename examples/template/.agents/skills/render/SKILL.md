@@ -13,7 +13,13 @@ description: Render the final video and its share copies - npm run render (out/<
 
 ## Notes
 
-- Concurrency is 2 tabs (`remotion.config.ts`); WebGL runs through ANGLE so shadows match Studio.
+- **Speed.** Renders run 8 frames at a time (`remotion.config.ts`; measured on a 24-core laptop with an RTX 4060:
+  2 tabs 108 s, 8 tabs 27 s, 12 tabs 30 s per 180 frames) through ANGLE on the GPU. On a Windows laptop with two
+  GPUs, headless Chrome starts on the slow integrated one: run `npm run fast-gpu` once per machine (sets "High
+  performance" for the render browser, current user only; ask the user first, it is a system setting).
+  `LOGS=1 npm run stills -- s01` prints the GPU each tab uses ("GPU ANGLE (NVIDIA ...").
+- The post effects (src/kit/post.ts: ambient occlusion, bloom, SMAA, ACES) cost about half again (27 s -> 40 s
+  per 180 frames) and are on by default; `{ "post": false }` in out/props.json renders without them for a quick draft.
 - Windows: if the browser fails with a misleading `ENOENT`, the path is too long: copy `chrome-headless-shell` to a short path and put that path in `.browser-path`.
 - `THREE.Clock deprecated` warnings from three r184 are harmless.
 - You can check frames but not hear audio: say so when handing over. Posting is the user's job.

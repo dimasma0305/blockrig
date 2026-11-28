@@ -17,7 +17,8 @@ Then write `docs/story.md`, `docs/visuals.md` and `docs/audio.md`, and:
 npm run voice     # narration + timings + music
 npm run check     # the voice says the right words, pace, captions
 npm run collide   # Rapier staging check: cameras in walls, hidden faces, characters in props or floating
-npm run studio    # preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab, PlanLab
+npm run studio    # preview; Debug folder: Sandbox (one character, orbit with the mouse), Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab, PlanLab
+npm run fast-gpu  # once per Windows laptop with two GPUs: render on the fast one (about 4x faster)
 npm run stills    # out/contact-sheet.jpg
 npm run render    # out/<slug>.mp4
 ```

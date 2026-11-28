@@ -17,3 +17,4 @@ export * from "./robloxMap";
 export * from "./plan";
 export * from "./surfaces";
 export * from "./ground";
+export * from "./post";

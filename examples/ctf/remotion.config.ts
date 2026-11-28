@@ -11,7 +11,8 @@ Config.setDefaultPremountInSeconds(2);
 Config.setPublicDir("assets");
 // WebGL through ANGLE so shadows render in headless Chrome the same as in Studio
 Config.setChromiumOpenGlRenderer("angle");
-Config.setConcurrency(2);
+// 8 frames at a time: measured fastest on a 24-core laptop with an RTX 4060 (2: 108 s, 8: 27 s, 12: 30 s per 180 frames)
+Config.setConcurrency(8);
 
 // BlockRig is linked from ../.. and has its own node_modules/three; make every import of "three" resolve to
 // this project's copy so there is exactly one three.js in the bundle.

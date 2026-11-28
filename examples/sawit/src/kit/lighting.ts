@@ -7,7 +7,11 @@ export type Daylight = { top: string; horizon: string; ground: string; sun: stri
 // blue sky, little flat fill so shadows keep their depth, and ACES Filmic for saturated, contrasty colour (AgX
 // looked washed out next to them). Every composition calls applyLook(gl).
 export const LOOK = { toneMapping: THREE.ACESFilmicToneMapping, exposure: 0.9, shadowMap: THREE.PCFShadowMap };
-export function applyLook(gl: THREE.WebGLRenderer) { gl.toneMapping = LOOK.toneMapping; gl.toneMappingExposure = LOOK.exposure; gl.shadowMap.type = LOOK.shadowMap; }
+export function applyLook(gl: THREE.WebGLRenderer) {
+  gl.toneMapping = LOOK.toneMapping; gl.toneMappingExposure = LOOK.exposure; gl.shadowMap.type = LOOK.shadowMap;
+  const w = globalThis as any; // once per tab: which GPU renders (headless Chrome can fall back to software)
+  if (!w.__gpuLogged) { w.__gpuLogged = true; const c = gl.getContext(), d = c.getExtension("WEBGL_debug_renderer_info"); console.log("GPU " + (d ? c.getParameter(d.UNMASKED_RENDERER_WEBGL) : c.getParameter(c.RENDERER))); }
+}
 /** Roblox lights avatars with strong ambient light, so faces and clothes stay readable in shade (reference shorts):
  *  a little of each material's own colour and texture as self-light. Call it on every character once it is dressed. */
 export function avatarAmbient(obj: THREE.Object3D, amount = 0.3) {
@@ -60,7 +64,7 @@ export function createLighting({ shadowSize = 40, shadowMap = 4096, sky: showSky
   sky.renderOrder = -1; sky.frustumCulled = false; sky.visible = showSky; root.add(sky); // off when an HDRI is the sky
   const hemi = new THREE.HemisphereLight("#ffffff", "#444444", 1); root.add(hemi);
   const sun = new THREE.DirectionalLight("#ffffff", 3);
-  sun.castShadow = true; sun.shadow.mapSize.set(shadowMap, shadowMap); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+  sun.castShadow = true; sun.shadow.mapSize.set(shadowMap, shadowMap); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03; sun.shadow.radius = 2.5; sun.shadow.blurSamples = 12; // soft edges (PCF)
   Object.assign(sun.shadow.camera, { left: -shadowSize, right: shadowSize, top: shadowSize, bottom: -shadowSize, near: 1, far: 300 });
   root.add(sun, sun.target);
   const flash = new THREE.DirectionalLight("#dfe6ff", 0); flash.position.set(-20, 60, 10); root.add(flash);

@@ -5,6 +5,7 @@ import { Video, type VideoProps } from "./Video";
 import { T, FPS, WIDTH, HEIGHT, TOTAL_FRAMES } from "./story";
 import { Lineup, PoseLab, MaterialBoard, WeatherLab, POSE_SECONDS, WEATHER_SECONDS, WEATHER_PRESET_COUNT, MapLab, MAP_SECONDS, PlanLab } from "./debug/Labs";
 import { ALL } from "./cast/clips";
+import { Sandbox, SANDBOX_DEFAULTS } from "./debug/Sandbox";
 
 type ShotProps = { shot: string; debug: boolean };
 const ShotView: React.FC<ShotProps> = ({ shot, debug }) => {
@@ -19,6 +20,7 @@ export const RemotionRoot: React.FC = () => (
       <Composition id="Shot" component={ShotView} fps={FPS} width={WIDTH} height={HEIGHT} durationInFrames={1}
         defaultProps={{ shot: T.SHOTS[0].id, debug: true } as ShotProps}
         calculateMetadata={({ props }) => { const s = T.byId(props.shot) ?? T.SHOTS[0]; return { durationInFrames: Math.max(1, s.endFrame - s.startFrame) }; }} />
+      <Composition id="Sandbox" component={Sandbox} durationInFrames={FPS * 30} fps={FPS} width={WIDTH} height={HEIGHT} defaultProps={SANDBOX_DEFAULTS} />
       <Composition id="Lineup" component={Lineup} durationInFrames={FPS * 4} fps={FPS} width={WIDTH} height={HEIGHT} />
       <Composition id="PoseLab" component={PoseLab} durationInFrames={Math.round(FPS * POSE_SECONDS * Object.keys(ALL).length)} fps={FPS} width={WIDTH} height={HEIGHT} />
       <Composition id="MaterialBoard" component={MaterialBoard} durationInFrames={1} fps={FPS} width={WIDTH} height={HEIGHT} />

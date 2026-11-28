@@ -11,6 +11,16 @@ description: Visual effects and shaders - glitch and flash cuts, lightning, part
 - **No EffectComposer** (it blanks Remotion's frames). Glow = additive sprites/meshes with `depthWrite: false` and `toneMapped: false`; grade = AgX tone mapping + exposure; vignette, scanlines, flashes and glitches are CSS layers (`src/kit/Overlays.tsx`).
 - **Effects carry beats.** Tie each to a word or cut: flash on the storm (`FlashCut`), glitch on a twist (`GlitchCut`), lightning on "!" lines, confetti on the win.
 
+## Post effects (src/kit/post.ts, on in every render)
+
+The final frame goes through `usePost()` (pmndrs postprocessing, rendered from a priority-1 useFrame so Remotion's
+frame-by-frame rendering uses it): **N8AO ambient occlusion** (soft contact shadows where blocks meet the ground,
+under hair, in corners), **bloom on HDR-bright pixels only** (threshold 1.35: fire, lamps, neon glow; sunlit white
+does not), **SMAA**, and **ACES** tone mapping with the renderer's exposure. Fire and glow materials should be
+`toneMapped: false` and brighter than 1 so they bloom. Everything is a function of the frame (no temporal
+accumulation), so parallel tabs match. Tune per video in `POST_DEFAULTS`; try changes in the Sandbox first.
+The sun's shadows are soft PCF (`shadow.radius`), 4096 px, fitted around the camera's focus.
+
 ## In the kit
 
 | Effect | Where |

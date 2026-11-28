@@ -60,13 +60,20 @@ export function plate() {
   return g;
 }
 
+/** Roblox hair in the manifest, by who usually wears it: casts pick from these, the Sandbox can try any of them. */
+export const HAIR = { boy: ["heroHair", "n0Hair", "n2Hair", "h4Hair", "h5Hair", "h6Hair", "h7Hair"], girl: ["sisterHair", "n1Hair", "n3Hair", "g5Hair", "g6Hair"] };
+
 export function buildCast(rb: RobloxCast | null = null): Cast {
   // Roblox items (the default once downloaded): anime face accessories per emotion, anime hair, classic clothing
   const F = (...names: string[]) => names.map((n) => rb?.faces[n]).filter(Boolean) as RobloxHair[];
-  const boyFaces = () => ({ neutral: F("faceAnime"), happy: F("faceFang"), grin: F("faceFang"), laugh: F("faceFang"), smug: F("faceFang"), wink: F("faceFang"),
-    embarrassed: F("faceAnime"), determined: F("faceRanker"), angry: F("faceRanker"), furious: F("faceRanker"), shocked: F("facePotato"), scared: F("facePotato"), sad: F("faceCrying"), hurt: F("faceCrying") });
-  const girlFaces = () => ({ neutral: F("faceSparkle"), happy: F("faceSmile"), grin: F("faceSmile"), laugh: F("faceSmile"), smug: F("faceHearts"), wink: F("faceHearts"),
-    embarrassed: F("faceHearts"), determined: F("faceSharpEyes"), angry: F("faceSharpEyes", "faceAngerVein"), furious: F("faceSharpEyes", "faceAngerVein"), shocked: F("faceChibi"), scared: F("faceChibi"), sad: F("faceCrying"), hurt: F("faceCrying") });
+  // one face (or a face plus an overlay, like a blush) per emotion; a missing item falls back to the next name
+  const or = (...names: string[]) => { const f = names.map((n) => rb?.faces[n]).find(Boolean); return f ? [f] : []; };
+  const boyFaces = () => ({ neutral: F("faceAnime"), happy: F("faceFang"), grin: F("faceFang"), laugh: or("faceLaugh", "faceFang"), smug: F("faceFang"), wink: F("faceFang"),
+    embarrassed: [...F("faceAnime"), ...F("faceBlush")], determined: F("faceRanker"), angry: F("faceRanker"), furious: [...F("faceRanker"), ...F("faceAngerVein")], shocked: F("facePotato"), scared: F("facePotato"),
+    sad: F("faceCrying"), hurt: F("faceCrying"), sleepy: or("faceSleepy", "faceAnime"), dazed: or("faceDizzy", "facePotato") });
+  const girlFaces = () => ({ neutral: F("faceSparkle"), happy: F("faceSmile"), grin: F("faceSmile"), laugh: or("faceLaugh", "faceSmile"), smug: F("faceHearts"), wink: F("faceHearts"),
+    embarrassed: [...F("faceHearts"), ...F("faceBlush")], determined: F("faceSharpEyes"), angry: F("faceSharpEyes", "faceAngerVein"), furious: F("faceSharpEyes", "faceAngerVein"), shocked: F("faceChibi"), scared: F("faceChibi"),
+    sad: F("faceCrying"), hurt: F("faceCrying"), sleepy: or("faceSleepy", "faceSparkle"), dazed: or("faceDizzy", "faceChibi") });
   // Roblox-accurate: a face accessory painted with a skin plate is worn on the skin it was made for (as players do),
   // so the plate blends into the head; faces without a plate keep the default skin
   const skinFor = (faces: Record<string, RobloxHair[]>, who: "boy" | "girl") => faces.neutral?.find((f) => f.plate)?.plate ?? (who === "boy" ? "#f0cdb0" : "#fcf3f0");

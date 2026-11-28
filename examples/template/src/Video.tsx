@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { applyLook, Captions, Soundtrack, Vignette, FlashCut, LightningFlash, DebugOverlay, applyCamera, useAssetLibrary, type AssetLibrary } from "./kit";
 import { ASSETS } from "./world/assets";
 import { createProbe, loadRapier } from "./kit/collide";
+import { usePost, POST_DEFAULTS } from "./kit/post";
 import { useRobloxCast, type RobloxCast } from "./cast/roblox";
 import { T, weatherAt, daylightAt } from "./story";
 import { buildCast } from "./cast/characters";
@@ -16,10 +17,11 @@ import { perform } from "./direction/performance";
 import { cameraFor } from "./direction/camera";
 
 // roblox: Roblox items (default once downloaded); collide: log staging problems per frame (npm run collide)
-export type VideoProps = { debug?: boolean; roblox?: boolean; collide?: boolean };
+export type VideoProps = { debug?: boolean; roblox?: boolean; collide?: boolean; post?: boolean };
 
-function Scene({ lib, rb, rapier }: { lib: AssetLibrary; rb: RobloxCast | null; rapier: any }) {
+function Scene({ lib, rb, rapier, post = true }: { lib: AssetLibrary; rb: RobloxCast | null; rapier: any; post?: boolean }) {
   const frame = useCurrentFrame(), time = frame / T.FPS;
+  usePost(POST_DEFAULTS, post); // ambient occlusion, bloom, MSAA, ACES (src/kit/post.ts); { post: false } renders without
   const { camera, gl, scene } = useThree() as any;
   // straight to the canvas with the kit look (ACES Filmic) and soft shadows (an EffectComposer blanks Remotion's frames)
   const world = useMemo(() => { applyLook(gl); return buildWorld(gl, scene, lib, rb); }, [gl, scene, lib, rb]);
@@ -54,7 +56,7 @@ function useRapier(enabled: boolean) {
   return r;
 }
 
-export const Video: React.FC<VideoProps> = ({ debug, roblox, collide }) => {
+export const Video: React.FC<VideoProps> = ({ debug, roblox, collide, post }) => {
   const { width, height } = useVideoConfig();
   // downloaded models, skies and textures: loaded before the canvas mounts (delayRender holds the render), because
   // ThreeCanvas only redraws on frame changes, not on state changes inside it
@@ -64,9 +66,9 @@ export const Video: React.FC<VideoProps> = ({ debug, roblox, collide }) => {
   return (
     <AbsoluteFill style={{ background: "#0b0d14" }}>
       {lib && rb !== undefined && rapier !== undefined && <ThreeCanvas width={width} height={height} shadows dpr={1}
-        gl={{ antialias: true, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
+        gl={{ antialias: post === false, outputColorSpace: THREE.SRGBColorSpace, preserveDrawingBuffer: true }}
         camera={{ fov: 50, near: 0.3, far: 2000, position: [0, 10, 30] }}>
-        <Scene lib={lib} rb={rb} rapier={rapier} />
+        <Scene lib={lib} rb={rb} rapier={rapier} post={post !== false} />
       </ThreeCanvas>}
       <Lightning />
       <Vignette strength={0.45} />

@@ -42,7 +42,8 @@ npm run voice            # narration clips, word timings, music
 ~/.venvs/chatterbox/Scripts/python scripts/voice/analyze_ref.py out/ref/*.m4a   # then: ... --ours
 npm run check            # voice says the right words, pace, captions, types
 npm run collide          # Rapier: cameras in walls, hidden faces, characters in props / floating / sunk / stiff on soft seats (-- --no-roblox for the all-original cut)
-npm run studio           # live preview; Debug folder: Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab, PlanLab
+npm run studio           # live preview; Debug folder: Sandbox (one character: orbit, try faces, hair, clips, light, effects), Shot, Lineup, PoseLab, MaterialBoard, WeatherLab, MapLab, PlanLab
+npm run fast-gpu         # once per Windows laptop with two GPUs: renders on the fast GPU (ask the user first)
 npm run stills           # one still per shot -> out/contact-sheet.jpg (DEBUG=1 for the overlay)
 npm run render           # out/<slug>.mp4
 npm run preview          # small MP4 + GIF for sharing

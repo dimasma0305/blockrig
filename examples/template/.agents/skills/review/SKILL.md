@@ -5,6 +5,14 @@ description: Check a video before and after rendering - docs and voice checks, s
 
 # Review
 
+## Try it on one character first: the Sandbox
+
+`npm run studio` → Debug → **Sandbox**: one character on a small lit stage with the full look (sky, soft shadows,
+post effects). Drag to orbit, scroll to zoom; edit its props (`who`, `clip` or "all", `face` or "cycle", `time`,
+`post`, `ao`, `bloom`). Rendered (`npm run stills -- --comp Sandbox 0 150 300`, or `PROPS='{"post":false}'` for a
+comparison), the camera turns around the character. Check faces, hair, clothes, clips and the light there before a
+shot or a full render.
+
 ## Before a full render
 
 1. `npm run check` — docs compile, every take says its line (speech recognition), pace ~150–170 wpm, caption timing, types.

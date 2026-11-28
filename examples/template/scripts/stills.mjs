@@ -23,7 +23,7 @@ const shots = story.shots.map((s) => {
 });
 const args = process.argv.slice(2), ci = args.indexOf("--comp"), compId = ci >= 0 ? args[ci + 1] : "Story";
 const only = args.filter((a, i) => !a.startsWith("--") && !(ci >= 0 && i === ci + 1));
-const inputProps = { debug: !!process.env.DEBUG, roblox: process.env.ROBLOX !== "0" && fs.existsSync("assets/roblox/cast.json") }; // ROBLOX=0: without Roblox items
+const inputProps = { debug: !!process.env.DEBUG, roblox: process.env.ROBLOX !== "0" && fs.existsSync("assets/roblox/cast.json"), ...(process.env.PROPS ? JSON.parse(process.env.PROPS) : {}) }; // ROBLOX=0: without Roblox items; PROPS='{"post":false}': more props (Sandbox)
 
 const browserExecutable = fs.existsSync(".browser-path") ? fs.readFileSync(".browser-path", "utf8").trim() : null;
 await ensureBrowser({ browserExecutable });

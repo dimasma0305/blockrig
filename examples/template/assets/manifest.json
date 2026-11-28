@@ -223,6 +223,56 @@
       "assetId": 17681009469,
       "kind": "map",
       "about": "Modern Bedroom (Toolbox, free)"
+    },
+    "faceLaugh": {
+      "assetId": 12064732367,
+      "kind": "face",
+      "about": "Blushing Big Smile Face (3D) (Headpets)"
+    },
+    "faceDizzy": {
+      "assetId": 10924889010,
+      "kind": "face",
+      "about": "Epic Dizzy Face (3D) (Headpets)"
+    },
+    "faceSleepy": {
+      "assetId": 11720215989,
+      "kind": "face",
+      "about": "Cute Sleepy Face (Blizzei)"
+    },
+    "faceBlush": {
+      "assetId": 10716153814,
+      "kind": "face",
+      "about": "Blush Sticker Filter (Blizzei): layered on for embarrassed"
+    },
+    "h4Hair": {
+      "assetId": 5891039736,
+      "kind": "hair",
+      "about": "Black Anime Hair (PolarCub)"
+    },
+    "h5Hair": {
+      "assetId": 323476364,
+      "kind": "hair",
+      "about": "Brown Scene Hair (Roblox)"
+    },
+    "h6Hair": {
+      "assetId": 10323360626,
+      "kind": "hair",
+      "about": "Black Fluffy Middle Swept Hair (Rush_X)"
+    },
+    "h7Hair": {
+      "assetId": 4875445470,
+      "kind": "hair",
+      "about": "Black Short Parted Hair (Homemade_Meal)"
+    },
+    "g5Hair": {
+      "assetId": 15227777707,
+      "kind": "hair",
+      "about": "Straight Hair with Headphones (Black) (DIDIgamedev)"
+    },
+    "g6Hair": {
+      "assetId": 13251161977,
+      "kind": "hair",
+      "about": "Braided Ponytail (Brown) (DIDIgamedev)"
     }
   }
 }
