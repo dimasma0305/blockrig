@@ -3,7 +3,7 @@
 // to zoom, and edit the props on the right; rendered (npm run stills -- --comp Sandbox 0 120 240), the camera turns
 // slowly around the character, so frames show every side.
 //
-// Props: who (hero, sister, neighbour0..3), clip (a name from src/cast/clips.ts, "all" to cycle them, or a pack's slot
+// Props: who (hero, sister, neighbour0..3, or "pack:<name>" for a Roblox pack as a whole avatar: npm run pack), clip (a name from src/cast/clips.ts, "all" to cycle them, or a pack's slot
 // as "<pack>:<slot>", e.g. "rthro:run" after npm run pack -- bundle:356 rthro), face (an
 // expression, or "cycle"), time (day, golden, dusk, night), post (effects on/off), ao, bloom.
 import { useEffect, useMemo, useRef } from "react";
@@ -12,7 +12,9 @@ import { ThreeCanvas } from "@remotion/three";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { applyLook, LOOK, TIMES, createLighting, useAssetLibrary, layer, type AssetLibrary } from "../kit";
+import { applyLook, LOOK, TIMES, createLighting, useAssetLibrary, layer, avatarAmbient, type AssetLibrary } from "../kit";
+import { rigFromPack } from "blockrig/pack";
+import { createFace } from "blockrig";
 import { usePost, POST_DEFAULTS } from "../kit/post";
 import { LightRig, LIGHT_PRESETS } from "../kit/lightRig";
 import { ASSETS } from "../world/assets";
@@ -44,6 +46,14 @@ function Stage({ lib, rb, packs, p }: { lib: AssetLibrary; rb: RobloxCast | null
     for (let i = -3; i <= 3; i++) at(lib.model("fence", { width: 4.4 }), i * 4.6, -26);
     const lighting = createLighting({ shadowSize: 30, sky: false }); root.add(lighting.root);
     const cast = buildCast(rb), all = [cast.hero, ...(cast as any).sister ? [(cast as any).sister] : [], ...((cast as any).neighbours ?? [])];
+    // every Roblox pack that brings a body, a head or accessories, as a whole avatar: who = "pack:<name>"
+    for (const [name, lp] of Object.entries(packs)) {
+      if (!Object.keys(lp.bodyParts).length && !lp.head && !lp.accessories.length) continue;
+      // no dynamic head in the pack: a drawn face, like the template's own characters
+      const face = lp.head?.dynamic ? null : createFace({ expression: "neutral", blink: false, seed: 1 });
+      const rig = rigFromPack(lp, { outline: 0.035, shadows: true, ...(face ? { face } : {}) }); avatarAmbient(rig.object);
+      all.push({ rig, face, name: `pack:${name}`, dynamic: !!lp.head?.dynamic } as any);
+    }
     // every Roblox hair in the manifest on every character, hidden: the `hair` prop shows one (or "own")
     const hairs = new Map<any, { own: THREE.Object3D[]; pool: Record<string, THREE.Object3D> }>();
     for (const q of all) {
@@ -53,7 +63,7 @@ function Stage({ lib, rb, packs, p }: { lib: AssetLibrary; rb: RobloxCast | null
       hairs.set(q, { own, pool });
     }
     return { lighting, cast, all, hairs };
-  }, [gl, scene, lib, rb]);
+  }, [gl, scene, lib, rb, packs]);
 
   const who = built.all.find((q: any) => q.name === p.who) ?? built.cast.hero;
   for (const q of built.all) q.rig.object.visible = q === who;

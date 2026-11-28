@@ -1,16 +1,20 @@
 import type * as THREE from "three";
 import type { ParsedMesh, RbxInstance, Rig, CFrame } from "../index.js";
 
-export type PackRef = string | number | { bundle?: number | string; asset?: number | string };
+export type PackRef = string | number | { bundle?: number | string; asset?: number | string; outfit?: number | string; user?: number | string };
 export type PackRole = "body" | "head" | "face" | "clothing" | "accessory" | "animation" | "model";
 export type PackFile = { id: number; format: string | null };
-export type PackMissing = { kind: "bundle"; id: number; key: string } | { kind: "asset"; id: number; format: string | null; key: string };
+export type PackMissing = { kind: "bundle"; id: number; key: string } | { kind: "details"; type: "outfit" | "user" | "username"; id: number | string; key: string } | { kind: "asset"; id: number; format: string | null; key: string };
 export interface PackStore {
   /** catalog bundle details (https://catalog.roblox.com/v1/bundles/{id}/details), or null if not cached */
   bundle(id: number): { name?: string; bundleType?: string; items?: { id: number; name?: string; type: string; assetType?: number }[] } | null;
   /** an asset's file as delivered (Roblox-AssetFormat `format` when given), or null if not cached */
   asset(id: number, format: string | null): Uint8Array | null;
+  /** outfit / user avatar details (avatar.roblox.com) and username lookups `{ id }`; falls back to bundle() for bundles */
+  details?(type: "bundle" | "outfit" | "user" | "username", id: number | string): any | null;
 }
+export type PackBodyColors = Partial<Record<"HeadColor3" | "TorsoColor3" | "LeftArmColor3" | "RightArmColor3" | "LeftLegColor3" | "RightLegColor3", string>>;
+export type PackScale = { height: number; width: number; depth: number; head: number; proportion: number; bodyType: number };
 export interface Pack {
   ref: string; key: string; name: string | null; bundleType: string | null;
   items: { id: number; name: string | null; assetType: number | null; role: PackRole | null; error?: string }[];
@@ -25,6 +29,10 @@ export interface Pack {
   map: { parts: any[]; lights: any[] } | null;
   /** every file the pack needs at runtime */
   files: PackFile[];
+  /** from the outfit or the player's avatar: BodyColors, scales, R6/R15 */
+  bodyColors: PackBodyColors | null; scale: PackScale | null; rigType: "R6" | "R15" | null;
+  /** user packs: the player's id */
+  userId: number | string | null;
 }
 export interface LoadedPack {
   pack: Pack;
@@ -42,7 +50,9 @@ export interface LoadedPack {
 
 export const ASSET_TYPES: Record<number, string>;
 export function roleOf(assetType: number | null | undefined): PackRole | null;
-export function parsePackRef(ref: PackRef): { type: "bundle" | "asset"; id: number; key: string };
+export function parsePackRef(ref: PackRef): { type: "bundle" | "asset" | "outfit" | "user"; id: number | string; key: string };
+export function avatarBodyColors(details: any): PackBodyColors | null;
+export function avatarScale(details: any): PackScale | null;
 export function fileKey(id: number, format?: string | null): string;
 export function resolvePack(ref: PackRef, store: PackStore, o?: { zstd?: (b: Uint8Array) => Uint8Array; name?: string; assetType?: number }): { pack: Pack | null; partial: Pack; missing: PackMissing[] };
 export function loadPack(pack: Pack, io: { bytes(id: number, format: string | null): Promise<Uint8Array>; image?(id: number): Promise<any>; decodeDraco?: (b: Uint8Array) => any; zstd?: (b: Uint8Array) => Uint8Array }): Promise<LoadedPack>;

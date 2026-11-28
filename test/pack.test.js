@@ -9,7 +9,7 @@ import zlib from "node:zlib";
 import * as THREE from "three";
 import { writeMesh } from "../src/writer.js";
 import { meshFromGeometry, makeCoat } from "../src/index.js";
-import { parsePackRef, resolvePack, loadPack, rigFromPack, roleOf, ASSET_TYPES } from "../src/pack/index.js";
+import { parsePackRef, resolvePack, loadPack, rigFromPack, roleOf, ASSET_TYPES, avatarBodyColors, avatarScale } from "../src/pack/index.js";
 import { packCache, fillPack, exportPack, locateScript } from "../src/pack/cache.js";
 import { writeRbxm } from "./helpers/rbxm-writer.js";
 
@@ -52,14 +52,24 @@ FILES[301] = writeMesh(makeCoat(), "4.00"); // a skinned garment
 const IMAGES = new Set([9001, 202, 302, 401]);
 for (const id of IMAGES) FILES[id] = new Uint8Array([0x89, 0x50, 0x4e, 0x47]); // "PNG"
 
+// the bundle's outfit (its body colours and scales, as avatar.roblox.com/v1/outfits/{id}/details returns them)
+const OUTFIT = { id: 99, name: "Outfit", bodyColors: { headColorId: 24, torsoColorId: 23, leftArmColorId: 24, rightArmColorId: 24, leftLegColorId: 119, rightLegColorId: 119 }, scale: { height: 1.05, width: 0.9, depth: 1, head: 1, proportion: 0, bodyType: 0 }, playerAvatarType: "R15" };
 // a store that only has what has been "downloaded" so far
-const memStore = () => { const have = new Map(); let details = null; return { have, setDetails: (d) => (details = d), bundle: (id) => (id === 777 ? details : null), asset: (id, format) => have.get(`${id}@${format ?? ""}`) ?? null, put: (id, format) => have.set(`${id}@${format ?? ""}`, FILES[id]) }; };
+const memStore = () => {
+  const have = new Map(), det = new Map();
+  return { have, setDetails: (d) => det.set("bundle-777", d), setDet: (type, id, d) => det.set(`${type}-${id}`, d),
+    details: (type, id) => det.get(`${type}-${id}`) ?? null, bundle: (id) => det.get(`bundle-${id}`) ?? null,
+    asset: (id, format) => have.get(`${id}@${format ?? ""}`) ?? null, put: (id, format) => have.set(`${id}@${format ?? ""}`, FILES[id]) };
+};
 
 test("pack: references by id (bundle:949, asset:123, numbers, objects)", () => {
   assert.deepEqual(parsePackRef("bundle:949"), { type: "bundle", id: 949, key: "bundle-949" });
   assert.deepEqual(parsePackRef("asset-376548738"), { type: "asset", id: 376548738, key: "asset-376548738" });
   assert.deepEqual(parsePackRef(42), { type: "asset", id: 42, key: "asset-42" });
   assert.deepEqual(parsePackRef({ bundle: 5 }).key, "bundle-5");
+  assert.deepEqual(parsePackRef("user:Roblox"), { type: "user", id: "Roblox", key: "user-Roblox" }, "a player's avatar by username");
+  assert.deepEqual(parsePackRef("user:1"), { type: "user", id: 1, key: "user-1" });
+  assert.deepEqual(parsePackRef("outfit:131929437").type, "outfit");
   assert.throws(() => parsePackRef("hat"));
   assert.equal(roleOf(79), "head"); assert.equal(roleOf(51), "animation"); assert.equal(roleOf(67), "accessory"); assert.equal(roleOf(29), "body"); assert.equal(ASSET_TYPES[78], "MoodAnimation");
 });
@@ -70,6 +80,9 @@ test("pack: a bundle resolves round by round (details, items, then meshes / text
   assert.deepEqual(r.missing, [{ kind: "bundle", id: 777, key: "bundle-777" }]);
   store.setDetails(DETAILS);
   r = resolvePack("bundle:777", store);
+  assert.deepEqual(r.missing, [{ kind: "details", type: "outfit", id: 99, key: "outfit-99" }], "the bundle's outfit: its body colours and scales");
+  store.setDet("outfit", 99, OUTFIT);
+  r = resolvePack("bundle:777", store);
   assert.deepEqual(r.missing.map((m) => m.id), [11, 12, 13, 14, 15, 16], "the items (not the outfit)");
   for (const m of r.missing) store.put(m.id, m.format);
   r = resolvePack("bundle:777", store);
@@ -79,6 +92,8 @@ test("pack: a bundle resolves round by round (details, items, then meshes / text
   assert.deepEqual(r.missing, []);
   const p = r.pack;
   assert.equal(p.name, "Test Pack"); assert.equal(p.key, "bundle-777");
+  assert.deepEqual(p.bodyColors, { HeadColor3: "#f5cd30", TorsoColor3: "#0d69ac", LeftArmColor3: "#f5cd30", RightArmColor3: "#f5cd30", LeftLegColor3: "#a4bd47", RightLegColor3: "#a4bd47" }, "BrickColor ids as BodyColors");
+  assert.equal(p.scale.height, 1.05); assert.equal(p.rigType, "R15");
   assert.deepEqual(Object.keys(p.body).sort(), ["LowerTorso", "UpperTorso"]); assert.equal(p.body.UpperTorso.mesh, 101);
   assert.deepEqual(p.accessories.map((a) => [a.name, a.mesh, a.layered?.order ?? null]), [["Spiky Hair", 201, null], ["Jacket", 301, 3]]);
   assert.equal(p.clothing.shirt, 401);
@@ -88,7 +103,7 @@ test("pack: a bundle resolves round by round (details, items, then meshes / text
 });
 
 test("pack: a loaded pack builds a dressed rig and gives clips by slot", async () => {
-  const store = memStore(); store.setDetails(DETAILS);
+  const store = memStore(); store.setDetails(DETAILS); store.setDet("outfit", 99, OUTFIT);
   for (let i = 0; i < 4; i++) for (const m of resolvePack("bundle:777", store).missing) store.put(m.id, m.format);
   const { pack } = resolvePack("bundle:777", store);
   const loaded = await loadPack(pack, { bytes: async (id) => FILES[id], image: async (id) => (IMAGES.has(id) ? { width: 4, height: 4, id } : null) });
@@ -98,18 +113,38 @@ test("pack: a loaded pack builds a dressed rig and gives clips by slot", async (
   const rig = rigFromPack(loaded, { outline: 0 });
   let skinned = 0, hairMesh = 0; rig.object.traverse((o) => { if (o.isSkinnedMesh) skinned++; if (o.isMesh && !o.isSkinnedMesh) hairMesh++; });
   assert.ok(skinned >= 1, "the jacket is layered clothing"); assert.ok(hairMesh > 0);
+  assert.equal(rig.body.scale.height, 1.05, "the outfit's BodyHeightScale");
+});
+
+test("pack: a player's whole avatar by username (users API -> avatar API): worn items, emotes, colours, scales", () => {
+  const store = memStore();
+  let r = resolvePack("user:SomeKid", store);
+  assert.deepEqual(r.missing, [{ kind: "details", type: "username", id: "SomeKid", key: "username-SomeKid" }]);
+  store.setDet("username", "SomeKid", { id: 4242, name: "SomeKid" });
+  r = resolvePack("user:SomeKid", store);
+  assert.deepEqual(r.missing, [{ kind: "details", type: "user", id: 4242, key: "user-4242" }]);
+  store.setDet("user", 4242, { playerAvatarType: "R6", scales: { height: 1, width: 1, depth: 1, head: 1.1 }, bodyColor3s: { headColor3: "FFCC99", torsoColor3: "#0D69AC" },
+    assets: [{ id: 12, name: "Hair", assetType: { id: 41, name: "HairAccessory" } }, { id: 14, name: "Shirt", assetType: { id: 11, name: "Shirt" } }], emotes: [{ assetId: 16, assetName: "Wave", position: 1 }] });
+  for (let i = 0; i < 3; i++) for (const m of resolvePack("user:SomeKid", store).missing) store.put(m.id, m.format);
+  const { pack } = resolvePack("user:SomeKid", store);
+  assert.equal(pack.bundleType, "Avatar"); assert.equal(pack.userId, 4242); assert.equal(pack.rigType, "R6");
+  assert.deepEqual(pack.bodyColors, { HeadColor3: "#ffcc99", TorsoColor3: "#0d69ac" });
+  assert.equal(pack.accessories[0].name, "Spiky Hair"); assert.equal(pack.clothing.shirt, 401);
+  assert.deepEqual(pack.animations.emote.map((a) => a.id), [16], "equipped emotes");
+  assert.equal(avatarScale({ scales: { head: 1.1 } }).head, 1.1); assert.equal(avatarBodyColors({}), null);
 });
 
 test("pack cache: shared on disk, fills from public details and links, exports next to a video", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "blockrig-pack-")), cache = packCache(path.join(dir, "cache"));
   const get = async (url) => {
     if (url === "https://catalog.roblox.com/v1/bundles/777/details") return new Response(JSON.stringify(DETAILS));
+    if (url === "https://avatar.roblox.com/v1/outfits/99/details") return new Response(JSON.stringify(OUTFIT));
     const m = /^https:\/\/cdn\.test\/(\d+)$/.exec(url); if (!m) return new Response("", { status: 404 });
     const b = Buffer.from(FILES[m[1]]);
     return new Response(+m[1] === 501 && zlib.zstdCompressSync ? zlib.zstdCompressSync(b) : b); // CDN files can come ZSTD-compressed
   };
   let r = await fillPack("bundle:777", cache, { fetch: get });
-  assert.ok(cache.bundle(777)); assert.equal(r.missing.length, 6, "the items need links from the signed-in browser");
+  assert.ok(cache.bundle(777)); assert.ok(cache.details("outfit", 99)); assert.equal(r.missing.length, 6, "the items need links from the signed-in browser");
   assert.match(locateScript(r.missing), /assetdelivery\.roblox\.com\/v2\/assetId/);
   for (let round = 0; round < 4 && r.missing.length; round++) {
     assert.equal(cache.addLinks(r.missing.map((m) => `${m.key} https://cdn.test/${m.id}`).join("\n") + "\n# not available: x"), r.missing.length);

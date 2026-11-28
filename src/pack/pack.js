@@ -18,6 +18,7 @@ import { describeBodyParts, describeClothing } from "../avatar.js";
 import { parseMesh } from "../mesh.js";
 import { keyframeSequenceToClip } from "../keyframes.js";
 import { createRig } from "../rig.js";
+import { brickColorHex } from "../brickcolor.js";
 import { describeMap } from "./map.js";
 
 /** Roblox AssetType enum values a pack can hold, by number. */
@@ -44,14 +45,43 @@ export function roleOf(assetType) {
 // Roblox-AssetFormat for asset delivery: a dynamic head comes as its MeshPart (with FaceControls) only when asked
 const FORMAT = { 79: "avatar_meshpart_head" };
 
-/** "bundle:949", "asset:376548738", { bundle: 949 }, { asset: 1 } or a bare number (an asset) -> { type, id, key }. */
+const REF_TYPES = ["bundle", "asset", "outfit", "user"];
+/**
+ * "bundle:949", "asset:376548738", "outfit:<id>", "user:<id>" or "user:<username>" (a player's whole avatar),
+ * `{ bundle: 949 }` / `{ user: "Name" }`, or a bare number (an asset) -> `{ type, id, key }`. A username stays a string
+ * until it is looked up.
+ */
 export function parsePackRef(ref) {
   let type, id;
   if (typeof ref === "number") { type = "asset"; id = ref; }
-  else if (typeof ref === "string") { const m = /^(bundle|asset)[:\-](\d+)$/.exec(ref.trim()) ?? (/^\d+$/.test(ref.trim()) ? ["", "asset", ref.trim()] : null); if (!m) throw new Error(`blockrig: pack reference "${ref}" should be "bundle:<id>" or "asset:<id>"`); type = m[1]; id = +m[2]; }
-  else if (ref && (ref.bundle || ref.asset)) { type = ref.bundle ? "bundle" : "asset"; id = +(ref.bundle ?? ref.asset); }
-  else throw new Error("blockrig: a pack reference needs a bundle or asset id");
+  else if (typeof ref === "string") {
+    const t = ref.trim(), m = /^(bundle|asset|outfit|user)[:\-](.+)$/.exec(t);
+    if (m && (/^\d+$/.test(m[2]) || (m[1] === "user" && /^\w{3,20}$/.test(m[2])))) { type = m[1]; id = /^\d+$/.test(m[2]) ? +m[2] : m[2]; }
+    else if (/^\d+$/.test(t)) { type = "asset"; id = +t; }
+    else throw new Error(`blockrig: pack reference "${ref}" should be "bundle:<id>", "asset:<id>", "outfit:<id>" or "user:<id or name>"`);
+  } else if (ref && REF_TYPES.some((k) => ref[k] != null)) { type = REF_TYPES.find((k) => ref[k] != null); id = /^\d+$/.test(String(ref[type])) ? +ref[type] : String(ref[type]); }
+  else throw new Error("blockrig: a pack reference needs a bundle, asset, outfit or user id");
   return { type, id, key: `${type}-${id}` };
+}
+
+// avatar API body colours: BrickColor ids (headColorId...) or Color3 hex (headColor3...) -> BlockRig bodyColors
+const COLOR_PARTS = { head: "HeadColor3", torso: "TorsoColor3", leftArm: "LeftArmColor3", rightArm: "RightArmColor3", leftLeg: "LeftLegColor3", rightLeg: "RightLegColor3" };
+/** The avatar API's `bodyColors` (or `bodyColor3s`) as `{ HeadColor3: "#rrggbb", ... }`; null when there are none. */
+export function avatarBodyColors(d) {
+  const out = {}, c = d?.bodyColor3s ?? d?.bodyColors ?? null;
+  if (!c) return null;
+  for (const [k, name] of Object.entries(COLOR_PARTS)) {
+    const hex = c[`${k}Color3`], id = c[`${k}ColorId`];
+    const v = typeof hex === "string" ? (hex.startsWith("#") ? hex : `#${hex}`).toLowerCase() : id != null ? brickColorHex(id) : null;
+    if (v) out[name] = v;
+  }
+  return Object.keys(out).length ? out : null;
+}
+/** The avatar API's `scales` (or an outfit's `scale`) as BlockRig's body scale plus Roblox's proportion and body type. */
+export function avatarScale(d) {
+  const s = d?.scales ?? d?.scale ?? null;
+  if (!s) return null;
+  return { height: s.height ?? 1, width: s.width ?? 1, depth: s.depth ?? 1, head: s.head ?? 1, proportion: s.proportion ?? 0, bodyType: s.bodyType ?? 0 };
 }
 /** The key a file is stored under: the asset id, plus "@format" when it was asked for in a Roblox-AssetFormat. */
 export const fileKey = (id, format) => (format ? `${id}@${format}` : String(id));
@@ -84,15 +114,31 @@ export function resolvePack(ref, store, o = {}) {
   const use = (id, format = null) => { if (id == null) return null; files.set(fileKey(id, format), { id, format }); need(id, format); return id; };
   const parse = (b) => parseRbxm(b, { zstd: o.zstd });
 
-  let name = null, bundleType = null, items;
+  // details: a bundle's (catalog), an outfit's or a user's avatar (avatar API), a username's id (users API)
+  const details = (type, id) => (store.details ? store.details(type, id) : type === "bundle" ? store.bundle(id) : null);
+  const wantDetails = (type, id) => ({ pack: null, partial: null, missing: [type === "bundle" ? { kind: "bundle", id, key: `bundle-${id}` } : { kind: "details", type, id, key: `${type}-${id}` }] });
+  let name = null, bundleType = null, items, avatar = null, userId = null;
   if (r.type === "bundle") {
-    const d = store.bundle(r.id);
-    if (!d) return { pack: null, missing: [{ kind: "bundle", id: r.id, key: `bundle-${r.id}` }] };
+    const d = details("bundle", r.id);
+    if (!d) return wantDetails("bundle", r.id);
     name = d.name ?? null; bundleType = d.bundleType ?? null;
     items = (d.items ?? []).filter((i) => i.type === "Asset").map((i) => ({ id: i.id, name: i.name ?? null, assetType: i.assetType ?? null }));
+    // a bundle's outfit carries its body colours and scales
+    const outfit = (d.items ?? []).find((i) => i.type === "UserOutfit");
+    if (outfit) { avatar = details("outfit", outfit.id); if (!avatar) return wantDetails("outfit", outfit.id); }
+  } else if (r.type === "outfit" || r.type === "user") {
+    userId = r.id;
+    if (r.type === "user" && typeof r.id === "string") { const u = details("username", r.id); if (!u) return wantDetails("username", r.id); userId = u.id; }
+    avatar = details(r.type, userId);
+    if (!avatar) return wantDetails(r.type, userId);
+    name = avatar.name ?? (r.type === "user" ? String(r.id) : null); bundleType = r.type === "user" ? "Avatar" : "Outfit";
+    items = (avatar.assets ?? []).map((a) => ({ id: a.id, name: a.name ?? null, assetType: a.assetType?.id ?? a.assetType ?? null }));
+    // a player's equipped emotes play like any other animation (slot "emote")
+    for (const e of avatar.emotes ?? []) if (!items.some((i) => i.id === e.assetId)) items.push({ id: e.assetId, name: e.assetName ?? null, assetType: 61 });
   } else items = [{ id: r.id, name: o.name ?? null, assetType: o.assetType ?? null }];
 
-  const pack = { ref: `${r.type}:${r.id}`, key: r.key, name, bundleType, items: [], body: {}, head: null, face: null, clothing: {}, accessories: [], animations: {}, map: null, files: [] };
+  const pack = { ref: `${r.type}:${r.id}`, key: r.key, name, bundleType, items: [], body: {}, head: null, face: null, clothing: {}, accessories: [], animations: {}, map: null, files: [],
+    bodyColors: avatarBodyColors(avatar), scale: avatarScale(avatar), rigType: avatar?.playerAvatarType ?? null, userId };
   for (const it of items) {
     const format = FORMAT[it.assetType] ?? null, bytes = need(it.id, format);
     if (!bytes) { pack.items.push({ ...it, role: roleOf(it.assetType) }); continue; }
@@ -212,9 +258,13 @@ export function rigFromPack(loaded, o = {}) {
   const bodyParts = { ...loaded.bodyParts };
   const h = loaded.head;
   if (h && h.kind === "meshpart") bodyParts.Head = { mesh: h.mesh, size: h.size, attachments: h.attachments, map: h.map ?? undefined };
-  const parts = { ...bodyParts, ...(o.bodyParts ?? {}) }, clothing = { ...loaded.clothing, ...(o.clothing ?? {}) };
+  const parts = { ...bodyParts, ...(o.bodyParts ?? {}) }, clothing = { ...loaded.clothing, ...(o.clothing ?? {}) }, p = loaded.pack;
+  const colors = o.bodyColors ?? p.bodyColors ?? undefined;
+  // the avatar's scales (BodyHeightScale, BodyWidthScale, BodyDepthScale, HeadScale); proportion / body type are Rthro blends
+  const scale = o.scale ?? (p.scale ? { height: p.scale.height, width: p.scale.width, depth: p.scale.depth, head: p.scale.head } : undefined);
   // only switch the rig to Roblox avatar mode for what the pack (or you) actually brings
-  const rig = createRig({ ...o, bodyParts: Object.keys(parts).length ? parts : undefined, clothing: Object.keys(clothing).length ? clothing : undefined });
+  const rig = createRig({ ...(p.rigType === "R6" && !Object.keys(parts).length ? { rigType: "R6" } : {}), ...o, scale, bodyColors: colors,
+    bodyParts: Object.keys(parts).length ? parts : undefined, clothing: Object.keys(clothing).length ? clothing : undefined });
   if (h && h.kind === "special") rig.setHead(h.mesh, { scale: h.scale, offset: h.offset, attachments: h.attachments, map: h.map });
   wearPack(rig, { ...loaded, clothing: {} });
   return rig;

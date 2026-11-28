@@ -276,6 +276,7 @@
     }
   },
   "packs": {
-    "rthro": "bundle:356"
+    "rthro": "bundle:356",
+    "korblox": "bundle:192"
   }
 }
